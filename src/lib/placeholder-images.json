@@ -1,0 +1,40 @@
+{
+  "placeholderImages": [
+    {
+      "id": "mlbb",
+      "description": "Mobile Legends: Bang Bang",
+      "imageUrl": "https://picsum.photos/seed/mlbb/400/500",
+      "imageHint": "mobile legends game"
+    },
+    {
+      "id": "pubg",
+      "description": "PUBG Mobile",
+      "imageUrl": "https://picsum.photos/seed/pubgm/400/500",
+      "imageHint": "pubg mobile"
+    },
+    {
+      "id": "genshin",
+      "description": "Genshin Impact",
+      "imageUrl": "https://picsum.photos/seed/genshin/400/500",
+      "imageHint": "genshin impact"
+    },
+    {
+      "id": "valorant",
+      "description": "Valorant",
+      "imageUrl": "https://picsum.photos/seed/valorant/400/500",
+      "imageHint": "valorant points"
+    },
+    {
+      "id": "freefire",
+      "description": "Free Fire",
+      "imageUrl": "https://picsum.photos/seed/freefire/400/500",
+      "imageHint": "free fire diamonds"
+    },
+    {
+      "id": "codm",
+      "description": "Call of Duty Mobile",
+      "imageUrl": "https://picsum.photos/seed/codm/400/500",
+      "imageHint": "cod mobile"
+    }
+  ]
+}

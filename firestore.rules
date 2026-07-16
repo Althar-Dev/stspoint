@@ -1,0 +1,54 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function untuk cek status developer
+    function isDev() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.dev == true;
+    }
+
+    // Aturan untuk profil pengguna
+    match /users/{userId} {
+      allow read, write: if (request.auth != null && request.auth.uid == userId) || isDev();
+      
+      match /services/{serviceId} {
+        allow read, write: if (request.auth != null && request.auth.uid == userId) || isDev();
+      }
+      
+      match /ai/{configId} {
+        allow read, write: if (request.auth != null && request.auth.uid == userId) || isDev();
+      }
+    }
+
+    // Aturan untuk Transaksi STSPay (Global Collection)
+    match /stspay_transactions/{transactionId} {
+      allow get: if true;
+      allow list: if (request.auth != null && resource.data.userId == request.auth.uid) || isDev();
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if true; 
+      allow delete: if isDev();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if (request.auth != null && (resource == null || request.auth.uid == resource.data.userId)) || isDev();
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /license_keys/{keyId} {
+      allow get: if true;
+      allow write: if isDev();
+      allow list: if isDev();
+      allow update: if request.auth != null 
+                    && resource.data.status == 'unused' 
+                    && request.resource.data.status == 'used'
+                    && request.resource.data.usedBy == request.auth.uid;
+    }
+
+    match /payment_channels/{channelId} {
+      allow read: if true;
+      allow write: if isDev();
+    }
+  }
+}

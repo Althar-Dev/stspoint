@@ -1,0 +1,152 @@
+
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Informasi profil utama pengguna.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["client", "merchant"] },
+        "clientKey": { "type": "string" },
+        "merchantId": { "type": "string" },
+        "secretKey": { "type": "string" },
+        "balance": { "type": "number" },
+        "dev": { "type": "boolean", "description": "Flag for developer/admin access." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt", "secretKey"]
+    },
+    "AiConfig": {
+      "title": "AI Config",
+      "description": "Konfigurasi paket dan sisa kuota AI pengguna.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "plan": { "type": "string", "enum": ["Starter", "Premium", "Enterprise"] },
+        "usage": { "type": "number" },
+        "limit": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ServiceConfig": {
+      "title": "Service Config",
+      "description": "Konfigurasi dan data saldo untuk provider layanan.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "token": { "type": "string" },
+        "refreshToken": { "type": "string" },
+        "baseQr": { "type": "string", "description": "QR Payload string or Base URL." },
+        "balance": { "type": "number" },
+        "quota": { "type": "number" },
+        "autoWithdrawEnabled": { "type": "boolean" },
+        "minWithdrawAmount": { "type": "number" },
+        "withdrawInterval": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Record of a game top-up purchase.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "gameId": { "type": "string" },
+        "gameName": { "type": "string" },
+        "itemName": { "type": "string" },
+        "price": { "type": "string" },
+        "priceAmount": { "type": "number" },
+        "userId": { "type": "string" },
+        "zoneId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Success", "Pending", "Failed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "paymentMethod": { "type": "string" }
+      },
+      "required": ["gameId", "itemName", "price", "userId", "status", "createdAt"]
+    },
+    "STSPayTransaction": {
+      "title": "STSPay Transaction",
+      "description": "Log transaksi spesifik untuk layanan STSPay (Xendit bridge).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "externalId": { "type": "string", "description": "ID Unik internal untuk referensi Xendit." },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "description": "Status dari Xendit (PENDING, PAID, EXPIRED, SETTLED)." },
+        "payerEmail": { "type": "string" },
+        "description": { "type": "string" },
+        "invoiceUrl": { "type": "string" },
+        "userId": { "type": "string", "description": "Owner of this transaction (Merchant)." },
+        "type": { "type": "string", "enum": ["payment", "payout"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["externalId", "amount", "status", "type", "createdAt", "userId"]
+    },
+    "LicenseKey": {
+      "title": "License Key",
+      "description": "Pre-generated keys for client registration.",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["unused", "used"] },
+        "usedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["key", "name", "status", "createdAt"]
+    },
+    "PaymentChannel": {
+      "title": "Payment Channel",
+      "description": "Konfigurasi status aktif/nonaktif untuk kanal pembayaran.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "provider": { "type": "string" },
+        "group": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "fee": { "type": "string" },
+        "logo": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "group", "status"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Koleksi data profil pengguna."
+    },
+    "/users/{userId}/services/{serviceId}": {
+      "schema": "ServiceConfig",
+      "description": "Sub-koleksi untuk menyimpan data provider (digiflazz, orderkuota, gomerchant)."
+    },
+    "/users/{userId}/ai/{configId}": {
+      "schema": "AiConfig",
+      "description": "Konfigurasi dan kuota AI pengguna."
+    },
+    "/stspay_transactions/{transactionId}": {
+      "schema": "STSPayTransaction",
+      "description": "Koleksi global transaksi pembayaran STSPay untuk akses publik yang mudah."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Public records of successful top-ups for the ledger."
+    },
+    "/license_keys/{keyId}": {
+      "schema": "LicenseKey",
+      "description": "Storage for registration keys/licenses."
+    },
+    "/payment_channels/{channelId}": {
+      "schema": "PaymentChannel",
+      "description": "Global payment channel registry."
+    }
+  }
+}
