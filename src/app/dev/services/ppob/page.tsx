@@ -178,7 +178,6 @@ export default function PPOBManagementPage() {
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
-  const [isCustomRows, setIsCustomRows] = useState(false);
 
   // Sync Modal States
   const [isOrkutDialogOpen, setIsOrkutDialogOpen] = useState(false);
@@ -886,7 +885,7 @@ export default function PPOBManagementPage() {
                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Rows:</span>
-                     <Select value={itemsPerPage.toString()} onValueChange={(v) => v === "custom" ? setIsCustomRows(true) : setItemsPerPage(parseInt(v))}>
+                     <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(parseInt(v))}>
                         <SelectTrigger className="h-8 w-24 text-[10px] font-bold rounded-md bg-background"><SelectValue /></SelectTrigger>
                         <SelectContent>
                            <SelectItem value="10" className="text-[10px]">10 Rows</SelectItem>
@@ -911,8 +910,6 @@ export default function PPOBManagementPage() {
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">Product Name</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-center">Brand</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-right">Base Price</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-center">Applied Markup</TableHead>
-                    <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-right">Selling Price</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-center">Status</TableHead>
                     <th className="w-[100px]"></th>
                   </TableRow>
@@ -921,17 +918,13 @@ export default function PPOBManagementPage() {
                   {loading ? (
                     Array.from({ length: 10 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={10} className="px-8 py-4"><Skeleton className="h-4 w-full" /></TableCell>
+                        <TableCell colSpan={8} className="px-8 py-4"><Skeleton className="h-4 w-full" /></TableCell>
                       </TableRow>
                     ))
                   ) : paginatedProducts.length === 0 ? (
-                    <TableRow><TableCell colSpan={10} className="py-20 text-center text-muted-foreground italic font-medium">Database kosong atau produk tidak ditemukan.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="py-20 text-center text-muted-foreground italic font-medium">Database kosong atau produk tidak ditemukan.</TableCell></TableRow>
                   ) : (
-                    paginatedProducts.map((prod) => {
-                      const appliedRule = getProductMarkup(prod);
-                      const sellPrice = calculateSellPrice(prod.price, appliedRule);
-                      
-                      return (
+                    paginatedProducts.map((prod) => (
                         <TableRow key={`${prod.buyer_sku_code}-${prod.provider}`} className="border-border/50 group hover:bg-muted/30 transition-colors">
                           <TableCell className="px-8 py-4 whitespace-nowrap">
                             <Badge variant="secondary" className="border-none font-bold text-[9px] rounded-md uppercase bg-primary/5 text-primary">{prod.provider}</Badge>
@@ -946,27 +939,6 @@ export default function PPOBManagementPage() {
                           </TableCell>
                           <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-medium">Rp {prod.price.toLocaleString('id-ID')}</TableCell>
                           <TableCell className="text-center whitespace-nowrap">
-                             <div className="flex flex-col items-center gap-0.5">
-                                {appliedRule ? (
-                                   <>
-                                      <div className="flex items-center gap-1 bg-emerald-500/5 rounded-md px-2 py-0.5 border border-emerald-500/10">
-                                         <span className="text-[9px] font-bold text-emerald-600">
-                                            +{appliedRule.value}{appliedRule.markupType === 'nominal' ? '' : '%'}
-                                         </span>
-                                      </div>
-                                      <span className="text-[7px] font-bold uppercase text-muted-foreground/60 tracking-tighter">
-                                        {appliedRule.targetType} Rule
-                                      </span>
-                                   </>
-                                ) : (
-                                   <span className="text-[9px] font-bold text-muted-foreground/40">No Markup</span>
-                                )}
-                             </div>
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-[11px] font-bold text-primary whitespace-nowrap">
-                             Rp {sellPrice.toLocaleString('id-ID')}
-                          </TableCell>
-                          <TableCell className="text-center whitespace-nowrap">
                              <Badge className={`${prod.buyer_product_status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'} border-none font-bold text-[9px] uppercase px-1.5 h-4 whitespace-nowrap`}>{prod.buyer_product_status ? 'Active' : 'Offline'}</Badge>
                           </TableCell>
                           <TableCell className="px-8 whitespace-nowrap">
@@ -975,8 +947,8 @@ export default function PPOBManagementPage() {
                              </div>
                           </TableCell>
                         </TableRow>
-                      );
-                    })
+                      )
+                    )
                   )}
                 </TableBody>
              </Table>
