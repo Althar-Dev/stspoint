@@ -49,6 +49,7 @@ export async function addProduct(params: {
   name: string;
   provider: string;
   type: string;
+  category: string;
   brand: string;
   price: number;
 }) {
@@ -67,7 +68,16 @@ export async function addProduct(params: {
         updated_at=CURRENT_TIMESTAMP
     `);
 
-    stmt.run(params.sku, params.provider, params.type, params.name, params.type, params.brand, params.price);
+    // Standardisasi: SKU dan Brand ke Uppercase
+    stmt.run(
+      params.sku.toUpperCase().trim(), 
+      params.provider, 
+      params.type, 
+      params.name.trim(), 
+      params.category.trim(), 
+      params.brand.toUpperCase().trim(), 
+      params.price
+    );
     
     return { success: true, message: "Produk berhasil ditambahkan ke database." };
   } catch (error: any) {

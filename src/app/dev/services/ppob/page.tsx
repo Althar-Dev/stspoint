@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,6 +127,7 @@ export default function PPOBManagementPage() {
     sku: '',
     name: '',
     brand: '',
+    category: 'Pulsa',
     price: 0
   });
 
@@ -137,12 +139,21 @@ export default function PPOBManagementPage() {
     brand: 'all'
   });
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+
+  // Sync Modal States
+  const [isOrkutDialogOpen, setIsOrkutDialogOpen] = useState(false);
+  const [orkutUrl, setOrkutUrl] = useState("https://okeconnect.com/harga/json?id=905ccd028329b0a&produk=pulsa,kuota_nasional,kuota_telkomsel,kuota_byu,kuota_indosat,kuota_tri,kuota_xl,kuota_axis,kuota_smartfren");
+  const [orkutType, setOrkutType] = useState<"Prepaid" | "Pasca">("Prepaid");
+
   const availableFilterBrands = useMemo(() => {
     const brands = new Set<string>();
     const provider = filters.provider;
     products.forEach(p => {
       if (p.brand && (provider === 'all' || p.provider === provider)) {
-        brands.add(p.brand);
+        brands.add(p.brand.toUpperCase().trim());
       }
     });
     return Array.from(brands).sort();
@@ -153,7 +164,7 @@ export default function PPOBManagementPage() {
     const provider = newRule.targetProvider || 'all';
     products.forEach(p => {
       if (p.brand && (provider === 'all' || p.provider === provider)) {
-        brands.add(p.brand);
+        brands.add(p.brand.toUpperCase().trim());
       }
     });
     return Array.from(brands).sort();
@@ -164,7 +175,7 @@ export default function PPOBManagementPage() {
     const provider = clearFilters.provider;
     products.forEach(p => {
       if (p.brand && (provider === 'all' || p.provider === provider)) {
-        brands.add(p.brand);
+        brands.add(p.brand.toUpperCase().trim());
       }
     });
     return Array.from(brands).sort();
@@ -191,15 +202,15 @@ export default function PPOBManagementPage() {
       });
 
       // 1. SKU
-      const skuRule = candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase());
+      const skuRule = candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase().trim() === product.buyer_sku_code.toUpperCase().trim());
       if (skuRule) return skuRule;
 
       // 2. Brand
-      const brandRule = candidates.find(r => r.targetType === 'brand' && r.targetValue.toLowerCase() === product.brand.toLowerCase());
+      const brandRule = candidates.find(r => r.targetType === 'brand' && r.targetValue.toUpperCase().trim() === product.brand.toUpperCase().trim());
       if (brandRule) return brandRule;
       
       // 3. Type
-      const typeRule = candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase());
+      const typeRule = candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase().trim() === product.type.toLowerCase().trim());
       if (typeRule) return typeRule;
       
       // 4. Global
@@ -222,15 +233,6 @@ export default function PPOBManagementPage() {
       return Math.ceil(basePrice * (1 + rule.value / 100));
     }
   };
-
-  // Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
-
-  // Sync Modal States
-  const [isOrkutDialogOpen, setIsOrkutDialogOpen] = useState(false);
-  const [orkutUrl, setOrkutUrl] = useState("https://okeconnect.com/harga/json?id=905ccd028329b0a&produk=pulsa,kuota_nasional,kuota_telkomsel,kuota_byu,kuota_indosat,kuota_tri,kuota_xl,kuota_axis,kuota_smartfren");
-  const [orkutType, setOrkutType] = useState<"Prepaid" | "Pasca">("Prepaid");
 
   const loadLocalData = async () => {
     setLoading(true);
@@ -283,7 +285,7 @@ export default function PPOBManagementPage() {
   };
 
   const handleAddManualProduct = async () => {
-    if (!productForm.sku || !productForm.name || !productForm.brand || !productForm.price) {
+    if (!productForm.sku || !productForm.name || !productForm.brand || !productForm.price || !productForm.category) {
       toast({ variant: "destructive", title: "Input Required", description: "Semua kolom wajib diisi." });
       return;
     }
@@ -299,6 +301,7 @@ export default function PPOBManagementPage() {
           sku: '',
           name: '',
           brand: '',
+          category: 'Pulsa',
           price: 0
         });
         await loadLocalData();
@@ -392,12 +395,17 @@ export default function PPOBManagementPage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchesSearch = p.product_name.toLowerCase().includes(search.toLowerCase()) ||
-        p.buyer_sku_code.toLowerCase().includes(search.toLowerCase());
+      const s = search.toLowerCase().trim();
+      const matchesSearch = p.product_name.toLowerCase().includes(s) ||
+        p.buyer_sku_code.toLowerCase().includes(s);
       
       const matchesProvider = filters.provider === 'all' || p.provider === filters.provider;
       const matchesType = filters.type === 'all' || p.type === filters.type;
-      const matchesBrand = filters.brand === 'all' || p.brand === filters.brand;
+      
+      // Case-insensitive and trimmed brand matching
+      const matchesBrand = filters.brand === 'all' || 
+        p.brand.toUpperCase().trim() === filters.brand.toUpperCase().trim();
+
       const matchesStatus = filters.status === 'all' || 
         (filters.status === 'active' ? p.buyer_product_status : !p.buyer_product_status);
 
@@ -607,6 +615,15 @@ export default function PPOBManagementPage() {
                      />
                   </div>
                   <div className="space-y-1.5">
+                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Kategori (e.g. Pulsa, Game)</Label>
+                     <Input 
+                      placeholder="e.g. Pulsa" 
+                      value={productForm.category} 
+                      onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                      className="h-10 rounded-xl bg-muted/50 border-none font-bold"
+                     />
+                  </div>
+                  <div className="space-y-1.5">
                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand</Label>
                      <Input 
                       placeholder="e.g. TELKOMSEL" 
@@ -615,8 +632,8 @@ export default function PPOBManagementPage() {
                       className="h-10 rounded-xl bg-muted/50 border-none font-bold"
                      />
                   </div>
-                  <div className="space-y-1.5">
-                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Harga Dasar (Rp)</Label>
+                  <div className="space-y-1.5 md:col-span-2">
+                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Harga Dasar / Admin Modal (Rp)</Label>
                      <Input 
                       type="number"
                       placeholder="10000" 
@@ -924,7 +941,7 @@ export default function PPOBManagementPage() {
         </div>
 
         <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card flex flex-col min-h-[600px]">
-          <CardHeader className="px-8 py-5 border-b border-border bg-muted/30 dark:bg-[#0A0A0A] shrink-0">
+          <CardHeader className="px-4 md:px-8 py-5 border-b border-border bg-muted/30 dark:bg-[#0A0A0A] shrink-0">
              <div className="flex items-center justify-between">
                <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                   <LayoutGrid className="w-4 h-4 text-primary" />
