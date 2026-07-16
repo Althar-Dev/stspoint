@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +27,10 @@ import {
   ShieldCheck,
   Coins,
   Percent,
-  ArrowRight
+  ArrowRight,
+  Tag,
+  TrendingUp,
+  Hash
 } from "lucide-react";
 import { 
   Table, 
@@ -173,6 +175,53 @@ export default function PPOBManagementPage() {
     products.forEach(p => { if (p.type) types.add(p.type); });
     return Array.from(types).sort();
   }, [products]);
+
+  /**
+   * Logika Penentuan Markup
+   */
+  const getProductMarkup = (product: OrkutPPOBProduct): MarkupRule | null => {
+    const specificProviderRules = markupRules.filter(r => r.targetProvider === product.provider);
+    const globalRules = markupRules.filter(r => r.targetProvider === 'all');
+
+    const checkSet = (rules: MarkupRule[]) => {
+      const candidates = rules.filter(r => {
+        const min = r.minPrice || 0;
+        const max = r.maxPrice || 999999999;
+        return product.price >= min && product.price <= max;
+      });
+
+      // 1. SKU
+      const skuRule = candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase());
+      if (skuRule) return skuRule;
+
+      // 2. Brand
+      const brandRule = candidates.find(r => r.targetType === 'brand' && r.targetValue.toLowerCase() === product.brand.toLowerCase());
+      if (brandRule) return brandRule;
+      
+      // 3. Type
+      const typeRule = candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase());
+      if (typeRule) return typeRule;
+      
+      // 4. Global
+      const globRule = candidates.find(r => r.targetType === 'global');
+      if (globRule) return globRule;
+      
+      return null;
+    };
+
+    return checkSet(specificProviderRules) || checkSet(globalRules);
+  };
+
+  const calculateSellPrice = (basePrice: number, product: OrkutPPOBProduct) => {
+    const rule = getProductMarkup(product);
+    if (!rule) return basePrice;
+    
+    if (rule.markupType === 'nominal') {
+      return basePrice + rule.value;
+    } else {
+      return Math.ceil(basePrice * (1 + rule.value / 100));
+    }
+  };
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -356,12 +405,12 @@ export default function PPOBManagementPage() {
     });
   }, [products, search, filters]);
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredProducts, currentPage, itemsPerPage]);
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startRange = filteredProducts.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endRange = Math.min(currentPage * itemsPerPage, filteredProducts.length);
 
@@ -909,21 +958,25 @@ export default function PPOBManagementPage() {
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">Product Name</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-center">Brand</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-right">Base Price</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-center text-amber-600">Profit / Markup</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-right text-primary">Sell Price</TableHead>
                     <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-center">Status</TableHead>
-                    <th className="w-[100px]"></th>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     Array.from({ length: 10 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={8} className="px-8 py-4"><Skeleton className="h-4 w-full" /></TableCell>
+                        <TableCell colSpan={9} className="px-8 py-4"><Skeleton className="h-4 w-full" /></TableCell>
                       </TableRow>
                     ))
                   ) : paginatedProducts.length === 0 ? (
-                    <TableRow><TableCell colSpan={8} className="py-20 text-center text-muted-foreground italic font-medium">Database kosong atau produk tidak ditemukan.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={9} className="py-20 text-center text-muted-foreground italic font-medium">Database kosong atau produk tidak ditemukan.</TableCell></TableRow>
                   ) : (
-                    paginatedProducts.map((prod) => (
+                    paginatedProducts.map((prod) => {
+                      const markupRule = getProductMarkup(prod);
+                      const sellPrice = calculateSellPrice(prod.price, prod);
+                      return (
                         <TableRow key={`${prod.buyer_sku_code}-${prod.provider}`} className="border-border/50 group hover:bg-muted/30 transition-colors">
                           <TableCell className="px-8 py-4 whitespace-nowrap">
                             <Badge variant="secondary" className="border-none font-bold text-[9px] rounded-md uppercase bg-primary/5 text-primary">{prod.provider}</Badge>
@@ -936,18 +989,24 @@ export default function PPOBManagementPage() {
                           <TableCell className="text-center whitespace-nowrap">
                              <Badge variant="outline" className="text-[9px] uppercase font-bold border-border whitespace-nowrap bg-background">{prod.brand}</Badge>
                           </TableCell>
-                          <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-medium">Rp {prod.price.toLocaleString('id-ID')}</TableCell>
+                          <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-medium text-muted-foreground">Rp {prod.price.toLocaleString('id-ID')}</TableCell>
+                          <TableCell className="text-center whitespace-nowrap">
+                             {markupRule ? (
+                               <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/20 text-[9px] font-bold py-0.5 px-2 rounded-sm gap-1.5 flex items-center justify-center w-fit mx-auto">
+                                 {markupRule.markupType === 'nominal' ? <Coins className="w-2.5 h-2.5" /> : <Percent className="w-2.5 h-2.5" />}
+                                 {markupRule.markupType === 'nominal' ? `+Rp ${markupRule.value.toLocaleString('id-ID')}` : `+${markupRule.value}%`}
+                               </Badge>
+                             ) : (
+                               <span className="text-[10px] text-muted-foreground/30 font-medium uppercase tracking-tighter">No Rule</span>
+                             )}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-bold text-primary">Rp {sellPrice.toLocaleString('id-ID')}</TableCell>
                           <TableCell className="text-center whitespace-nowrap">
                              <Badge className={`${prod.buyer_product_status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'} border-none font-bold text-[9px] uppercase px-1.5 h-4 whitespace-nowrap`}>{prod.buyer_product_status ? 'Active' : 'Offline'}</Badge>
                           </TableCell>
-                          <TableCell className="px-8 whitespace-nowrap">
-                             <div className="flex items-center justify-end gap-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent rounded-md"><Edit2 className="w-3.5 h-3.5" /></Button>
-                             </div>
-                          </TableCell>
                         </TableRow>
-                      )
-                    )
+                      );
+                    })
                   )}
                 </TableBody>
              </Table>
@@ -967,6 +1026,79 @@ export default function PPOBManagementPage() {
               </div>
             </div>
           )}
+        </Card>
+
+        {/* --- Active Markup Configuration --- */}
+        <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
+          <CardHeader className="px-8 py-5 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                Active Markup Configuration
+              </CardTitle>
+              <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold">{markupRules.length} Rules Active</Badge>
+            </div>
+          </CardHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="px-8 py-4 font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">Provider Target</TableHead>
+                  <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">Rule Based On</TableHead>
+                  <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">Target Value</TableHead>
+                  <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">Modal Range (IDR)</TableHead>
+                  <TableHead className="font-bold text-[10px] uppercase tracking-widest whitespace-nowrap text-right">Profit Value</TableHead>
+                  <th className="w-[100px]"></th>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {markupRules.length === 0 ? (
+                  <TableRow>
+                    <td colSpan={6} className="py-12 text-center text-muted-foreground italic font-medium text-xs">Belum ada aturan markup yang dibuat.</td>
+                  </TableRow>
+                ) : (
+                  markupRules.map((rule) => (
+                    <TableRow key={rule.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="px-8 py-4">
+                        <Badge variant="outline" className="border-primary/20 text-primary text-[9px] font-bold uppercase">{rule.targetProvider === 'all' ? 'Universal' : rule.targetProvider}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-muted text-muted-foreground border-none text-[9px] font-bold uppercase">{rule.targetType}</Badge>
+                      </TableCell>
+                      <TableCell className="font-bold text-xs">
+                        {rule.targetValue === 'all' ? (
+                          <span className="text-muted-foreground/60 italic">Global Default</span>
+                        ) : (
+                          <span className="font-mono text-primary flex items-center gap-1">
+                            {rule.targetType === 'sku' && <Hash className="w-3 h-3 opacity-30" />}
+                            {rule.targetValue}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                         <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
+                            <span>Rp {(rule.minPrice || 0).toLocaleString()}</span>
+                            <ArrowRight className="w-3 h-3" />
+                            <span>Rp {(rule.maxPrice || 999999999).toLocaleString()}</span>
+                         </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1.5 font-bold text-xs text-primary">
+                          {rule.markupType === 'nominal' ? <Coins className="w-3.5 h-3.5" /> : <Percent className="w-3.5 h-3.5" />}
+                          {rule.markupType === 'nominal' ? `+ Rp ${rule.value.toLocaleString()}` : `+ ${rule.value}%`}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-8 text-right">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5" onClick={() => removeRule(rule.id)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
       </div>
     </div>
