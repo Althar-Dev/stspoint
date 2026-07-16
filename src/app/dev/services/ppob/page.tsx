@@ -289,52 +289,6 @@ export default function PPOBManagementPage() {
     loadLocalData();
   }, []);
 
-  /**
-   * Logika Penentuan Markup dengan Rentang Harga & SKU
-   */
-  const getProductMarkup = (product: OrkutPPOBProduct): MarkupRule | null => {
-    const specificProviderRules = markupRules.filter(r => r.targetProvider === product.provider);
-    const globalRules = markupRules.filter(r => r.targetProvider === 'all');
-
-    const checkSet = (rules: MarkupRule[]) => {
-      // Filter aturan yang harganya cocok dulu
-      const candidates = rules.filter(r => {
-        const min = r.minPrice || 0;
-        const max = r.maxPrice || 999999999;
-        return product.price >= min && product.price <= max;
-      });
-
-      // 1. SKU (Paling Spesifik)
-      const skuRule = candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase());
-      if (skuRule) return skuRule;
-
-      // 2. Brand
-      const brandRule = candidates.find(r => r.targetType === 'brand' && r.targetValue.toLowerCase() === product.brand.toLowerCase());
-      if (brandRule) return brandRule;
-      
-      // 3. Type
-      const typeRule = candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase());
-      if (typeRule) return typeRule;
-      
-      // 4. Global
-      const globRule = candidates.find(r => r.targetType === 'global');
-      if (globRule) return globRule;
-      
-      return null;
-    };
-
-    return checkSet(specificProviderRules) || checkSet(globalRules);
-  };
-
-  const calculateSellPrice = (basePrice: number, rule: MarkupRule | null) => {
-    if (!rule) return basePrice;
-    if (rule.markupType === 'nominal') {
-      return basePrice + rule.value;
-    } else {
-      return Math.ceil(basePrice * (1 + rule.value / 100));
-    }
-  };
-
   const handleAddRule = async () => {
     if (newRule.value === undefined) return;
     if (newRule.targetType === 'brand' && !newRule.targetValue) {
@@ -392,9 +346,7 @@ export default function PPOBManagementPage() {
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.product_name.toLowerCase().includes(search.toLowerCase()) ||
-        p.buyer_sku_code.toLowerCase().includes(search.toLowerCase()) ||
-        p.brand.toLowerCase().includes(search.toLowerCase()) ||
-        p.provider.toLowerCase().includes(search.toLowerCase());
+        p.buyer_sku_code.toLowerCase().includes(search.toLowerCase());
       
       const matchesProvider = filters.provider === 'all' || p.provider === filters.provider;
       const matchesType = filters.type === 'all' || p.type === filters.type;
@@ -485,7 +437,7 @@ export default function PPOBManagementPage() {
                           <AlertDialogHeader>
                              <AlertDialogTitle className="font-headline font-bold">Apakah Anda yakin?</AlertDialogTitle>
                              <AlertDialogDescription className="text-sm">
-                                Tindakan ini akan menghapus data produk terpilih secara permanen dari database lokal. Anda harus melakukan sinkronisasi ulang untuk mengembalikan data.
+                                Tindakan ini akan menghapus data produk terpilih secara permanen dari database lokal.
                              </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -503,7 +455,7 @@ export default function PPOBManagementPage() {
            <Button 
             variant="outline" 
             size="sm" 
-            className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 h-11 px-6 border-border hover:bg-accent"
+            className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 h-11 px-6 border-border"
             onClick={handleSyncFromDigi}
             disabled={loading}
           >
@@ -516,14 +468,14 @@ export default function PPOBManagementPage() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 h-11 px-6 border-border hover:bg-accent"
+                className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 h-11 px-6 border-border"
                 disabled={loading}
               >
                 <Database className="w-3.5 h-3.5" />
                 Sync Orderkuota
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[94vw] md:max-w-md rounded-xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[94vw] md:max-w-md rounded-xl">
               <DialogHeader>
                 <DialogTitle className="font-headline font-bold">Sinkronisasi Orderkuota</DialogTitle>
                 <DialogDescription className="text-xs">Pilih tipe dan masukkan endpoint untuk menarik data produk.</DialogDescription>
@@ -559,11 +511,11 @@ export default function PPOBManagementPage() {
 
           <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 h-11 px-6 border-border hover:bg-accent">
+              <Button variant="outline" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 h-11 px-6 border-border">
                 <Plus className="w-3.5 h-3.5" /> Tambah Produk
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[94vw] md:max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto p-6">
+            <DialogContent className="w-[94vw] md:max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto">
                <DialogHeader>
                   <DialogTitle className="font-headline font-bold">Tambah Produk Manual</DialogTitle>
                   <DialogDescription className="text-xs">Input data produk baru ke dalam database lokal.</DialogDescription>
@@ -609,21 +561,12 @@ export default function PPOBManagementPage() {
                   </div>
                   <div className="space-y-1.5">
                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Brand</Label>
-                     <div className="flex gap-2">
-                        <Select value={productForm.brand} onValueChange={(v) => setProductForm({...productForm, brand: v})}>
-                           <SelectTrigger className="h-10 rounded-xl bg-muted/50 border-none font-bold text-xs flex-1">
-                              <SelectValue placeholder="Pilih Brand..." />
-                           </SelectTrigger>
-                           <SelectContent className="max-h-[200px]">
-                              {availableFilterBrands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                           </SelectContent>
-                        </Select>
-                        <Input 
-                          placeholder="Brand Baru..." 
-                          className="h-10 rounded-xl bg-muted/50 border-none font-bold text-xs w-32"
-                          onChange={(e) => setProductForm({...productForm, brand: e.target.value})}
-                        />
-                     </div>
+                     <Input 
+                      placeholder="e.g. TELKOMSEL" 
+                      value={productForm.brand} 
+                      onChange={(e) => setProductForm({...productForm, brand: e.target.value.toUpperCase()})}
+                      className="h-10 rounded-xl bg-muted/50 border-none font-bold"
+                     />
                   </div>
                   <div className="space-y-1.5">
                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Harga Dasar (Rp)</Label>
@@ -657,7 +600,7 @@ export default function PPOBManagementPage() {
             <DialogContent className="w-[94vw] md:max-w-4xl rounded-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="font-headline font-bold">Konfigurasi Markup Otomatis</DialogTitle>
-                <DialogDescription className="text-xs">Atur selisih harga jual berdasarkan provider, brand, tipe, SKU, atau rentang harga.</DialogDescription>
+                <DialogDescription className="text-xs">Atur keuntungan berdasarkan SKU spesifik dan rentang harga produk.</DialogDescription>
               </DialogHeader>
               
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-6">
@@ -857,9 +800,6 @@ export default function PPOBManagementPage() {
               <Button variant="outline" className="h-12 px-6 rounded-xl gap-2 font-bold text-xs bg-card border-border">
                 <Filter className="w-4 h-4" />
                 Filter
-                {(filters.provider !== 'all' || filters.type !== 'all' || filters.brand !== 'all' || filters.status !== 'all') && (
-                  <Badge className="h-4 w-4 p-0 flex items-center justify-center text-[8px] bg-primary text-primary-foreground ml-1">!</Badge>
-                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 rounded-2xl border-border p-5 space-y-6" align="end">
@@ -946,32 +886,16 @@ export default function PPOBManagementPage() {
                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Rows:</span>
-                     {isCustomRows ? (
-                       <div className="flex items-center gap-1 animate-in slide-in-from-right-2">
-                         <Input 
-                           type="number" 
-                           value={itemsPerPage} 
-                           onChange={(e) => setItemsPerPage(Math.max(1, parseInt(e.target.value) || 1))}
-                           className="h-8 w-16 text-[10px] font-bold px-2 rounded-md"
-                           autoFocus
-                         />
-                         <button className="text-muted-foreground hover:text-foreground" onClick={() => setIsCustomRows(false)}>
-                            <X className="w-3 h-3" />
-                         </button>
-                       </div>
-                     ) : (
-                       <Select value={itemsPerPage.toString()} onValueChange={(v) => v === "custom" ? setIsCustomRows(true) : setItemsPerPage(parseInt(v))}>
-                          <SelectTrigger className="h-8 w-24 text-[10px] font-bold rounded-md bg-background"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                             <SelectItem value="10" className="text-[10px]">10 Rows</SelectItem>
-                             <SelectItem value="25" className="text-[10px]">25 Rows</SelectItem>
-                             <SelectItem value="50" className="text-[10px]">50 Rows</SelectItem>
-                             <SelectItem value="100" className="text-[10px]">100 Rows</SelectItem>
-                             <SelectItem value="250" className="text-[10px]">250 Rows</SelectItem>
-                             <SelectItem value="custom" className="text-[10px] font-bold text-primary">Custom...</SelectItem>
-                          </SelectContent>
-                       </Select>
-                     )}
+                     <Select value={itemsPerPage.toString()} onValueChange={(v) => v === "custom" ? setIsCustomRows(true) : setItemsPerPage(parseInt(v))}>
+                        <SelectTrigger className="h-8 w-24 text-[10px] font-bold rounded-md bg-background"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="10" className="text-[10px]">10 Rows</SelectItem>
+                           <SelectItem value="25" className="text-[10px]">25 Rows</SelectItem>
+                           <SelectItem value="50" className="text-[10px]">50 Rows</SelectItem>
+                           <SelectItem value="100" className="text-[10px]">100 Rows</SelectItem>
+                           <SelectItem value="250" className="text-[10px]">250 Rows</SelectItem>
+                        </SelectContent>
+                     </Select>
                   </div>
                   <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">{filteredProducts.length.toLocaleString()} Products</Badge>
                </div>
@@ -997,16 +921,7 @@ export default function PPOBManagementPage() {
                   {loading ? (
                     Array.from({ length: 10 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell className="px-8 py-4"><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                        <TableCell className="text-center"><Skeleton className="h-4 w-14 mx-auto" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
-                        <TableCell className="text-center"><Skeleton className="h-7 w-24 mx-auto" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-4 w-24 ml-auto" /></TableCell>
-                        <TableCell className="text-center"><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
+                        <TableCell colSpan={10} className="px-8 py-4"><Skeleton className="h-4 w-full" /></TableCell>
                       </TableRow>
                     ))
                   ) : paginatedProducts.length === 0 ? (
@@ -1040,7 +955,7 @@ export default function PPOBManagementPage() {
                                          </span>
                                       </div>
                                       <span className="text-[7px] font-bold uppercase text-muted-foreground/60 tracking-tighter">
-                                        {appliedRule.targetProvider === 'all' ? '' : `${appliedRule.targetProvider} `}{appliedRule.targetType} Rule
+                                        {appliedRule.targetType} Rule
                                       </span>
                                    </>
                                 ) : (

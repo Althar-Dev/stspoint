@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverExternalPackages: ['better-sqlite3'],
-  },
+  serverExternalPackages: ['better-sqlite3'],
   images: {
     remotePatterns: [
       {
