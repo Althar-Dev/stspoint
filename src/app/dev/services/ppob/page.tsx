@@ -21,7 +21,6 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  X,
   Settings,
   Layers,
   RotateCcw,
@@ -682,7 +681,7 @@ export default function PPOBManagementPage() {
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                           <Label className="text-xs font-bold">Min Harga Modal</Label>
+                           <Label className="text-xs font-bold">Min Modal (Pasca)</Label>
                            <Input 
                             type="number" 
                             placeholder="0"
@@ -692,7 +691,7 @@ export default function PPOBManagementPage() {
                            />
                         </div>
                         <div className="space-y-2">
-                           <Label className="text-xs font-bold">Max Harga Modal</Label>
+                           <Label className="text-xs font-bold">Max Modal (Pasca)</Label>
                            <Input 
                             type="number" 
                             placeholder="999.999"

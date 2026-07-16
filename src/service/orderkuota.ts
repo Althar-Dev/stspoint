@@ -142,7 +142,7 @@ export async function getOrderkuotaPPOBPricelist() {
       brand: p.kategori,
       type: p.tipe || 'Prepaid',
       price: p.harga,
-      buyer_product_status: p.status === "1" || p.status === "active" || p.status === "1",
+      buyer_product_status: p.status === "1" || p.status === "active",
       seller_product_status: true,
       desc: p.keterangan,
       provider: p.provider || 'Orderkuota'
@@ -191,7 +191,6 @@ export async function deleteProducts(filters: {
       params.push(filters.brand);
     }
 
-    // Jika semua 'all', berarti hapus semuanya
     if (!filters.provider && !filters.tipe && !filters.brand) {
       query = "DELETE FROM products";
     }
@@ -207,6 +206,64 @@ export async function deleteProducts(filters: {
   } catch (error: any) {
     console.error("Delete Products Error:", error);
     return { success: false, message: error.message || "Gagal menghapus data dari database." };
+  }
+}
+
+/**
+ * Eksekusi transaksi PPOB (Pulsa, Data, Token, dll).
+ */
+export async function createOrderkuotaPPOBTransaction(params: {
+  username: string;
+  token: string;
+  sku: string;
+  target: string;
+  ref_id: string;
+}) {
+  const { username, token, sku, target, ref_id } = params;
+  const url = `https://api.qrispay.biz.id/orderkuota/transaksi?apikey=${STS_POINT_API_KEY}&username=${encodeURIComponent(username)}&token=${encodeURIComponent(token)}&sku=${encodeURIComponent(sku)}&target=${encodeURIComponent(target)}&ref_id=${encodeURIComponent(ref_id)}`;
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    const data = await response.json();
+    return { 
+      success: data.status, 
+      message: data.message, 
+      data: data.result 
+    };
+  } catch (error: any) {
+    console.error("Orderkuota Transaction Error:", error);
+    return { 
+      success: false, 
+      message: "Terjadi kesalahan saat memproses transaksi ke provider." 
+    };
+  }
+}
+
+/**
+ * Cek status transaksi PPOB secara spesifik.
+ */
+export async function checkOrderkuotaPPOBStatus(params: {
+  username: string;
+  token: string;
+  ref_id: string;
+}) {
+  const { username, token, ref_id } = params;
+  const url = `https://api.qrispay.biz.id/orderkuota/status?apikey=${STS_POINT_API_KEY}&username=${encodeURIComponent(username)}&token=${encodeURIComponent(token)}&ref_id=${encodeURIComponent(ref_id)}`;
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const data = await response.json();
+    return { 
+      success: data.status, 
+      message: data.message, 
+      data: data.result 
+    };
+  } catch (error: any) {
+    console.error("Orderkuota Status Error:", error);
+    return { 
+      success: false, 
+      message: "Gagal mendapatkan status transaksi terbaru." 
+    };
   }
 }
 
