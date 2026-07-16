@@ -1,6 +1,3 @@
-
-'use server';
-
 /**
  * @fileOverview Groq AI Engine Utility
  * Interface sederhana untuk berinteraksi dengan API Groq menggunakan SDK resmi.
