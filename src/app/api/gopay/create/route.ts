@@ -1,0 +1,141 @@
+
+import { NextResponse } from 'next/server';
+import { initializeFirebase } from '@/firebase';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  getDoc,
+  setDoc,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { createDynamicQrisString } from '@/lib/qris/dynamic';
+
+/**
+ * API: Create GoPay QRIS Transaction
+ * Method: POST
+ * URL: /api/gopay/create
+ */
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { secret_key, amount, payer_email, description, external_id } = body;
+
+    // 1. Basic Validation
+    if (!secret_key || !amount) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Missing required fields: secret_key and amount are mandatory.' 
+      }, { status: 400 });
+    }
+
+    const baseAmount = Number(amount);
+    if (isNaN(baseAmount) || baseAmount < 100) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Amount must be at least 100.' 
+      }, { status: 400 });
+    }
+
+    const { firestore } = initializeFirebase();
+
+    // 2. Authenticate Merchant via secretKey
+    const usersRef = collection(firestore, 'users');
+    const authQuery = query(usersRef, where('secretKey', '==', secret_key));
+    const authSnap = await getDocs(authQuery);
+
+    if (authSnap.empty) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Authentication failed: Invalid secret_key.' 
+      }, { status: 401 });
+    }
+
+    const userData = authSnap.docs[0].data();
+    const userId = userData.uid;
+
+    // 3. Fetch GoPay Settings (BaseQr & Random Digit)
+    const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
+    const gomerchantSnap = await getDoc(gomerchantRef);
+
+    if (!gomerchantSnap.exists() || !gomerchantSnap.data().baseQr) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'GoPay service is not configured. Please set up BaseQr in your dashboard.' 
+      }, { status: 403 });
+    }
+
+    const gomerchantData = gomerchantSnap.data();
+    const baseQr = gomerchantData.baseQr;
+    const digitSetting = Number(gomerchantData.randomDigit) || 3;
+
+    // 4. Generate Unique Nominal (Random Code)
+    let randomSuffix = 0;
+    if (digitSetting === 2) {
+      randomSuffix = Math.floor(Math.random() * 90) + 10; // 10 - 99
+    } else {
+      randomSuffix = Math.floor(Math.random() * 900) + 100; // 100 - 999
+    }
+
+    const finalAmount = baseAmount + randomSuffix;
+    const trxId = external_id || `GPY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+    // 5. Generate Dynamic QRIS Payload
+    let qrString = "";
+    try {
+      qrString = createDynamicQrisString(baseQr, finalAmount.toString());
+    } catch (e: any) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Failed to generate QRIS: ' + e.message 
+      }, { status: 500 });
+    }
+
+    // 6. Record Transaction in Firestore
+    const transactionRef = doc(firestore, 'stspay_transactions', trxId);
+    const transactionData = {
+      id: trxId,
+      userId: userId,
+      type: 'payment',
+      provider: 'GoMerchant',
+      status: 'PENDING',
+      amount: finalAmount,
+      base_amount: baseAmount,
+      random_code: randomSuffix,
+      payerEmail: payer_email || 'guest@stspoint.id',
+      description: description || 'GoPay Payment',
+      payment_info: {
+        qr_string: qrString,
+        method: 'QRIS',
+        provider: 'GoMerchant'
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    await setDoc(transactionRef, transactionData);
+
+    // 7. Return Result
+    return NextResponse.json({
+      success: true,
+      data: {
+        external_id: trxId,
+        qr_string: qrString,
+        amount: finalAmount,
+        base_amount: baseAmount,
+        random_code: randomSuffix,
+        status: 'PENDING',
+        checkout_url: `${request.headers.get('x-forwarded-proto') || 'http'}://${request.headers.get('host')}/checkout/${trxId}`
+      }
+    });
+
+  } catch (error: any) {
+    console.error('API GoPay Create Error:', error);
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Internal Server Error.' 
+    }, { status: 500 });
+  }
+}
