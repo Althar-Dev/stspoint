@@ -6,13 +6,13 @@ import {
   where, 
   getDocs,
   doc,
-  getDoc,
   updateDoc,
   increment,
   serverTimestamp,
   setDoc
 } from 'firebase/firestore';
 import { getOrderkuotaPPOBPricelist, forwardOrderToOkeConnect } from '@/service/orderkuota';
+import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 
 /**
  * API: PPOB Order & Product List
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 
   } catch (error: any) {
     console.error('PPOB GET API Error:', error);
-    return { success: false, error: 'Internal Server Error' };
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -104,32 +104,21 @@ export async function POST(request: Request) {
     }
 
     // 4. Hitung Harga & Cek Saldo
-    // Catatan: Untuk Pasca, harga biasanya dihitung berdasarkan QTY (Nominal) + Fee Admin
-    const price = product.price; // Ini adalah harga dasar/admin dari DB
+    const price = product.price; 
 
     if (product.type === 'Prepaid' && userBalance < price) {
       return NextResponse.json({ success: false, error: 'Insufficient account balance' }, { status: 403 });
     }
 
-    // 5. Ambil Kredensial H2H (memberID, pin, password) dari Firestore
-    const serviceRef = doc(firestore, 'users', userId, 'services', 'orderkuota');
-    const serviceSnap = await getDoc(serviceRef);
-    
-    if (!serviceSnap.exists() || !serviceSnap.data().token) {
-      return NextResponse.json({ success: false, error: 'Orderkuota H2H credentials not found' }, { status: 400 });
-    }
-
-    const s = serviceSnap.data();
-
-    // 6. Teruskan Pesanan ke H2H OkeConnect
+    // 5. Teruskan Pesanan ke H2H OkeConnect menggunakan kredensial global ("Milik Kita")
     const h2hRes = await forwardOrderToOkeConnect({
       type: product.type === 'Pasca' ? 'Pasca' : 'Prepaid',
       product: sku,
       dest: target,
       refID: ref_id,
-      memberID: s.username, // memberID
-      pin: s.token,        // pin (disimpan di field token)
-      password: s.refreshToken, // password (disimpan di field refreshToken)
+      memberID: OKE_MEMBER_ID,
+      pin: OKE_PIN,
+      password: OKE_PASSWORD,
       qty: product.type === 'Pasca' ? Number(qty) : undefined
     });
 
@@ -140,7 +129,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // 7. Potong Saldo (Hanya jika Prepaid, untuk Pasca biasanya dipotong setelah sukses atau sesuai kebijakan merchant)
+    // 6. Potong Saldo Merchant (Hanya jika Prepaid)
     if (product.type === 'Prepaid') {
       await updateDoc(doc(firestore, 'users', userId), {
         balance: increment(-price),
@@ -148,7 +137,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 8. Catat Transaksi
+    // 7. Catat Transaksi
     const txRef = doc(firestore, 'transactions', ref_id);
     await setDoc(txRef, {
       id: ref_id,
@@ -158,7 +147,7 @@ export async function POST(request: Request) {
       price: price.toString(),
       priceAmount: price,
       userId: userId,
-      status: 'Pending', // Status awal adalah pending sampai ada webhook/update status
+      status: 'Pending',
       createdAt: serverTimestamp(),
       paymentMethod: 'H2H_API',
       raw_h2h_response: h2hRes.message
