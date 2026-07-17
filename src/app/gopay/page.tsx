@@ -386,7 +386,7 @@ export default function GopayPage() {
                 
                 <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
                   <Button className="bg-[#00AED6] text-white hover:bg-[#00AED6]/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-[#00AED6]/10 transition-all active:scale-95">
-                    Withdraw
+                    Generate QRIS
                   </Button>
                   <Button 
                     variant="outline" 
@@ -477,7 +477,7 @@ export default function GopayPage() {
                         Edit BaseQr
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="rounded-3xl border-border max-w-sm">
+                    <DialogContent className="rounded-3xl border-border max-sm">
                       <DialogHeader>
                         <DialogTitle className="font-headline font-bold">Setup BaseQr</DialogTitle>
                         <DialogDescription className="text-xs">
