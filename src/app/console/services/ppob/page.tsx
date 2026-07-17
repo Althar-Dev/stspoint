@@ -123,15 +123,19 @@ export default function PPOBConsolePage() {
         return product.price >= min && product.price <= max;
       });
 
-      // 1. Brand
+      // 1. SKU
+      const skuRule = candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase());
+      if (skuRule) return skuRule;
+
+      // 2. Brand
       const brandRule = candidates.find(r => r.targetType === 'brand' && r.targetValue.toLowerCase() === product.brand.toLowerCase());
       if (brandRule) return brandRule;
       
-      // 2. Type
+      // 3. Type
       const typeRule = candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase());
       if (typeRule) return typeRule;
       
-      // 3. Global
+      // 4. Global
       const globRule = candidates.find(r => r.targetType === 'global');
       if (globRule) return globRule;
       
@@ -139,6 +143,46 @@ export default function PPOBConsolePage() {
     };
 
     return checkSet(specificProviderRules) || checkSet(globalRules);
+  };
+
+  /**
+   * Logika Rentang Harga untuk Produk Pascabayar
+   */
+  const getPascaMarkupInfo = (product: OrkutPPOBProduct) => {
+    const relevantRules = markupRules.filter(r => 
+      (r.targetProvider === 'all' || r.targetProvider === product.provider) &&
+      (
+        (r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase()) ||
+        (r.targetType === 'brand' && r.targetValue.toUpperCase() === product.brand.toUpperCase()) ||
+        (r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase()) ||
+        (r.targetType === 'global')
+      )
+    );
+
+    if (relevantRules.length === 0) return null;
+
+    const skuRules = relevantRules.filter(r => r.targetType === 'sku');
+    const brandRules = relevantRules.filter(r => r.targetType === 'brand');
+    const typeRules = relevantRules.filter(r => r.targetType === 'type');
+    const globalRules = relevantRules.filter(r => r.targetType === 'global');
+
+    const priorityGroup = skuRules.length > 0 ? skuRules : 
+                          brandRules.length > 0 ? brandRules : 
+                          typeRules.length > 0 ? typeRules : globalRules;
+
+    const values = priorityGroup.map(r => {
+      if (r.markupType === 'nominal') return product.price + r.value;
+      return Math.ceil(product.price * (1 + r.value / 100));
+    });
+
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+
+    return {
+      min: minVal,
+      max: maxVal,
+      isRange: minVal !== maxVal
+    };
   };
 
   const calculateSellPrice = (basePrice: number, product: OrkutPPOBProduct) => {
@@ -310,7 +354,6 @@ export default function PPOBConsolePage() {
                     </TableRow>
                   ) : (
                     paginatedProducts.map((item) => {
-                      const sellPrice = calculateSellPrice(item.price, item);
                       return (
                         <TableRow key={`${item.buyer_sku_code}-${item.provider}`} className="border-border/50 hover:bg-slate-50/50 transition-colors">
                           <TableCell className="px-4 md:px-8 py-4 font-mono text-[10px] text-primary font-bold uppercase whitespace-nowrap">
@@ -330,7 +373,18 @@ export default function PPOBConsolePage() {
                             {item.product_name}
                           </TableCell>
                           <TableCell className="font-bold text-primary text-xs whitespace-nowrap text-right">
-                            Rp {sellPrice.toLocaleString('id-ID')}
+                            {item.type === 'Pasca' ? (
+                              (() => {
+                                const range = getPascaMarkupInfo(item);
+                                return range ? (
+                                  range.isRange 
+                                    ? `Rp ${range.min.toLocaleString('id-ID')} - ${range.max.toLocaleString('id-ID')}` 
+                                    : `Rp ${range.min.toLocaleString('id-ID')}`
+                                ) : `Rp ${item.price.toLocaleString('id-ID')}`;
+                              })()
+                            ) : (
+                              `Rp ${calculateSellPrice(item.price, item).toLocaleString('id-ID')}`
+                            )}
                           </TableCell>
                           <TableCell className="text-right whitespace-nowrap px-4 md:px-8">
                             <Badge className={`${
