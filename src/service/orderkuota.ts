@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Orderkuota PPOB Service Engine.
@@ -220,7 +219,7 @@ export async function deleteProducts(filters: {
 }
 
 /**
- * Eksekusi transaksi PPOB (Pulsa, Data, Token, dll).
+ * Eksekusi transaksi PPOB (Pulsa, Data, Token, dll) melalui API Bridge.
  */
 export async function createOrderkuotaPPOBTransaction(params: {
   username: string;
@@ -274,6 +273,48 @@ export async function checkOrderkuotaPPOBStatus(params: {
       success: false, 
       message: "Gagal mendapatkan status transaksi terbaru." 
     };
+  }
+}
+
+/**
+ * Meneruskan pesanan langsung ke H2H OkeConnect (H2H Engine).
+ * Mendukung format Prepaid (Global) dan Pasca (Open Denom).
+ */
+export async function forwardOrderToOkeConnect(params: {
+  type: 'Prepaid' | 'Pasca';
+  product: string;
+  dest: string;
+  refID: string;
+  memberID: string;
+  pin: string;
+  password: string;
+  qty?: number;
+}) {
+  const { type, product, dest, refID, memberID, pin, password, qty } = params;
+  
+  // Format dasar URL sesuai spesifikasi OkeConnect H2H
+  let url = `https://h2h.okeconnect.com/trx?product=${encodeURIComponent(product)}&dest=${encodeURIComponent(dest)}&refID=${encodeURIComponent(refID)}&memberID=${encodeURIComponent(memberID)}&pin=${encodeURIComponent(pin)}&password=${encodeURIComponent(password)}`;
+  
+  // Jika tipe Pasca (Open Denom), tambahkan parameter qty (Nominal Pengisian)
+  if (type === 'Pasca' && qty !== undefined) {
+    url = `https://h2h.okeconnect.com/trx?product=${encodeURIComponent(product)}&dest=${encodeURIComponent(dest)}&qty=${qty}&refID=${encodeURIComponent(refID)}&memberID=${encodeURIComponent(memberID)}&pin=${encodeURIComponent(pin)}&password=${encodeURIComponent(password)}`;
+  }
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(60000) });
+    const text = await response.text(); 
+    
+    // OkeConnect mengembalikan respon teks. Cek keberadaan kata kunci sukses/proses.
+    const isSuccess = text.toUpperCase().includes("SUKSES") || text.toUpperCase().includes("PROSES");
+    
+    return { 
+      success: isSuccess, 
+      message: text,
+      raw: text 
+    };
+  } catch (error: any) {
+    console.error("forwardOrderToOkeConnect Error:", error);
+    return { success: false, message: "Koneksi ke H2H OkeConnect terputus atau timeout." };
   }
 }
 
