@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       if (gomerchantSnap.exists() && gomerchantSnap.data().token) {
         const gmData = gomerchantSnap.data();
         
-        // Panggil bridge untuk mengambil mutasi terbaru (terkonversi ke nominal asli)
+        // Panggil bridge untuk mengambil mutasi terbaru dari GoBiz
         const mutationRes = await getGoMerchantMutations({
           access_token: gmData.token,
           refresh_token: gmData.refreshToken || "",
@@ -104,13 +104,16 @@ export async function POST(request: Request) {
           
           /**
            * STRATEGI REKONSILIASI:
-           * Mencari mutasi yang memiliki nominal yang persis sama dengan tagihan unik kita.
-           * Karena saat create kita menambahkan nominal acak (2-3 digit), kemungkinan tabrakan nominal sangat kecil.
+           * Mencari mutasi masuk yang memiliki nominal yang persis sama dengan tagihan unik kita.
+           * Perbandingan menggunakan Math.abs < 1 untuk menangani potensi perbedaan pembulatan float.
            */
-          const match = mutations.find(m => Math.abs(m.amount - transactionData.amount) < 1);
+          const match = mutations.find(m => 
+            m.status.toLowerCase() === 'paid' && 
+            Math.abs(m.amount - transactionData.amount) < 1
+          );
 
           if (match) {
-            // Update Firestore ke PAID jika ditemukan kecocokan nominal
+            // Update Firestore ke PAID jika ditemukan kecocokan nominal unik
             await updateDoc(transactionRef, {
               status: 'PAID',
               updatedAt: serverTimestamp(),
@@ -155,9 +158,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API GoPay Status Error:', error);
-    return NextResponse.json({ 
+    return { 
       success: false, 
       message: 'Internal Server Error during status verification.' 
-    }, { status: 500 });
+    };
   }
 }
