@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight,
-  X
+  SmartphoneNfc
 } from "lucide-react";
 import { 
   Table, 
@@ -74,6 +74,7 @@ export default function PPOBConsolePage() {
   const [search, setSearch] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
@@ -103,39 +104,35 @@ export default function PPOBConsolePage() {
     const b = new Set<string>();
     products.forEach(p => { 
       const matchesCategory = selectedCategory === "all" || p.category.toLowerCase().includes(selectedCategory.toLowerCase()) || p.type.toLowerCase().includes(selectedCategory.toLowerCase());
-      if (p.brand && matchesCategory) b.add(p.brand.toUpperCase()); 
+      const matchesType = selectedType === "all" || p.type.toLowerCase() === selectedType.toLowerCase();
+      if (p.brand && matchesCategory && matchesType) b.add(p.brand.toUpperCase()); 
     });
     return Array.from(b).sort();
-  }, [products, selectedCategory]);
+  }, [products, selectedCategory, selectedType]);
 
   /**
-   * Logika Penentuan Markup dengan Rentang Harga
+   * Logika Penentuan Markup
    */
   const getProductMarkup = (product: OrkutPPOBProduct): MarkupRule | null => {
     const specificProviderRules = markupRules.filter(r => r.targetProvider === product.provider);
     const globalRules = markupRules.filter(r => r.targetProvider === 'all');
 
     const checkSet = (rules: MarkupRule[]) => {
-      // Filter aturan yang harganya cocok
       const candidates = rules.filter(r => {
         const min = r.minPrice || 0;
         const max = r.maxPrice || 999999999;
         return product.price >= min && product.price <= max;
       });
 
-      // 1. SKU
       const skuRule = candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase());
       if (skuRule) return skuRule;
 
-      // 2. Brand
       const brandRule = candidates.find(r => r.targetType === 'brand' && r.targetValue.toLowerCase() === product.brand.toLowerCase());
       if (brandRule) return brandRule;
       
-      // 3. Type
       const typeRule = candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase());
       if (typeRule) return typeRule;
       
-      // 4. Global
       const globRule = candidates.find(r => r.targetType === 'global');
       if (globRule) return globRule;
       
@@ -146,7 +143,7 @@ export default function PPOBConsolePage() {
   };
 
   /**
-   * Logika Rentang Harga untuk Produk Pascabayar
+   * Logika Rentang Markup Khusus Pasca
    */
   const getPascaMarkupInfo = (product: OrkutPPOBProduct) => {
     const relevantRules = markupRules.filter(r => 
@@ -204,9 +201,10 @@ export default function PPOBConsolePage() {
       const matchesCategory = selectedCategory === "all" || 
         p.category.toLowerCase().includes(selectedCategory.toLowerCase()) || 
         p.type.toLowerCase().includes(selectedCategory.toLowerCase());
-      return matchesSearch && matchesBrand && matchesCategory;
+      const matchesType = selectedType === "all" || p.type.toLowerCase() === selectedType.toLowerCase();
+      return matchesSearch && matchesBrand && matchesCategory && matchesType;
     });
-  }, [products, search, selectedBrand, selectedCategory]);
+  }, [products, search, selectedBrand, selectedCategory, selectedType]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = useMemo(() => {
@@ -219,7 +217,7 @@ export default function PPOBConsolePage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedBrand, selectedCategory, itemsPerPage]);
+  }, [search, selectedBrand, selectedCategory, selectedType, itemsPerPage]);
 
   return (
     <div className="grid grid-cols-1 w-full gap-6 animate-in fade-in duration-500">
@@ -258,6 +256,23 @@ export default function PPOBConsolePage() {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={selectedType} onValueChange={(v) => {
+              setSelectedType(v);
+              setSelectedBrand("all");
+            }}>
+              <SelectTrigger className="h-11 w-full sm:w-40 bg-card border-border rounded-xl font-bold text-xs shadow-sm">
+                <div className="flex items-center gap-2">
+                  <SmartphoneNfc className="w-3.5 h-3.5 text-primary/50" />
+                  <SelectValue placeholder="Tipe" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border">
+                <SelectItem value="all" className="text-xs rounded-lg">Semua Tipe</SelectItem>
+                <SelectItem value="prepaid" className="text-xs rounded-lg">Prabayar</SelectItem>
+                <SelectItem value="pasca" className="text-xs rounded-lg">Pascabayar</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Select value={selectedCategory} onValueChange={(v) => {
               setSelectedCategory(v);
               setSelectedBrand("all");
@@ -294,17 +309,6 @@ export default function PPOBConsolePage() {
                 ))}
               </SelectContent>
             </Select>
-
-            <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(parseInt(v))}>
-              <SelectTrigger className="h-11 w-full sm:w-32 bg-card border-border rounded-xl font-bold text-xs shadow-sm">
-                <SelectValue placeholder="Baris" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="50" className="text-xs">50 Baris</SelectItem>
-                <SelectItem value="100" className="text-xs">100 Baris</SelectItem>
-                <SelectItem value="250" className="text-xs">250 Baris</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
@@ -315,9 +319,20 @@ export default function PPOBConsolePage() {
                 <Smartphone className="w-4 h-4 text-primary" />
                 Daftar Produk PPOB
               </CardTitle>
-              <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
-                {filteredProducts.length.toLocaleString()} Produk
-              </Badge>
+              <div className="flex items-center gap-4">
+                <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(parseInt(v))}>
+                  <SelectTrigger className="h-8 w-24 text-[10px] font-bold rounded-md bg-background"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10" className="text-[10px]">10 Baris</SelectItem>
+                    <SelectItem value="25" className="text-[10px]">25 Baris</SelectItem>
+                    <SelectItem value="50" className="text-[10px]">50 Baris</SelectItem>
+                    <SelectItem value="100" className="text-[10px]">100 Baris</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
+                  {filteredProducts.length.toLocaleString()} Produk
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           
