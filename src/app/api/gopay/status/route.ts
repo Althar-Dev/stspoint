@@ -48,26 +48,19 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Ambil Data Transaksi dari stspay_transactions
-    const transactionRef = doc(firestore, 'stspay_transactions', external_id);
+    // 3. Ambil Data Transaksi dari User Sub-collection
+    // Path: users/{userId}/services/gomerchant/transactions/{external_id}
+    const transactionRef = doc(firestore, 'users', userId, 'services', 'gomerchant', 'transactions', external_id);
     const transactionSnap = await getDoc(transactionRef);
 
     if (!transactionSnap.exists()) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Transaction not found.' 
+        message: 'Transaction not found for this account.' 
       }, { status: 404 });
     }
 
     const transactionData = transactionSnap.data();
-
-    // Pastikan transaksi ini milik merchant yang merequest
-    if (transactionData.userId !== userId) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Access denied: You do not own this transaction.' 
-      }, { status: 403 });
-    }
 
     // 4. Jika status sudah PAID, langsung kembalikan respon
     const paidStatuses = ['PAID', 'SETTLED', 'SUCCEEDED'];
@@ -105,7 +98,6 @@ export async function POST(request: Request) {
           /**
            * STRATEGI REKONSILIASI:
            * Mencari mutasi masuk yang memiliki nominal yang persis sama dengan tagihan unik kita.
-           * Perbandingan menggunakan Math.abs < 1 untuk menangani potensi perbedaan pembulatan float.
            */
           const match = mutations.find(m => 
             m.status.toLowerCase() === 'paid' && 
@@ -158,9 +150,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API GoPay Status Error:', error);
-    return { 
+    return NextResponse.json({ 
       success: false, 
       message: 'Internal Server Error during status verification.' 
-    };
+    }, { status: 500 });
   }
 }

@@ -93,8 +93,9 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // 6. Record Transaction in Firestore
-    const transactionRef = doc(firestore, 'stspay_transactions', trxId);
+    // 6. Record Transaction in User Sub-collection
+    // Path: users/{userId}/services/gomerchant/transactions/{trxId}
+    const transactionRef = doc(firestore, 'users', userId, 'services', 'gomerchant', 'transactions', trxId);
     const transactionData = {
       id: trxId,
       userId: userId,
