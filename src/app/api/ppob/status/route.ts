@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { checkStatusOkeConnect } from '@/service/orderkuota';
 import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
+import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
  * API: PPOB Transaction Status Check (Live H2H)
@@ -72,10 +73,23 @@ export async function GET(request: Request) {
           provider_msg: statusRes.message,
           updatedAt: serverTimestamp()
         });
+
+        // 6. Trigger Webhook Merchant karena status berubah
+        await notifyMerchant(txData.userId, {
+          event: 'ppob.status_update',
+          data: {
+            ref_id: ref_id,
+            sku: txData.sku,
+            target: txData.target,
+            status: statusRes.status,
+            message: statusRes.message,
+            timestamp: new Date().toISOString()
+          }
+        });
       }
     }
 
-    // 6. Kembalikan Respon
+    // 7. Kembalikan Respon
     return NextResponse.json({
       success: statusRes.success,
       status: statusRes.status,
