@@ -26,6 +26,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Wallet, 
   RefreshCcw, 
@@ -38,7 +45,9 @@ import {
   Loader2,
   User as UserIcon,
   QrCode,
-  Save
+  Save,
+  Settings as SettingsIcon,
+  Hash
 } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
@@ -55,7 +64,7 @@ export default function GopayPage() {
   const db = useFirestore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isBaseQrDialogOpen, setIsBaseQrDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
   // Mutations state
@@ -67,6 +76,7 @@ export default function GopayPage() {
   const [phone, setPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [baseQrInput, setBaseQrInput] = useState("");
+  const [digitSetting, setDigitSetting] = useState<string>("3");
   
   // Bridge Session states
   const [otpToken, setOtpToken] = useState("");
@@ -82,21 +92,17 @@ export default function GopayPage() {
   const isConnected = !!gomerchant?.token;
 
   useEffect(() => {
-    if (gomerchant?.baseQr) {
-      setBaseQrInput(gomerchant.baseQr);
+    if (gomerchant) {
+      setBaseQrInput(gomerchant.baseQr || "");
+      setDigitSetting(gomerchant.randomDigit?.toString() || "3");
     }
   }, [gomerchant]);
 
-  /**
-   * REAL-TIME CALCULATION:
-   * Calculate total revenue from processed mutations.
-   */
   const totalRevenue = useMemo(() => {
     if (!mutations || !Array.isArray(mutations)) return 0;
     return mutations.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   }, [mutations]);
 
-  // Fetch real-time mutations from API Bridge
   const fetchLiveMutations = useCallback(async () => {
     if (isConnected && gomerchant?.token && gomerchant?.id && gomerchantRef) {
       setMutationsLoading(true);
@@ -206,18 +212,19 @@ export default function GopayPage() {
     }
   };
 
-  const handleSaveBaseQr = async () => {
+  const handleSaveSettings = async () => {
     if (!gomerchantRef) return;
     setIsProcessing(true);
     try {
       await updateDoc(gomerchantRef, {
         baseQr: baseQrInput,
+        randomDigit: parseInt(digitSetting),
         updatedAt: serverTimestamp()
       });
-      toast({ title: "Settings Saved", description: "BaseQr configuration has been updated." });
-      setIsBaseQrDialogOpen(false);
+      toast({ title: "Settings Saved", description: "GoPay configuration has been updated." });
+      setIsSettingsOpen(false);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Failed", description: "Failed to update BaseQr settings." });
+      toast({ variant: "destructive", title: "Save Failed", description: "Failed to update settings." });
     } finally {
       setIsProcessing(false);
     }
@@ -470,18 +477,18 @@ export default function GopayPage() {
                     </div>
                   </div>
                   
-                  <Dialog open={isBaseQrDialogOpen} onOpenChange={setIsBaseQrDialogOpen}>
+                  <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-[#00AED6]/20 transition-all">
-                        <QrCode className="w-3.5 h-3.5 text-[#00AED6]" />
-                        Edit BaseQr
+                        <SettingsIcon className="w-3.5 h-3.5 text-[#00AED6]" />
+                        Settings
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-3xl border-border max-sm">
                       <DialogHeader>
-                        <DialogTitle className="font-headline font-bold">Setup BaseQr</DialogTitle>
+                        <DialogTitle className="font-headline font-bold">GoPay Settings</DialogTitle>
                         <DialogDescription className="text-xs">
-                          Configure the base QR string data used for transaction identification.
+                          Configure your BaseQr string and random nominal settings.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
@@ -491,16 +498,34 @@ export default function GopayPage() {
                             placeholder="Enter your QR string payload here..." 
                             value={baseQrInput} 
                             onChange={(e) => setBaseQrInput(e.target.value)}
-                            className="rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[150px] text-xs font-mono break-all"
+                            className="rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[120px] text-xs font-mono break-all"
                           />
                         </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                            <Hash className="w-3 h-3" />
+                            Random Nominal Digit
+                          </Label>
+                          <Select value={digitSetting} onValueChange={setDigitSetting}>
+                            <SelectTrigger className="h-11 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold text-xs">
+                              <SelectValue placeholder="Select digit" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-border">
+                              <SelectItem value="2" className="text-xs">2 Digits (10 - 99)</SelectItem>
+                              <SelectItem value="3" className="text-xs">3 Digits (100 - 999)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-[9px] text-muted-foreground ml-1">Digunakan untuk menghasilkan nominal unik saat generate QRIS.</p>
+                        </div>
+
                         <Button 
-                          onClick={handleSaveBaseQr} 
+                          onClick={handleSaveSettings} 
                           className="w-full h-11 rounded-xl font-bold bg-[#00AED6] hover:bg-[#00AED6]/90 text-white gap-2 shadow-lg shadow-[#00AED6]/20" 
                           disabled={isProcessing}
                         >
                           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                          Save QR Configuration
+                          Save Configuration
                         </Button>
                       </div>
                     </DialogContent>
@@ -512,7 +537,6 @@ export default function GopayPage() {
         </Card>
       </div>
 
-      {/* Responsive Table Wrapper */}
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="w-full max-w-full border border-border shadow-sm rounded-xl overflow-hidden bg-card h-[455px] flex flex-col">
           <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] shrink-0">
