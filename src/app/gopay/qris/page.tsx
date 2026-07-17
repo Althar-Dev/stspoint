@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -194,22 +195,6 @@ export default function GopayQrisPage() {
               )}
            </CardContent>
         </Card>
-      </div>
-
-      {/* Info Note */}
-      <div className="flex items-center gap-4 p-6 rounded-3xl bg-muted/30 border border-border/50">
-        <div className="w-10 h-10 rounded-xl bg-[#00AED6]/10 flex items-center justify-center text-[#00AED6] shrink-0">
-          <QrCode className="w-5 h-5" />
-        </div>
-        <div className="space-y-1">
-          <h4 className="text-xs font-bold uppercase tracking-tight">Teknologi QRIS Dinamis</h4>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Sistem kami secara otomatis menyisipkan nominal tagihan ke dalam payload QRIS. Pelanggan tidak perlu memasukkan nominal secara manual, sehingga meminimalisir kesalahan pembayaran.
-          </p>
-        </div>
-        <div className="ml-auto hidden md:block">
-           <ArrowRight className="w-5 h-5 text-muted-foreground/20" />
-        </div>
       </div>
     </div>
   );
