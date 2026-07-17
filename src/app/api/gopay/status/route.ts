@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { secret_key, external_id } = body;
 
-    // 1. Basic Validation
+    // 1. Validasi Input Dasar
     if (!secret_key || !external_id) {
       return NextResponse.json({ 
         success: false, 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     const { firestore } = initializeFirebase();
 
-    // 2. Authenticate Merchant via secretKey
+    // 2. Autentikasi Merchant via secretKey
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Fetch Transaction Data
+    // 3. Ambil Data Transaksi dari stspay_transactions
     const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const transactionSnap = await getDoc(transactionRef);
 
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     const transactionData = transactionSnap.data();
 
-    // Ensure the transaction belongs to the requesting merchant
+    // Pastikan transaksi ini milik merchant yang merequest
     if (transactionData.userId !== userId) {
       return NextResponse.json({ 
         success: false, 
@@ -69,8 +69,9 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    // 4. If status is already PAID, return immediately
-    if (transactionData.status === 'PAID' || transactionData.status === 'SETTLED' || transactionData.status === 'SUCCEEDED') {
+    // 4. Jika status sudah PAID, langsung kembalikan respon
+    const paidStatuses = ['PAID', 'SETTLED', 'SUCCEEDED'];
+    if (paidStatuses.includes(transactionData.status)) {
       return NextResponse.json({
         success: true,
         data: {
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 5. If status is PENDING, attempt live reconciliation with GoMerchant
+    // 5. Rekonsiliasi Live jika status masih PENDING
     if (transactionData.status === 'PENDING') {
       const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
       const gomerchantSnap = await getDoc(gomerchantRef);
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
       if (gomerchantSnap.exists() && gomerchantSnap.data().token) {
         const gmData = gomerchantSnap.data();
         
-        // Fetch last 50 mutations from GoBiz
+        // Panggil bridge untuk mengambil mutasi terbaru (terkonversi ke nominal asli)
         const mutationRes = await getGoMerchantMutations({
           access_token: gmData.token,
           refresh_token: gmData.refreshToken || "",
@@ -101,11 +102,15 @@ export async function POST(request: Request) {
         if (mutationRes.status === 'success' && mutationRes.data) {
           const mutations = mutationRes.data.mutations || [];
           
-          // Strategy: Match by exact unique amount
+          /**
+           * STRATEGI REKONSILIASI:
+           * Mencari mutasi yang memiliki nominal yang persis sama dengan tagihan unik kita.
+           * Karena saat create kita menambahkan nominal acak (2-3 digit), kemungkinan tabrakan nominal sangat kecil.
+           */
           const match = mutations.find(m => Math.abs(m.amount - transactionData.amount) < 1);
 
           if (match) {
-            // Update Firestore to PAID
+            // Update Firestore ke PAID jika ditemukan kecocokan nominal
             await updateDoc(transactionRef, {
               status: 'PAID',
               updatedAt: serverTimestamp(),
@@ -113,7 +118,7 @@ export async function POST(request: Request) {
               gm_trx_id: match.trx_id
             });
 
-            // Update Tokens if they were refreshed during mutation fetch
+            // Update Token jika terjadi rotasi otomatis selama penarikan mutasi
             if (mutationRes.data.token_refreshed) {
               await updateDoc(gomerchantRef, {
                 token: mutationRes.data.new_access_token,
@@ -128,7 +133,8 @@ export async function POST(request: Request) {
                 external_id: transactionData.id,
                 status: 'PAID',
                 amount: transactionData.amount,
-                paid_at: match.created_at
+                paid_at: match.created_at,
+                message: 'Payment detected and matched via live mutation.'
               }
             });
           }
@@ -136,7 +142,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 6. Return current status if no match found
+    // 6. Jika tidak ditemukan mutasi yang cocok, kembalikan status saat ini (PENDING)
     return NextResponse.json({
       success: true,
       data: {
@@ -151,7 +157,7 @@ export async function POST(request: Request) {
     console.error('API GoPay Status Error:', error);
     return NextResponse.json({ 
       success: false, 
-      message: 'Internal Server Error during status check.' 
+      message: 'Internal Server Error during status verification.' 
     }, { status: 500 });
   }
 }
