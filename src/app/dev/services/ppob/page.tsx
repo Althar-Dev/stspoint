@@ -223,6 +223,35 @@ export default function PPOBManagementPage() {
     return checkSet(specificProviderRules) || checkSet(globalRules);
   };
 
+  /**
+   * Logika Rentang Markup Khusus Pasca
+   */
+  const getPascaMarkupInfo = (product: OrkutPPOBProduct) => {
+    const relevantRules = markupRules.filter(r => 
+      (r.targetProvider === 'all' || r.targetProvider === product.provider) &&
+      (
+        r.targetType === 'global' || 
+        (r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase()) ||
+        (r.targetType === 'brand' && r.targetValue.toUpperCase() === product.brand.toUpperCase()) ||
+        (r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase())
+      )
+    );
+
+    if (relevantRules.length === 0) return null;
+
+    const values = relevantRules.map(r => r.value);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    const isNominal = relevantRules[0].markupType === 'nominal';
+
+    return {
+      min: minVal,
+      max: maxVal,
+      isRange: minVal !== maxVal,
+      isNominal
+    };
+  };
+
   const calculateSellPrice = (basePrice: number, product: OrkutPPOBProduct) => {
     const rule = getProductMarkup(product);
     if (!rule) return basePrice;
@@ -402,7 +431,6 @@ export default function PPOBManagementPage() {
       const matchesProvider = filters.provider === 'all' || p.provider === filters.provider;
       const matchesType = filters.type === 'all' || p.type === filters.type;
       
-      // Case-insensitive and trimmed brand matching
       const matchesBrand = filters.brand === 'all' || 
         p.brand.toUpperCase().trim() === filters.brand.toUpperCase().trim();
 
@@ -991,8 +1019,11 @@ export default function PPOBManagementPage() {
                     <TableRow><TableCell colSpan={9} className="py-20 text-center text-muted-foreground italic font-medium">Database kosong atau produk tidak ditemukan.</TableCell></TableRow>
                   ) : (
                     paginatedProducts.map((prod) => {
-                      const markupRule = getProductMarkup(prod);
-                      const sellPrice = calculateSellPrice(prod.price, prod);
+                      const isPasca = prod.type === 'Pasca';
+                      const pascaInfo = isPasca ? getPascaMarkupInfo(prod) : null;
+                      const markupRule = !isPasca ? getProductMarkup(prod) : null;
+                      const sellPrice = !isPasca ? calculateSellPrice(prod.price, prod) : 0;
+
                       return (
                         <TableRow key={`${prod.buyer_sku_code}-${prod.provider}`} className="border-border/50 group hover:bg-muted/30 transition-colors">
                           <TableCell className="px-8 py-4 whitespace-nowrap">
@@ -1008,7 +1039,14 @@ export default function PPOBManagementPage() {
                           </TableCell>
                           <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-medium text-muted-foreground">Rp {prod.price.toLocaleString('id-ID')}</TableCell>
                           <TableCell className="text-center whitespace-nowrap">
-                             {markupRule ? (
+                             {isPasca && pascaInfo ? (
+                               <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/20 text-[9px] font-bold py-0.5 px-2 rounded-sm gap-1.5 flex items-center justify-center w-fit mx-auto">
+                                 {pascaInfo.isNominal ? <Coins className="w-2.5 h-2.5" /> : <Percent className="w-2.5 h-2.5" />}
+                                 {pascaInfo.isRange 
+                                   ? `+Rp ${pascaInfo.min.toLocaleString()} - ${pascaInfo.max.toLocaleString()}` 
+                                   : `+Rp ${pascaInfo.min.toLocaleString()}`}
+                               </Badge>
+                             ) : markupRule ? (
                                <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/20 text-[9px] font-bold py-0.5 px-2 rounded-sm gap-1.5 flex items-center justify-center w-fit mx-auto">
                                  {markupRule.markupType === 'nominal' ? <Coins className="w-2.5 h-2.5" /> : <Percent className="w-2.5 h-2.5" />}
                                  {markupRule.markupType === 'nominal' ? `+Rp ${markupRule.value.toLocaleString('id-ID')}` : `+${markupRule.value}%`}
@@ -1017,7 +1055,11 @@ export default function PPOBManagementPage() {
                                <span className="text-[10px] text-muted-foreground/30 font-medium uppercase tracking-tighter">No Rule</span>
                              )}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-bold text-primary">Rp {sellPrice.toLocaleString('id-ID')}</TableCell>
+                          <TableCell className="text-right font-mono text-[11px] whitespace-nowrap font-bold text-primary">
+                            {isPasca && pascaInfo 
+                              ? `Rp ${(prod.price + pascaInfo.min).toLocaleString('id-ID')} - ${(prod.price + pascaInfo.max).toLocaleString('id-ID')}` 
+                              : `Rp ${sellPrice.toLocaleString('id-ID')}`}
+                          </TableCell>
                           <TableCell className="text-center whitespace-nowrap">
                              <Badge className={`${prod.buyer_product_status ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'} border-none font-bold text-[9px] uppercase px-1.5 h-4 whitespace-nowrap`}>{prod.buyer_product_status ? 'Active' : 'Offline'}</Badge>
                           </TableCell>

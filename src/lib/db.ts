@@ -57,15 +57,22 @@ export function getDb() {
     `);
 
     /**
-     * MIGRASI: Tambahkan kolom rentang harga jika database sudah ada sebelumnya
+     * MIGRASI: Tambahkan kolom yang mungkin hilang jika database sudah ada sebelumnya
      */
     try {
       const tableInfo = db.prepare("PRAGMA table_info(markup_rules)").all() as any[];
-      const hasMinPrice = tableInfo.some(col => col.name === 'minPrice');
-      if (!hasMinPrice) {
-        db.exec("ALTER TABLE markup_rules ADD COLUMN minPrice INTEGER DEFAULT 0");
-        db.exec("ALTER TABLE markup_rules ADD COLUMN maxPrice INTEGER DEFAULT 999999999");
-        console.log("Migration: Added price range columns to markup_rules.");
+      
+      const columnsToAdd = [
+        { name: 'targetProvider', type: 'TEXT DEFAULT "all"' },
+        { name: 'minPrice', type: 'INTEGER DEFAULT 0' },
+        { name: 'maxPrice', type: 'INTEGER DEFAULT 999999999' }
+      ];
+
+      for (const col of columnsToAdd) {
+        if (!tableInfo.some(c => c.name === col.name)) {
+          db.exec(`ALTER TABLE markup_rules ADD COLUMN ${col.name} ${col.type}`);
+          console.log(`Migration: Added column ${col.name} to markup_rules.`);
+        }
       }
     } catch (e) {
       console.error("Migration error:", e);
