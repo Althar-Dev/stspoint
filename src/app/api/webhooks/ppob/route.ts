@@ -9,14 +9,11 @@ import { notifyMerchant } from '@/lib/webhook-sender';
  */
 export async function POST(request: Request) {
   try {
-    // OkeConnect biasanya mengirim data via POST (JSON atau Form)
-    // Sesuaikan parsing berdasarkan format asli mereka
     const body = await request.json();
     console.log('Incoming PPOB Webhook:', JSON.stringify(body, null, 2));
 
-    // Ekstrak ID referensi (refID kita)
     const ref_id = body.refID || body.ref_id || body.reference;
-    const status = body.status; // Sukses, Gagal, dll
+    const status = body.status; 
     const message = body.message || body.msg;
     const sn = body.sn || body.serial_number;
 
@@ -34,13 +31,11 @@ export async function POST(request: Request) {
 
     const txData = txSnap.data();
 
-    // 1. Petakan status provider ke status internal platform
     let internalStatus = 'Pending';
-    const rawStatus = status.toUpperCase();
+    const rawStatus = String(status).toUpperCase();
     if (rawStatus.includes('SUKSES') || rawStatus.includes('SUCCESS')) internalStatus = 'Success';
     if (rawStatus.includes('GAGAL') || rawStatus.includes('FAILED')) internalStatus = 'Failed';
 
-    // 2. Update Firestore
     await updateDoc(txRef, {
       status: internalStatus,
       sn: sn || null,
@@ -48,7 +43,7 @@ export async function POST(request: Request) {
       updatedAt: serverTimestamp()
     });
 
-    // 3. Kirim Webhook ke Merchant
+    // Kirim Webhook ke Merchant menggunakan callbackUrl dinamis jika ada
     await notifyMerchant(txData.userId, {
       event: 'ppob.status_update',
       data: {
@@ -60,7 +55,7 @@ export async function POST(request: Request) {
         message: message,
         timestamp: new Date().toISOString()
       }
-    });
+    }, txData.callbackUrl); // Meneruskan overrideUrl dari data transaksi
 
     return NextResponse.json({ status: 'OK' });
 

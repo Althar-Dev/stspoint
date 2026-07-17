@@ -2,6 +2,7 @@
 /**
  * @fileOverview Webhook Dispatcher Engine.
  * Menangani pengiriman notifikasi dari platform STS ke URL merchant secara aman.
+ * Mendukung URL dinamis (overrideUrl) dari request header.
  */
 
 import { initializeFirebase } from '@/firebase';
@@ -10,8 +11,11 @@ import crypto from 'crypto';
 
 /**
  * Mengirimkan data webhook ke merchant dan menandatanganinya dengan HMAC SHA256.
+ * @param userId ID Merchant
+ * @param payload Data yang akan dikirim
+ * @param overrideUrl URL opsional yang dikirim via header (callback dinamis)
  */
-export async function notifyMerchant(userId: string, payload: any) {
+export async function notifyMerchant(userId: string, payload: any, overrideUrl?: string) {
   try {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', userId);
@@ -21,12 +25,15 @@ export async function notifyMerchant(userId: string, payload: any) {
     
     const userData = userSnap.data();
     
-    // Pastikan webhook dikonfigurasi dan aktif
-    if (!userData.webhookUrl || userData.webhookEnabled === false) {
-      return { success: false, message: 'Webhook disabled or not set' };
+    // Tentukan target URL: Prioritas overrideUrl (header) > userData.webhookUrl (dashboard)
+    const targetUrl = overrideUrl || userData.webhookUrl;
+
+    // Jika tidak ada URL sama sekali atau webhook dinonaktifkan di DB (hanya berlaku jika pakai URL DB)
+    if (!targetUrl || (userData.webhookEnabled === false && !overrideUrl)) {
+      return { success: false, message: 'No valid webhook URL found or webhook disabled' };
     }
 
-    // Gunakan webhookSecret jika ada, jika tidak gunakan secretKey sebagai fallback
+    // Gunakan webhookSecret jika ada, jika tidak gunakan secretKey sebagai fallback untuk signing
     const secret = userData.webhookSecret || userData.secretKey;
     const body = JSON.stringify(payload);
     
@@ -35,7 +42,7 @@ export async function notifyMerchant(userId: string, payload: any) {
       .update(body)
       .digest('hex');
 
-    const response = await fetch(userData.webhookUrl, {
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +56,7 @@ export async function notifyMerchant(userId: string, payload: any) {
     return { 
       success: response.ok, 
       status: response.status,
-      message: `Webhook sent to ${userData.webhookUrl}`
+      message: `Webhook sent to ${targetUrl}`
     };
   } catch (error: any) {
     console.error(`Webhook Error [User: ${userId}]:`, error.message);

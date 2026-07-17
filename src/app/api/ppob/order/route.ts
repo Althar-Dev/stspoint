@@ -22,7 +22,7 @@ import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type'); // prepaid or pasca
+    const type = searchParams.get('type');
     const secret_key = searchParams.get('secret_key');
 
     if (!secret_key) {
@@ -30,8 +30,6 @@ export async function GET(request: Request) {
     }
 
     const { firestore } = initializeFirebase();
-    
-    // Authenticate user via secretKey
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -40,7 +38,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid secret_key' }, { status: 401 });
     }
 
-    // Fetch product list from SQLite
     const productsRes = await getOrderkuotaPPOBPricelist();
     if (!productsRes.success) {
       return NextResponse.json({ success: false, error: productsRes.message }, { status: 500 });
@@ -52,14 +49,11 @@ export async function GET(request: Request) {
       filtered = filtered.filter(p => p.type?.toLowerCase() === targetType.toLowerCase());
     }
 
-    return NextResponse.json({
-      success: true,
-      data: filtered
-    });
+    return NextResponse.json({ success: true, data: filtered });
 
   } catch (error: any) {
     console.error('PPOB GET API Error:', error);
-    return { success: false, error: 'Internal Server Error' };
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -68,7 +62,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { secret_key, sku, target, ref_id, qty } = body;
 
-    // 1. Validasi Input
+    // Menangkap Callback URL dinamis dari header
+    const callbackUrl = request.headers.get('x-callback-url');
+
     if (!secret_key || !sku || !target || !ref_id) {
       return NextResponse.json({ 
         success: false, 
@@ -77,8 +73,6 @@ export async function POST(request: Request) {
     }
 
     const { firestore } = initializeFirebase();
-    
-    // 2. Autentikasi Merchant via Secret Key
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -91,7 +85,6 @@ export async function POST(request: Request) {
     const userId = userData.uid;
     const userBalance = userData.balance || 0;
 
-    // 3. Validasi Produk di DB Lokal
     const productsRes = await getOrderkuotaPPOBPricelist();
     const product = productsRes.data.find(p => p.buyer_sku_code === sku);
 
@@ -99,18 +92,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: `Product SKU '${sku}' not found` }, { status: 404 });
     }
 
-    if (!product.buyer_product_status) {
-      return NextResponse.json({ success: false, error: 'Product is currently unavailable' }, { status: 400 });
-    }
-
-    // 4. Hitung Harga & Cek Saldo
     const price = product.price; 
-
     if (product.type === 'Prepaid' && userBalance < price) {
       return NextResponse.json({ success: false, error: 'Insufficient account balance' }, { status: 403 });
     }
 
-    // 5. Teruskan Pesanan ke H2H OkeConnect menggunakan kredensial global
     const h2hRes = await forwardOrderToOkeConnect({
       type: product.type === 'Pasca' ? 'Pasca' : 'Prepaid',
       product: sku,
@@ -123,13 +109,9 @@ export async function POST(request: Request) {
     });
 
     if (!h2hRes.success) {
-      return NextResponse.json({ 
-        success: false, 
-        message: h2hRes.message || 'H2H Provider rejected the request' 
-      }, { status: 400 });
+      return NextResponse.json({ success: false, message: h2hRes.message }, { status: 400 });
     }
 
-    // 6. Langsung Cek Status (Heartbeat Awal)
     const statusRes = await checkStatusOkeConnect({
       product: sku,
       dest: target,
@@ -142,7 +124,6 @@ export async function POST(request: Request) {
 
     const finalStatus = statusRes.success ? statusRes.status : 'Pending';
 
-    // 7. Potong Saldo Merchant (Hanya jika Prepaid)
     if (product.type === 'Prepaid') {
       await updateDoc(doc(firestore, 'users', userId), {
         balance: increment(-price),
@@ -150,20 +131,20 @@ export async function POST(request: Request) {
       });
     }
 
-    // 8. Catat Transaksi
     const txRef = doc(firestore, 'transactions', ref_id);
     await setDoc(txRef, {
       id: ref_id,
       gameId: product.brand,
       gameName: product.category,
       itemName: product.product_name,
-      sku: sku, // Penting untuk cek status nanti
-      target: target, // Penting untuk cek status nanti
+      sku: sku,
+      target: target,
       qty: qty || null,
       price: price.toString(),
       priceAmount: price,
       userId: userId,
       status: finalStatus,
+      callbackUrl: callbackUrl || null, // Simpan URL dinamis untuk webhook nanti
       createdAt: serverTimestamp(),
       paymentMethod: 'H2H_API',
       provider_msg: statusRes.message || h2hRes.message
@@ -176,8 +157,7 @@ export async function POST(request: Request) {
         ref_id: ref_id,
         sku: sku,
         target: target,
-        status: finalStatus,
-        provider_message: statusRes.message || h2hRes.message
+        status: finalStatus
       }
     });
 

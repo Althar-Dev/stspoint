@@ -24,7 +24,6 @@ export async function GET(request: Request) {
     const secret_key = searchParams.get('secret_key');
     const ref_id = searchParams.get('ref_id');
 
-    // 1. Validasi Parameter
     if (!secret_key) {
       return NextResponse.json({ success: false, error: 'secret_key is required' }, { status: 401 });
     }
@@ -34,8 +33,6 @@ export async function GET(request: Request) {
     }
 
     const { firestore } = initializeFirebase();
-    
-    // 2. Autentikasi User via secretKey
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -44,7 +41,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid secret_key' }, { status: 401 });
     }
 
-    // 3. Ambil Data Transaksi dari Firestore
     const txRef = doc(firestore, 'transactions', ref_id);
     const txSnap = await getDoc(txRef);
     
@@ -54,7 +50,6 @@ export async function GET(request: Request) {
 
     const txData = txSnap.data();
 
-    // 4. Cek Status Langsung ke Upstream (OkeConnect) menggunakan platform credentials
     const statusRes = await checkStatusOkeConnect({
       product: txData.sku,
       dest: txData.target,
@@ -66,7 +61,6 @@ export async function GET(request: Request) {
     });
 
     if (statusRes.success) {
-      // 5. Update Status di Firestore jika ada perubahan
       if (statusRes.status !== txData.status) {
         await updateDoc(txRef, {
           status: statusRes.status,
@@ -74,7 +68,7 @@ export async function GET(request: Request) {
           updatedAt: serverTimestamp()
         });
 
-        // 6. Trigger Webhook Merchant karena status berubah
+        // Trigger Webhook Merchant dengan callbackUrl dinamis jika ada
         await notifyMerchant(txData.userId, {
           event: 'ppob.status_update',
           data: {
@@ -85,11 +79,10 @@ export async function GET(request: Request) {
             message: statusRes.message,
             timestamp: new Date().toISOString()
           }
-        });
+        }, txData.callbackUrl);
       }
     }
 
-    // 7. Kembalikan Respon
     return NextResponse.json({
       success: statusRes.success,
       status: statusRes.status,
