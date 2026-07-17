@@ -12,7 +12,7 @@ import {
   serverTimestamp,
   setDoc
 } from 'firebase/firestore';
-import { getOrderkuotaPPOBPricelist, createOrderkuotaPPOBTransaction } from '@/service/orderkuota';
+import { getOrderkuotaPPOBPricelist, forwardOrderToOkeConnect } from '@/service/orderkuota';
 
 /**
  * API: PPOB Order & Product List
@@ -59,15 +59,16 @@ export async function GET(request: Request) {
 
   } catch (error: any) {
     console.error('PPOB GET API Error:', error);
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+    return { success: false, error: 'Internal Server Error' };
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { secret_key, sku, target, ref_id } = body;
+    const { secret_key, sku, target, ref_id, qty } = body;
 
+    // 1. Validasi Input
     if (!secret_key || !sku || !target || !ref_id) {
       return NextResponse.json({ 
         success: false, 
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
 
     const { firestore } = initializeFirebase();
     
-    // 1. Authenticate Merchant
+    // 2. Autentikasi Merchant via Secret Key
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
     const userId = userData.uid;
     const userBalance = userData.balance || 0;
 
-    // 2. Validate Product
+    // 3. Validasi Produk di DB Lokal
     const productsRes = await getOrderkuotaPPOBPricelist();
     const product = productsRes.data.find(p => p.buyer_sku_code === sku);
 
@@ -102,44 +103,52 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Product is currently unavailable' }, { status: 400 });
     }
 
-    const price = product.price;
+    // 4. Hitung Harga & Cek Saldo
+    // Catatan: Untuk Pasca, harga biasanya dihitung berdasarkan QTY (Nominal) + Fee Admin
+    const price = product.price; // Ini adalah harga dasar/admin dari DB
 
-    if (userBalance < price) {
+    if (product.type === 'Prepaid' && userBalance < price) {
       return NextResponse.json({ success: false, error: 'Insufficient account balance' }, { status: 403 });
     }
 
-    // 3. Get Service Configuration (credentials for provider bridge)
+    // 5. Ambil Kredensial H2H (memberID, pin, password) dari Firestore
     const serviceRef = doc(firestore, 'users', userId, 'services', 'orderkuota');
     const serviceSnap = await getDoc(serviceRef);
     
     if (!serviceSnap.exists() || !serviceSnap.data().token) {
-      return NextResponse.json({ success: false, error: 'Orderkuota service is not connected for this account' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Orderkuota H2H credentials not found' }, { status: 400 });
     }
 
-    const serviceData = serviceSnap.data();
+    const s = serviceSnap.data();
 
-    // 4. Execute Transaction to Provider
-    const providerRes = await createOrderkuotaPPOBTransaction({
-      username: serviceData.username,
-      token: serviceData.token,
-      sku: sku,
-      target: target,
-      ref_id: ref_id
+    // 6. Teruskan Pesanan ke H2H OkeConnect
+    const h2hRes = await forwardOrderToOkeConnect({
+      type: product.type === 'Pasca' ? 'Pasca' : 'Prepaid',
+      product: sku,
+      dest: target,
+      refID: ref_id,
+      memberID: s.username, // memberID
+      pin: s.token,        // pin (disimpan di field token)
+      password: s.refreshToken, // password (disimpan di field refreshToken)
+      qty: product.type === 'Pasca' ? Number(qty) : undefined
     });
 
-    if (!providerRes.success) {
+    if (!h2hRes.success) {
       return NextResponse.json({ 
         success: false, 
-        message: providerRes.message || 'Provider rejected the transaction' 
+        message: h2hRes.message || 'H2H Provider rejected the request' 
       }, { status: 400 });
     }
 
-    // 5. Update Database (Deduct balance and log transaction)
-    await updateDoc(doc(firestore, 'users', userId), {
-      balance: increment(-price),
-      updatedAt: serverTimestamp()
-    });
+    // 7. Potong Saldo (Hanya jika Prepaid, untuk Pasca biasanya dipotong setelah sukses atau sesuai kebijakan merchant)
+    if (product.type === 'Prepaid') {
+      await updateDoc(doc(firestore, 'users', userId), {
+        balance: increment(-price),
+        updatedAt: serverTimestamp()
+      });
+    }
 
+    // 8. Catat Transaksi
     const txRef = doc(firestore, 'transactions', ref_id);
     await setDoc(txRef, {
       id: ref_id,
@@ -149,21 +158,21 @@ export async function POST(request: Request) {
       price: price.toString(),
       priceAmount: price,
       userId: userId,
-      status: 'Success',
+      status: 'Pending', // Status awal adalah pending sampai ada webhook/update status
       createdAt: serverTimestamp(),
-      paymentMethod: 'API_H2H'
+      paymentMethod: 'H2H_API',
+      raw_h2h_response: h2hRes.message
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Transaction has been processed',
+      message: 'Transaction is being processed',
       data: {
         ref_id: ref_id,
         sku: sku,
         target: target,
-        price: price,
-        status: 'Success',
-        provider_response: providerRes.data
+        status: 'Pending',
+        provider_message: h2hRes.message
       }
     });
 
