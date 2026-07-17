@@ -318,6 +318,51 @@ export async function forwardOrderToOkeConnect(params: {
   }
 }
 
+/**
+ * Cek status transaksi langsung ke H2H OkeConnect (H2H Status Engine).
+ */
+export async function checkStatusOkeConnect(params: {
+  product: string;
+  dest: string;
+  refID: string;
+  memberID: string;
+  pin: string;
+  password: string;
+  qty?: number;
+}) {
+  const { product, dest, refID, memberID, pin, password, qty } = params;
+  
+  let url = `https://h2h.okeconnect.com/trx?pin=${encodeURIComponent(pin)}&product=${encodeURIComponent(product)}&dest=${encodeURIComponent(dest)}&refID=${encodeURIComponent(refID)}&memberID=${encodeURIComponent(memberID)}&password=${encodeURIComponent(password)}&check=1`;
+  
+  if (qty !== undefined) {
+    url += `&qty=${qty}`;
+  }
+
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(20000) });
+    const text = await response.text();
+    
+    const textUpper = text.toUpperCase();
+    let status: 'Pending' | 'Success' | 'Failed' = 'Pending';
+    
+    if (textUpper.includes("SUKSES")) {
+      status = 'Success';
+    } else if (textUpper.includes("GAGAL")) {
+      status = 'Failed';
+    }
+
+    return { 
+      success: true, 
+      status: status,
+      message: text,
+      raw: text 
+    };
+  } catch (error: any) {
+    console.error("checkStatusOkeConnect Error:", error);
+    return { success: false, message: "Gagal cek status H2H: Koneksi terputus." };
+  }
+}
+
 // --- MARKUP RULES CRUD ---
 
 export async function getMarkupRules(): Promise<{ success: boolean; data: MarkupRule[] }> {

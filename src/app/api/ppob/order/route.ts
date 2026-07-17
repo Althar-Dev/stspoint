@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   setDoc
 } from 'firebase/firestore';
-import { getOrderkuotaPPOBPricelist, forwardOrderToOkeConnect } from '@/service/orderkuota';
+import { getOrderkuotaPPOBPricelist, forwardOrderToOkeConnect, checkStatusOkeConnect } from '@/service/orderkuota';
 import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 
 /**
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 
   } catch (error: any) {
     console.error('PPOB GET API Error:', error);
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+    return { success: false, error: 'Internal Server Error' };
   }
 }
 
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Insufficient account balance' }, { status: 403 });
     }
 
-    // 5. Teruskan Pesanan ke H2H OkeConnect menggunakan kredensial global ("Milik Kita")
+    // 5. Teruskan Pesanan ke H2H OkeConnect menggunakan kredensial global
     const h2hRes = await forwardOrderToOkeConnect({
       type: product.type === 'Pasca' ? 'Pasca' : 'Prepaid',
       product: sku,
@@ -129,7 +129,20 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // 6. Potong Saldo Merchant (Hanya jika Prepaid)
+    // 6. Langsung Cek Status (Heartbeat Awal)
+    const statusRes = await checkStatusOkeConnect({
+      product: sku,
+      dest: target,
+      refID: ref_id,
+      memberID: OKE_MEMBER_ID,
+      pin: OKE_PIN,
+      password: OKE_PASSWORD,
+      qty: product.type === 'Pasca' ? Number(qty) : undefined
+    });
+
+    const finalStatus = statusRes.success ? statusRes.status : 'Pending';
+
+    // 7. Potong Saldo Merchant (Hanya jika Prepaid)
     if (product.type === 'Prepaid') {
       await updateDoc(doc(firestore, 'users', userId), {
         balance: increment(-price),
@@ -137,20 +150,23 @@ export async function POST(request: Request) {
       });
     }
 
-    // 7. Catat Transaksi
+    // 8. Catat Transaksi
     const txRef = doc(firestore, 'transactions', ref_id);
     await setDoc(txRef, {
       id: ref_id,
       gameId: product.brand,
       gameName: product.category,
       itemName: product.product_name,
+      sku: sku, // Penting untuk cek status nanti
+      target: target, // Penting untuk cek status nanti
+      qty: qty || null,
       price: price.toString(),
       priceAmount: price,
       userId: userId,
-      status: 'Pending',
+      status: finalStatus,
       createdAt: serverTimestamp(),
       paymentMethod: 'H2H_API',
-      raw_h2h_response: h2hRes.message
+      provider_msg: statusRes.message || h2hRes.message
     });
 
     return NextResponse.json({
@@ -160,8 +176,8 @@ export async function POST(request: Request) {
         ref_id: ref_id,
         sku: sku,
         target: target,
-        status: 'Pending',
-        provider_message: h2hRes.message
+        status: finalStatus,
+        provider_message: statusRes.message || h2hRes.message
       }
     });
 

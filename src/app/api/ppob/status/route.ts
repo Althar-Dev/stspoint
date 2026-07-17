@@ -6,12 +6,15 @@ import {
   where, 
   getDocs,
   doc,
-  getDoc
+  getDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
-import { checkOrderkuotaPPOBStatus } from '@/service/orderkuota';
+import { checkStatusOkeConnect } from '@/service/orderkuota';
+import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 
 /**
- * API: PPOB Transaction Status Check
+ * API: PPOB Transaction Status Check (Live H2H)
  * URL: /api/ppob/status?secret_key=...&ref_id=...
  */
 export async function GET(request: Request) {
@@ -40,34 +43,49 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid secret_key' }, { status: 401 });
     }
 
-    const userData = authSnap.docs[0].data();
-    const userId = userData.uid;
-
-    // 3. Ambil Konfigurasi Service (Kredensial Provider)
-    const serviceRef = doc(firestore, 'users', userId, 'services', 'orderkuota');
-    const serviceSnap = await getDoc(serviceRef);
+    // 3. Ambil Data Transaksi dari Firestore
+    const txRef = doc(firestore, 'transactions', ref_id);
+    const txSnap = await getDoc(txRef);
     
-    if (!serviceSnap.exists() || !serviceSnap.data().token) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Orderkuota service is not connected for this account' 
-      }, { status: 400 });
+    if (!txSnap.exists()) {
+      return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 });
     }
 
-    const serviceData = serviceSnap.data();
+    const txData = txSnap.data();
 
-    // 4. Cek Status ke Provider Bridge
-    const statusRes = await checkOrderkuotaPPOBStatus({
-      username: serviceData.username,
-      token: serviceData.token,
-      ref_id: ref_id
+    // 4. Cek Status Langsung ke Upstream (OkeConnect) menggunakan platform credentials
+    const statusRes = await checkStatusOkeConnect({
+      product: txData.sku,
+      dest: txData.target,
+      refID: ref_id,
+      memberID: OKE_MEMBER_ID,
+      pin: OKE_PIN,
+      password: OKE_PASSWORD,
+      qty: txData.qty ? Number(txData.qty) : undefined
     });
 
-    // 5. Kembalikan Respon
+    if (statusRes.success) {
+      // 5. Update Status di Firestore jika ada perubahan
+      if (statusRes.status !== txData.status) {
+        await updateDoc(txRef, {
+          status: statusRes.status,
+          provider_msg: statusRes.message,
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+
+    // 6. Kembalikan Respon
     return NextResponse.json({
       success: statusRes.success,
+      status: statusRes.status,
       message: statusRes.message,
-      data: statusRes.data // Berisi detail transaksi dari provider (status, sn, target, dll)
+      data: {
+        ref_id: ref_id,
+        sku: txData.sku,
+        target: txData.target,
+        status: statusRes.status
+      }
     });
 
   } catch (error: any) {
