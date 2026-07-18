@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,8 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getGoMerchantMutations, type GoMerchantMutationItem } from "@/lib/gomerchant/mutation";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function GopayTransactionsPage() {
   const { user, loading: authLoading } = useUser();
@@ -133,14 +136,58 @@ export default function GopayTransactionsPage() {
       toast({ variant: "destructive", title: "Export Failed", description: "No data available to export." });
       return;
     }
-    window.print();
+
+    const doc = new jsPDF();
+    const merchantName = gomerchant?.merchant_name || "STS Merchant";
+    const timestamp = format(new Date(), "dd MMMM yyyy, HH:mm");
+
+    // PDF Header
+    doc.setFontSize(18);
+    doc.text("GoPay Transaction Report", 14, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Merchant: ${merchantName}`, 14, 28);
+    doc.text(`Generated on: ${timestamp}`, 14, 33);
+    doc.setDrawColor(200);
+    doc.line(14, 38, 196, 38);
+
+    const tableColumn = ["Time", "Transaction ID", "Customer", "Amount (IDR)", "Status"];
+    const tableRows = filteredMutations.map(m => [
+      formatTrxDate(m.created_at),
+      m.trx_id.toUpperCase(),
+      m.customer_name || "GoPay Customer",
+      m.amount.toLocaleString('id-ID'),
+      m.status.toUpperCase()
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 45,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 174, 214], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      margin: { top: 45 },
+    });
+
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Page ${i} of ${pageCount} - Powered by STSPay`, 196, 285, { align: 'right' });
+    }
+
+    doc.save(`GoPay_Report_${format(new Date(), "yyyyMMdd_HHmm")}.pdf`);
+    toast({ title: "Export Success", description: "PDF document has been downloaded." });
   };
 
   const isGlobalLoading = authLoading || serviceLoading;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 print:p-0">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-headline font-bold tracking-tight">Transaction <span className="text-[#00AED6]">History</span></h1>
           <p className="text-muted-foreground text-sm">Real-time mutation logs from all connected outlets.</p>
@@ -169,7 +216,7 @@ export default function GopayTransactionsPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 print:hidden">
+      <div className="flex gap-2">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
@@ -190,20 +237,20 @@ export default function GopayTransactionsPage() {
         </Button>
       </div>
 
-      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden print:overflow-visible">
-        <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card flex flex-col print:border-none print:shadow-none">
+      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
+        <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card flex flex-col">
           <CardHeader className="bg-slate-50/50 dark:bg-[#0A0A0A] py-4 px-6 border-b border-border shrink-0 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#00AED6] print:hidden" />
+              <Clock className="w-4 h-4 text-[#00AED6]" />
               GoPay Transaction Logs
             </CardTitle>
-            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border print:hidden">
+            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">
               {loading ? "Counting..." : `${filteredMutations.length} Transactions Found`}
             </Badge>
           </CardHeader>
-          <div className="w-full flex-1 overflow-x-auto overflow-y-auto max-h-[600px] print:max-h-none print:overflow-visible">
+          <div className="w-full flex-1 overflow-x-auto overflow-y-auto max-h-[600px]">
             <table className="w-full min-w-full text-xs text-left">
-              <thead className="sticky top-0 z-10 bg-muted/50 print:static">
+              <thead className="sticky top-0 z-10 bg-muted/50">
                 <tr>
                   <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
                   <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Transaction ID</th>
@@ -215,7 +262,7 @@ export default function GopayTransactionsPage() {
               <tbody className="divide-y divide-border">
                 {isGlobalLoading || loading ? (
                   Array.from({ length: 12 }).map((_, i) => (
-                    <tr key={i} className="print:hidden">
+                    <tr key={i}>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
@@ -248,7 +295,7 @@ export default function GopayTransactionsPage() {
                   </tr>
                 ) : (
                   filteredMutations.map((log, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors print:break-inside-avoid">
+                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
                         {formatTrxDate(log.created_at)}
                       </td>
@@ -257,7 +304,7 @@ export default function GopayTransactionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-primary/5 flex items-center justify-center print:hidden">
+                          <div className="w-6 h-6 rounded-full bg-primary/5 flex items-center justify-center">
                             <UserIcon className="w-3 h-3 text-muted-foreground" />
                           </div>
                           <span className="font-bold text-xs">{log.customer_name || "GoPay Customer"}</span>
@@ -282,7 +329,7 @@ export default function GopayTransactionsPage() {
         </Card>
       </div>
 
-      <div className="text-center py-6 print:hidden">
+      <div className="text-center py-6">
          <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-[0.4em]">
            STS Point Analytics Engine • Data Export Tool
          </p>
