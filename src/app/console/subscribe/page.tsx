@@ -6,19 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, Check, ShieldCheck, Crown, Star, CreditCard, Building2, Rocket, Briefcase, X } from "lucide-react";
 import React from "react";
+import Link from "next/link";
 
 const servicePlans = {
   orderkuota: [
     {
+      id: "pro",
       name: "Pro",
       price: "Rp 49.000",
       description: "Akses H2H produk Orderkuota dengan margin kompetitif.",
       features: ["Akses Katalog Lengkap", "Auto-Refill", "Standard Margin", "Standard Support"],
       icon: Briefcase,
       button: "Subscribe Pro",
-      current: true,
+      current: false,
     },
     {
+      id: "premium",
       name: "Premium",
       price: "Rp 125.000",
       description: "Harga khusus untuk reseller volume tinggi.",
@@ -29,6 +32,7 @@ const servicePlans = {
       highlight: true,
     },
     {
+      id: "enterprise",
       name: "Enterprise",
       price: "Custom",
       description: "Solusi bisnis skala industri.",
@@ -40,6 +44,7 @@ const servicePlans = {
   ],
   gomerchant: [
     {
+      id: "pro",
       name: "Pro",
       price: "Rp 25.000",
       description: "Paket dasar untuk integrasi GoPay otomatis.",
@@ -52,9 +57,10 @@ const servicePlans = {
       ],
       icon: Briefcase,
       button: "Subscribe Pro",
-      current: true,
+      current: false,
     },
     {
+      id: "premium",
       name: "Premium",
       price: "Rp 50.000",
       description: "Paket performa tinggi untuk bisnis menengah.",
@@ -71,6 +77,7 @@ const servicePlans = {
       highlight: true,
     },
     {
+      id: "enterprise",
       name: "Enterprise",
       price: "Custom",
       description: "Infrastruktur eksklusif tanpa batasan.",
@@ -180,17 +187,30 @@ export default function SubscriptionPage() {
                     </ul>
                   </CardContent>
                   <CardFooter className="p-8 pt-0">
-                    <Button 
-                      variant={plan.highlight ? "default" : "outline"} 
-                      className={`w-full rounded-2xl h-14 font-bold transition-all active:scale-95 uppercase tracking-widest text-[10px] ${
-                        plan.highlight 
-                        ? 'bg-primary-foreground text-primary hover:bg-primary-foreground/90' 
-                        : 'border-border'
-                      }`}
-                      disabled={plan.current}
-                    >
-                      {plan.current ? "Active Plan" : plan.button}
-                    </Button>
+                    {plan.price === "Custom" ? (
+                      <Button 
+                        asChild
+                        variant="outline" 
+                        className="w-full rounded-2xl h-14 font-bold uppercase tracking-widest text-[10px] border-border"
+                      >
+                        <Link href="/support">Contact Sales</Link>
+                      </Button>
+                    ) : (
+                      <Button 
+                        asChild
+                        variant={plan.highlight ? "default" : "outline"} 
+                        className={`w-full rounded-2xl h-14 font-bold transition-all active:scale-95 uppercase tracking-widest text-[10px] ${
+                          plan.highlight 
+                          ? 'bg-primary-foreground text-primary hover:bg-primary-foreground/90' 
+                          : 'border-border'
+                        }`}
+                        disabled={plan.current}
+                      >
+                        <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}`}>
+                          {plan.current ? "Active Plan" : plan.button}
+                        </Link>
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               ))}
