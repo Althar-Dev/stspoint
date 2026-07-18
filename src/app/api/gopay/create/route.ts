@@ -9,6 +9,8 @@ import {
   doc, 
   getDoc,
   setDoc,
+  updateDoc,
+  increment,
   serverTimestamp 
 } from 'firebase/firestore';
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
@@ -56,18 +58,37 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Fetch GoPay Settings (BaseQr & Random Digit)
+    // 3. Check Quota & Fetch Settings
     const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
     const gomerchantSnap = await getDoc(gomerchantRef);
 
-    if (!gomerchantSnap.exists() || !gomerchantSnap.data().baseQr) {
+    if (!gomerchantSnap.exists()) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'GoPay service is not initialized for this account.' 
+      }, { status: 403 });
+    }
+
+    const gomerchantData = gomerchantSnap.data();
+    
+    // Quota Logic
+    const currentQuota = gomerchantData.quota || 0;
+    const plan = gomerchantData.plan || "";
+
+    if (currentQuota <= 0 && plan !== 'enterprise') {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'API Quota Exceeded. Please upgrade your plan in the dashboard.' 
+      }, { status: 429 });
+    }
+
+    if (!gomerchantData.baseQr) {
       return NextResponse.json({ 
         success: false, 
         message: 'GoPay service is not configured. Please set up BaseQr in your dashboard.' 
       }, { status: 403 });
     }
 
-    const gomerchantData = gomerchantSnap.data();
     const baseQr = gomerchantData.baseQr;
     const digitSetting = Number(gomerchantData.randomDigit) || 3;
 
@@ -93,8 +114,7 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // 6. Record Transaction in User Sub-collection
-    // Path: users/{userId}/services/gomerchant/transactions/{trxId}
+    // 6. Record Transaction & Deduct Quota
     const transactionRef = doc(firestore, 'users', userId, 'services', 'gomerchant', 'transactions', trxId);
     const transactionData = {
       id: trxId,
@@ -116,7 +136,14 @@ export async function POST(request: Request) {
       updatedAt: serverTimestamp(),
     };
 
-    await setDoc(transactionRef, transactionData);
+    // Atomic update for database and quota
+    await Promise.all([
+      setDoc(transactionRef, transactionData),
+      updateDoc(gomerchantRef, {
+        quota: increment(-1),
+        updatedAt: serverTimestamp()
+      })
+    ]);
 
     // 7. Return Result
     return NextResponse.json({
@@ -128,6 +155,7 @@ export async function POST(request: Request) {
         base_amount: baseAmount,
         random_code: randomSuffix,
         status: 'PENDING',
+        remaining_quota: currentQuota - 1,
         checkout_url: `${request.headers.get('x-forwarded-proto') || 'http'}://${request.headers.get('host')}/checkout/${trxId}`
       }
     });

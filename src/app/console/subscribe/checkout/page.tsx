@@ -238,7 +238,7 @@ function CheckoutContent() {
           <h2 className="text-3xl font-headline font-bold text-emerald-600">Payment Successful!</h2>
           <p className="text-muted-foreground">Thank you for your purchase. Your account has been upgraded to <strong>{plan.name}</strong>.</p>
           <div className="pt-6">
-            <Button asChild className="h-12 px-10 rounded-xl font-bold bg-primary text-white shadow-xl shadow-primary/10">
+            <Button asChild className="h-12 px-10 rounded-xl font-bold bg-primary text-white dark:text-black shadow-xl shadow-primary/10">
               <Link href="/console">Go to Dashboard</Link>
             </Button>
           </div>
