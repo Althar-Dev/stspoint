@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, Crown, Building2, Briefcase, X } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import Link from "next/link";
 
 const servicePlans = {
@@ -97,6 +97,9 @@ const servicePlans = {
 };
 
 export default function SubscriptionPage() {
+  // Use useMemo to generate a unique ref for each render cycle or trigger
+  const generateRef = () => `SUB-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
   return (
     <div className="w-full max-w-full overflow-hidden space-y-12 animate-in fade-in duration-500 px-1">
       {/* Centered Header Section */}
@@ -130,6 +133,7 @@ export default function SubscriptionPage() {
           </TabsList>
         </div>
 
+        {/* Since it's a list, we generate fresh refs for each link */}
         {Object.entries(servicePlans).map(([serviceId, plans]) => (
           <TabsContent key={serviceId} value={serviceId} className="space-y-6 focus-visible:outline-none">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -209,7 +213,8 @@ export default function SubscriptionPage() {
                         }`}
                         disabled={plan.current}
                       >
-                        <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}`}>
+                        {/* We generate a unique reference ID for each subscription intent */}
+                        <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}&ref=STS${Math.random().toString(36).substring(2, 9).toUpperCase()}`}>
                           {plan.current ? "Plan Currently Active" : plan.button}
                         </Link>
                       </Button>

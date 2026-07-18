@@ -12,13 +12,24 @@ import {
   Info,
   Clock,
   Download,
-  RefreshCcw
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  Home
 } from "lucide-react";
 import { useState, useMemo, Suspense, useEffect } from "react";
-import { useUser, useFirestore } from "@/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { requestPaymentInfo } from "@/services/stspay/v1/payment";
+import { manualCheckPaymentStatus } from "@/services/stspay/v1/check-status";
 import { toast } from "@/hooks/use-toast";
+import { addMinutes, isAfter, differenceInSeconds } from "date-fns";
+import dynamic from "next/dynamic";
+
+const Player = dynamic(
+  () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
+  { ssr: false }
+);
 
 const PLAN_DETAILS: Record<string, Record<string, any>> = {
   orderkuota: {
@@ -39,46 +50,79 @@ function CheckoutContent() {
 
   const serviceId = searchParams.get("service") || "";
   const planId = searchParams.get("plan") || "";
+  const refId = searchParams.get("ref") || "";
 
   const plan = useMemo(() => {
     return PLAN_DETAILS[serviceId]?.[planId] || null;
   }, [serviceId, planId]);
 
+  // Firestore Sync
+  const transactionRef = useMemoFirebase(() => {
+    if (!db || !refId) return null;
+    return doc(db, "stspay_transactions", refId);
+  }, [db, refId]);
+
+  const { data: transaction, loading: txLoading } = useDoc(transactionRef);
+
   const [isGenerating, setIsGenerating] = useState(false);
-  const [paymentData, setPaymentData] = useState<any>(null);
+  const [isChecking, setIsChecking] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("15:00");
 
+  // Countdown Logic
   useEffect(() => {
-    if (!paymentData) return;
+    if (!transaction || transaction.status !== 'PENDING' || !transaction.createdAt) return;
 
-    // Start 15 minutes countdown
-    let secondsTotal = 15 * 60;
-    
+    const createdAtDate = transaction.createdAt.toDate ? transaction.createdAt.toDate() : new Date(transaction.createdAt);
+    const expiryDate = addMinutes(createdAtDate, 15);
+
     const timer = setInterval(() => {
-      secondsTotal--;
-      if (secondsTotal <= 0) {
+      const now = new Date();
+      if (isAfter(now, expiryDate)) {
         clearInterval(timer);
+        if (transactionRef) updateDoc(transactionRef, { status: 'EXPIRED', updatedAt: serverTimestamp() });
         setTimeLeft("EXPIRED");
         return;
       }
       
-      const mins = Math.floor(secondsTotal / 60);
-      const secs = secondsTotal % 60;
-      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+      const diff = differenceInSeconds(expiryDate, now);
+      const minutes = Math.floor(diff / 60);
+      const seconds = diff % 60;
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [paymentData]);
+  }, [transaction, transactionRef]);
+
+  // Status Polling Logic
+  useEffect(() => {
+    if (!transaction || transaction.status !== 'PENDING') return;
+    
+    const pollInterval = setInterval(async () => {
+      const prId = transaction.payment_info?.pr_id;
+      if (!prId) return;
+
+      try {
+        const res = await manualCheckPaymentStatus(prId, 'Xendit');
+        if (res.success && res.isPaid && transactionRef) {
+          await updateDoc(transactionRef, { status: 'PAID', updatedAt: serverTimestamp() });
+          toast({ title: "Payment Successful", description: "Your subscription has been activated." });
+        }
+      } catch (e) {
+        console.error("Polling error:", e);
+      }
+    }, 15000);
+
+    return () => clearInterval(pollInterval);
+  }, [transaction, transactionRef]);
 
   const handleGenerateQRIS = async () => {
-    if (!plan || !user || !db) return;
+    if (!plan || !user || !db || !refId) return;
 
     setIsGenerating(true);
-    const externalId = `SUB-${Date.now()}-${user.uid.substring(0, 5).toUpperCase()}`;
 
     try {
       const res = await requestPaymentInfo('qris', {
-        external_id: externalId,
+        external_id: refId,
         amount: plan.price,
         name: user.displayName || "STS Member",
         payer_email: user.email,
@@ -86,9 +130,8 @@ function CheckoutContent() {
       });
 
       if (res.success) {
-        const txRef = doc(db, "stspay_transactions", externalId);
-        await setDoc(txRef, {
-          id: externalId,
+        const txData = {
+          id: refId,
           userId: user.uid,
           amount: plan.price,
           status: 'PENDING',
@@ -98,9 +141,11 @@ function CheckoutContent() {
           payment_info: res,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        });
+        };
 
-        setPaymentData(res);
+        if (transactionRef) {
+          await setDoc(transactionRef, txData);
+        }
         toast({ title: "QRIS Generated", description: "Please complete your payment using the QR code below." });
       } else {
         throw new Error(res.message);
@@ -113,8 +158,8 @@ function CheckoutContent() {
   };
 
   const handleDownloadQR = () => {
-    if (!paymentData?.qr_string) return;
-    const url = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(paymentData.qr_string)}`;
+    if (!transaction?.payment_info?.qr_string) return;
+    const url = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(transaction.payment_info.qr_string)}`;
     const link = document.createElement("a");
     link.href = url;
     link.download = `QRIS-SUB-${plan?.name}.png`;
@@ -134,13 +179,57 @@ function CheckoutContent() {
     );
   }
 
+  // --- Render Paid State ---
+  if (transaction?.status === 'PAID') {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8 animate-in zoom-in-95 duration-500 py-10 px-4 text-center">
+        <div className="w-48 h-48 mx-auto">
+          <Player autoplay loop src="/assets/lottie/success.json" />
+        </div>
+        <div className="space-y-4">
+          <h2 className="text-3xl font-headline font-bold text-emerald-600">Payment Successful!</h2>
+          <p className="text-muted-foreground">Thank you for your purchase. Your account has been upgraded to <strong>{plan.name}</strong>.</p>
+          <div className="pt-6">
+            <Button asChild className="h-12 px-10 rounded-xl font-bold bg-primary text-white shadow-xl shadow-primary/10">
+              <Link href="/console">Go to Dashboard</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Render Expired / Canceled State ---
+  if (transaction?.status === 'EXPIRED' || transaction?.status === 'CANCELED') {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 py-10 px-4 text-center">
+        <div className="w-32 h-32 mx-auto flex items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <XCircle className="w-20 h-20" />
+        </div>
+        <div className="space-y-4">
+          <h2 className="text-2xl font-headline font-bold">Payment {transaction.status === 'EXPIRED' ? 'Expired' : 'Canceled'}</h2>
+          <p className="text-muted-foreground">This transaction is no longer active. Please create a new subscription intent from the upgrade menu.</p>
+          <div className="pt-6">
+            <Button asChild variant="outline" className="h-12 px-10 rounded-xl font-bold gap-2">
+              <Link href="/console/subscribe">
+                <Home className="w-4 h-4" /> Return to Subscriptions
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const paymentData = transaction?.payment_info;
+
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 px-4">
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={() => router.back()}
+          onClick={() => router.push("/console/subscribe")}
           className="rounded-xl px-3 hover:bg-accent font-bold text-xs"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
@@ -162,7 +251,12 @@ function CheckoutContent() {
            </div>
         </CardHeader>
         <CardContent className="p-8">
-           {paymentData ? (
+           {txLoading ? (
+             <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-primary/20" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Syncing Transaction...</p>
+             </div>
+           ) : paymentData ? (
              <div className="space-y-10 w-full animate-in zoom-in-95 duration-500 flex flex-col items-center text-center">
                 <div className="space-y-4">
                    <div className="p-5 bg-white border border-border rounded-[2rem] shadow-xl inline-block relative">
@@ -202,7 +296,7 @@ function CheckoutContent() {
                         <Button 
                           variant="ghost" 
                           className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors" 
-                          onClick={() => setPaymentData(null)}
+                          onClick={() => router.push("/console/subscribe")}
                         >
                           Cancel
                         </Button>
