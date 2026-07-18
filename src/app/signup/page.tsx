@@ -135,13 +135,13 @@ export default function SignUpPage() {
         });
       }
 
-      // 5. Initialize AI Config
+      // 5. Initialize AI Config (Default to Pro instead of Starter)
       const aiConfigRef = doc(db, 'users', user.uid, 'ai', 'config');
       await setDoc(aiConfigRef, {
         id: "config",
-        plan: "Starter",
+        plan: "Pro",
         usage: 0,
-        limit: 50,
+        limit: 100,
         updatedAt: serverTimestamp()
       });
 

@@ -25,7 +25,7 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Starter", "Premium", "Enterprise"] },
+        "plan": { "type": "string", "enum": ["Pro", "Premium", "Enterprise"] },
         "usage": { "type": "number" },
         "limit": { "type": "number" },
         "updatedAt": { "type": "string", "format": "date-time" }
