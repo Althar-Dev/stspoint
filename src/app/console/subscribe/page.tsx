@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, Check, ShieldCheck, Crown, Star, CreditCard, Building2, Rocket, Briefcase } from "lucide-react";
+import { Zap, Check, ShieldCheck, Crown, Star, CreditCard, Building2, Rocket, Briefcase, X } from "lucide-react";
 import React from "react";
 
 const servicePlans = {
@@ -72,18 +72,30 @@ const servicePlans = {
   gomerchant: [
     {
       name: "Pro",
-      price: "Rp 75.000",
-      description: "Automasi dasar untuk satu akun GoPay.",
-      features: ["Live Mutation Tracking", "Balance Inquiry", "Transaction List (14 hari)", "Email Notifications"],
+      price: "Rp 25.000",
+      description: "Paket dasar untuk integrasi GoPay otomatis.",
+      features: [
+        { text: "Rate Limit 60 RPM", available: true },
+        { text: "Transaction List 7 Day", available: true },
+        { text: "Export Data", available: true },
+        { text: "Priority Support", available: false },
+        { text: "Priority Process", available: false },
+      ],
       icon: Briefcase,
       button: "Subscribe Pro",
       current: true,
     },
     {
       name: "Premium",
-      price: "Rp 175.000",
-      description: "Automasi penuh untuk merchant aktif.",
-      features: ["Real-time HTTP Callbacks", "History (Unlimited)", "Priority Jurnal Reconcile", "Advanced Webhooks", "Multi-Outlet Support"],
+      price: "Rp 50.000",
+      description: "Paket performa tinggi untuk bisnis menengah.",
+      features: [
+        { text: "Rate Limit 180 RPM", available: true },
+        { text: "Transaction List 30 Day", available: true },
+        { text: "Export Data", available: true },
+        { text: "Priority Support", available: true },
+        { text: "Priority Process", available: false },
+      ],
       icon: Crown,
       button: "Upgrade Premium",
       current: false,
@@ -92,8 +104,15 @@ const servicePlans = {
     {
       name: "Enterprise",
       price: "Custom",
-      description: "Sistem pembayaran korporasi terintegrasi.",
-      features: ["Auto-Withdraw to Bank", "Custom Reconcile Logic", "Dedicated API Bridge", "Audit Logs Export", "Volume Discounting"],
+      description: "Infrastruktur eksklusif tanpa batasan.",
+      features: [
+        { text: "Unlimited Rate Limit", available: true },
+        { text: "Unlimited Transaction List", available: true },
+        { text: "Export Data (Full Access)", available: true },
+        { text: "Dedicated Support 24/7", available: true },
+        { text: "Priority Process", available: true },
+        { text: "Custom Features", available: true },
+      ],
       icon: Building2,
       button: "Contact Sales",
       current: false,
@@ -173,14 +192,28 @@ export default function SubscriptionPage() {
                       {plan.price !== "Custom" && <span className={`text-xs ml-1 ${plan.highlight ? 'text-primary-foreground/40' : 'text-muted-foreground'}`}>/ bulan</span>}
                     </div>
                     <ul className="space-y-4">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${plan.highlight ? 'bg-primary-foreground/10 text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
-                            <Check className="w-3 h-3" />
-                          </div>
-                          <span className={`text-sm ${plan.highlight ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{feature}</span>
-                        </li>
-                      ))}
+                      {plan.features.map((feature, idx) => {
+                        const isString = typeof feature === 'string';
+                        const text = isString ? feature : feature.text;
+                        const available = isString ? true : feature.available;
+
+                        return (
+                          <li key={idx} className={`flex items-start gap-3 ${!available ? 'opacity-40' : ''}`}>
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                              !available 
+                                ? 'bg-muted text-muted-foreground' 
+                                : plan.highlight 
+                                  ? 'bg-primary-foreground/10 text-primary-foreground' 
+                                  : 'bg-primary/10 text-primary'
+                            }`}>
+                              {available ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                            </div>
+                            <span className={`text-sm ${plan.highlight ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                              {text}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </CardContent>
                   <CardFooter className="p-8 pt-0">
