@@ -35,12 +35,12 @@ const Player = dynamic(
 
 const PLAN_DETAILS: Record<string, Record<string, any>> = {
   gomerchant: {
-    pro: { name: "GoMerchant Pro", price: 25000, desc: "Rate Limit 60 RPM & 7-Day History" },
-    premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support" },
+    pro: { name: "GoMerchant Pro", price: 25000, desc: "Rate Limit 60 RPM & 7-Day History", quota: 5000 },
+    premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support", quota: 15000 },
   },
   orderkuota: {
-    pro: { name: "Orderkuota Pro", price: 25000, desc: "Standard API Speed & 7-Day History" },
-    premium: { name: "Orderkuota Premium", price: 50000, desc: "High Speed API & Priority Support" },
+    pro: { name: "Orderkuota Pro", price: 25000, desc: "Standard API Speed & 7-Day History", quota: 5000 },
+    premium: { name: "Orderkuota Premium", price: 50000, desc: "High Speed API & Priority Support", quota: 15000 },
   }
 };
 
@@ -123,13 +123,16 @@ function CheckoutContent() {
           // 1. Update Transaction Status
           await updateDoc(transactionRef, { status: 'PAID', updatedAt: serverTimestamp() });
           
-          // 2. Update User Service Plan
+          // 2. Update User Service Plan & Quota
           const metadata = transaction.metadata || {};
           if (metadata.serviceId && metadata.planId) {
             const svcRef = doc(db, "users", user.uid, "services", metadata.serviceId);
+            const quota = PLAN_DETAILS[metadata.serviceId]?.[metadata.planId]?.quota || 0;
+            
             await updateDoc(svcRef, {
               plan: metadata.planId,
               planExpiry: addDays(new Date(), 30), // Subscription lasts 30 days
+              quota: quota, // Assigned quota based on plan
               updatedAt: serverTimestamp()
             });
           }
