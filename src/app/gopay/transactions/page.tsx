@@ -13,7 +13,9 @@ import {
   Clock,
   User as UserIcon,
   Download,
-  Loader2
+  Loader2,
+  FileText,
+  FileSpreadsheet
 } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -91,11 +93,54 @@ export default function GopayTransactionsPage() {
     }
   };
 
+  // --- Export Logic ---
+
+  const handleExportCSV = () => {
+    if (filteredMutations.length === 0) {
+      toast({ variant: "destructive", title: "Export Failed", description: "No data available to export." });
+      return;
+    }
+
+    const headers = ["Time", "Transaction ID", "Customer", "Amount", "Status"];
+    const rows = filteredMutations.map(m => [
+      formatTrxDate(m.created_at),
+      m.trx_id,
+      m.customer_name || "GoPay Customer",
+      m.amount,
+      m.status
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(e => e.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `GoPay_Transactions_${format(new Date(), "yyyyMMdd_HHmmss")}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({ title: "Export Success", description: "CSV file has been generated." });
+  };
+
+  const handleExportPDF = () => {
+    if (filteredMutations.length === 0) {
+      toast({ variant: "destructive", title: "Export Failed", description: "No data available to export." });
+      return;
+    }
+    window.print();
+  };
+
   const isGlobalLoading = authLoading || serviceLoading;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-500 print:p-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
         <div>
           <h1 className="text-2xl font-headline font-bold tracking-tight">Transaction <span className="text-[#00AED6]">History</span></h1>
           <p className="text-muted-foreground text-sm">Real-time mutation logs from all connected outlets.</p>
@@ -105,14 +150,26 @@ export default function GopayTransactionsPage() {
             <Calendar className="w-4 h-4" />
             Pick Date
           </Button>
-          <Button variant="outline" className="h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-xs">
-            <Download className="w-4 h-4" />
+          <Button 
+            variant="outline" 
+            className="h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-xs hover:border-[#00AED6]/20 transition-all"
+            onClick={handleExportCSV}
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
             Export CSV
+          </Button>
+          <Button 
+            variant="outline" 
+            className="h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-xs hover:border-[#00AED6]/20 transition-all"
+            onClick={handleExportPDF}
+          >
+            <FileText className="w-4 h-4 text-rose-500" />
+            Export PDF
           </Button>
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 print:hidden">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
@@ -133,22 +190,20 @@ export default function GopayTransactionsPage() {
         </Button>
       </div>
 
-      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
-        <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card h-[600px] flex flex-col">
-          <CardHeader className="bg-slate-50/50 dark:bg-[#0A0A0A] py-4 px-6 border-b border-border shrink-0">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#00AED6]" />
-                All Mutation Logs
-              </CardTitle>
-              <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">
-                {loading ? "Counting..." : `${filteredMutations.length} Transactions Found`}
-              </Badge>
-            </div>
+      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden print:overflow-visible">
+        <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card flex flex-col print:border-none print:shadow-none">
+          <CardHeader className="bg-slate-50/50 dark:bg-[#0A0A0A] py-4 px-6 border-b border-border shrink-0 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#00AED6] print:hidden" />
+              GoPay Transaction Logs
+            </CardTitle>
+            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border print:hidden">
+              {loading ? "Counting..." : `${filteredMutations.length} Transactions Found`}
+            </Badge>
           </CardHeader>
-          <div className="w-full flex-1 overflow-x-auto overflow-y-auto">
+          <div className="w-full flex-1 overflow-x-auto overflow-y-auto max-h-[600px] print:max-h-none print:overflow-visible">
             <table className="w-full min-w-full text-xs text-left">
-              <thead className="sticky top-0 z-10 bg-muted/50">
+              <thead className="sticky top-0 z-10 bg-muted/50 print:static">
                 <tr>
                   <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
                   <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Transaction ID</th>
@@ -160,7 +215,7 @@ export default function GopayTransactionsPage() {
               <tbody className="divide-y divide-border">
                 {isGlobalLoading || loading ? (
                   Array.from({ length: 12 }).map((_, i) => (
-                    <tr key={i}>
+                    <tr key={i} className="print:hidden">
                       <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
@@ -193,7 +248,7 @@ export default function GopayTransactionsPage() {
                   </tr>
                 ) : (
                   filteredMutations.map((log, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors print:break-inside-avoid">
                       <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
                         {formatTrxDate(log.created_at)}
                       </td>
@@ -202,7 +257,7 @@ export default function GopayTransactionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-primary/5 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-primary/5 flex items-center justify-center print:hidden">
                             <UserIcon className="w-3 h-3 text-muted-foreground" />
                           </div>
                           <span className="font-bold text-xs">{log.customer_name || "GoPay Customer"}</span>
@@ -225,6 +280,12 @@ export default function GopayTransactionsPage() {
             </table>
           </div>
         </Card>
+      </div>
+
+      <div className="text-center py-6 print:hidden">
+         <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-[0.4em]">
+           STS Point Analytics Engine • Data Export Tool
+         </p>
       </div>
     </div>
   );
