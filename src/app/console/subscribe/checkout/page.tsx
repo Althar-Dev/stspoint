@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Home
+  Home,
+  ArrowLeft
 } from "lucide-react";
 import { useState, useMemo, Suspense, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -25,6 +26,7 @@ import { manualCheckPaymentStatus } from "@/services/stspay/v1/check-status";
 import { toast } from "@/hooks/use-toast";
 import { addMinutes, isAfter, differenceInSeconds } from "date-fns";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 const Player = dynamic(
   () => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player),
@@ -32,10 +34,6 @@ const Player = dynamic(
 );
 
 const PLAN_DETAILS: Record<string, Record<string, any>> = {
-  orderkuota: {
-    pro: { name: "Orderkuota Pro", price: 49000, desc: "Full H2H Catalog Access" },
-    premium: { name: "Orderkuota Premium", price: 125000, desc: "VIP Margin & Priority API" },
-  },
   gomerchant: {
     pro: { name: "GoMerchant Pro", price: 25000, desc: "Rate Limit 60 RPM & 7-Day History" },
     premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support" },
@@ -65,7 +63,7 @@ function CheckoutContent() {
   const { data: transaction, loading: txLoading } = useDoc(transactionRef);
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
   const [timeLeft, setTimeLeft] = useState<string>("15:00");
 
   // Countdown Logic
@@ -157,6 +155,23 @@ function CheckoutContent() {
     }
   };
 
+  const handleCancelPayment = async () => {
+    if (!transactionRef) return;
+    setIsCanceling(true);
+    try {
+      // Void the transaction in our database
+      await updateDoc(transactionRef, {
+        status: 'CANCELED',
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Transaction Canceled", description: "Your payment request has been voided." });
+      router.push("/console/subscribe");
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to cancel transaction." });
+      setIsCanceling(false);
+    }
+  };
+
   const handleDownloadQR = () => {
     if (!transaction?.payment_info?.qr_string) return;
     const url = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(transaction.payment_info.qr_string)}`;
@@ -203,16 +218,16 @@ function CheckoutContent() {
   if (transaction?.status === 'EXPIRED' || transaction?.status === 'CANCELED') {
     return (
       <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 py-10 px-4 text-center">
-        <div className="w-32 h-32 mx-auto flex items-center justify-center rounded-full bg-destructive/10 text-destructive">
-          <XCircle className="w-20 h-20" />
+        <div className="w-24 h-24 mx-auto flex items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4">
+          <XCircle className="w-16 h-16" />
         </div>
         <div className="space-y-4">
-          <h2 className="text-2xl font-headline font-bold">Payment {transaction.status === 'EXPIRED' ? 'Expired' : 'Canceled'}</h2>
-          <p className="text-muted-foreground">This transaction is no longer active. Please create a new subscription intent from the upgrade menu.</p>
+          <h2 className="text-3xl font-headline font-bold">Transaction {transaction.status === 'EXPIRED' ? 'Expired' : 'Canceled'}</h2>
+          <p className="text-muted-foreground">This session is no longer active. If you still wish to upgrade, please start a new request from the subscription menu.</p>
           <div className="pt-6">
             <Button asChild variant="outline" className="h-12 px-10 rounded-xl font-bold gap-2">
               <Link href="/console/subscribe">
-                <Home className="w-4 h-4" /> Return to Subscriptions
+                <ArrowLeft className="w-4 h-4" /> Return to Subscriptions
               </Link>
             </Button>
           </div>
@@ -296,9 +311,11 @@ function CheckoutContent() {
                         <Button 
                           variant="ghost" 
                           className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors" 
-                          onClick={() => router.push("/console/subscribe")}
+                          onClick={handleCancelPayment}
+                          disabled={isCanceling}
                         >
-                          Cancel
+                          {isCanceling ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                          Cancel Payment
                         </Button>
                       </div>
                    </div>
