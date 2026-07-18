@@ -62,6 +62,58 @@ const servicePlans = {
       button: "Contact Sales",
       current: false,
     }
+  ],
+  orderkuota: [
+    {
+      id: "pro",
+      name: "Pro",
+      price: 25000,
+      description: "Essential package for PPOB & OTP automation.",
+      features: [
+        { text: "Standard API Speed", available: true },
+        { text: "7-Day History", available: true },
+        { text: "Export Data", available: true },
+        { text: "Priority Support", available: false },
+        { text: "Priority Processing", available: false },
+      ],
+      icon: Briefcase,
+      button: "Buy Pro Plan",
+      current: false,
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: 50000,
+      description: "High-performance package for high-volume transactions.",
+      features: [
+        { text: "High Speed API", available: true },
+        { text: "30-Day History", available: true },
+        { text: "Export Data", available: true },
+        { text: "Priority Support", available: true },
+        { text: "Priority Processing", available: false },
+      ],
+      icon: Crown,
+      button: "Upgrade to Premium",
+      current: false,
+      highlight: true,
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise",
+      price: "Custom",
+      description: "Exclusive infrastructure for industrial scale.",
+      features: [
+        { text: "Unlimited Speed", available: true },
+        { text: "Unlimited History", available: true },
+        { text: "Full Data Export", available: true },
+        { text: "24/7 Dedicated Support", available: true },
+        { text: "Priority Processing", available: true },
+        { text: "Custom Features", available: true },
+      ],
+      icon: Building2,
+      button: "Contact Sales",
+      current: false,
+    }
   ]
 };
 
@@ -100,6 +152,12 @@ export default function SubscriptionPage() {
               className="rounded-xl px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[11px] uppercase tracking-widest transition-all"
             >
               GoMerchant
+            </TabsTrigger>
+            <TabsTrigger 
+              value="orderkuota" 
+              className="rounded-xl px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[11px] uppercase tracking-widest transition-all"
+            >
+              Orderkuota
             </TabsTrigger>
           </TabsList>
         </div>
