@@ -50,9 +50,24 @@ function CheckoutContent() {
   const planId = searchParams.get("plan") || "";
   const refId = searchParams.get("ref") || "";
 
+  // Get profile to check for dev status
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user?.uid]);
+  const { data: profile } = useDoc(profileRef);
+  const isDev = profile?.dev === true;
+
   const plan = useMemo(() => {
-    return PLAN_DETAILS[serviceId]?.[planId] || null;
-  }, [serviceId, planId]);
+    const basePlan = PLAN_DETAILS[serviceId]?.[planId];
+    if (!basePlan) return null;
+    
+    // Override price if developer
+    return {
+      ...basePlan,
+      price: isDev ? 1 : basePlan.price
+    };
+  }, [serviceId, planId, isDev]);
 
   // Firestore Sync
   const transactionRef = useMemoFirebase(() => {
@@ -134,7 +149,7 @@ function CheckoutContent() {
           amount: plan.price,
           status: 'PENDING',
           type: 'subscription',
-          metadata: { serviceId, planId },
+          metadata: { serviceId, planId, isDevDiscount: isDev },
           payerEmail: user.email,
           payment_info: res,
           createdAt: serverTimestamp(),
@@ -159,7 +174,6 @@ function CheckoutContent() {
     if (!transactionRef) return;
     setIsCanceling(true);
     try {
-      // Void the transaction in our database
       await updateDoc(transactionRef, {
         status: 'CANCELED',
         updatedAt: serverTimestamp()
@@ -326,8 +340,16 @@ function CheckoutContent() {
                <div className="space-y-4">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground font-medium">Plan Price</span>
-                    <span className="font-bold">Rp {plan.price.toLocaleString('id-ID')}</span>
+                    <span className={isDev ? "text-muted-foreground line-through" : "font-bold"}>
+                      Rp {PLAN_DETAILS[serviceId]?.[planId]?.price.toLocaleString('id-ID')}
+                    </span>
                   </div>
+                  {isDev && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-emerald-600 font-bold text-[10px] uppercase tracking-widest">Developer Pricing</span>
+                      <span className="font-bold text-emerald-600">Rp 1</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground font-medium">Service Fee</span>
                     <span className="font-bold text-primary italic">Free</span>
