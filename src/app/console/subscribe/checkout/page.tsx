@@ -14,7 +14,7 @@ import {
   Download,
   RefreshCcw
 } from "lucide-react";
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, Suspense, useEffect } from "react";
 import { useUser, useFirestore } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { requestPaymentInfo } from "@/services/stspay/v1/payment";
@@ -46,6 +46,29 @@ function CheckoutContent() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [paymentData, setPaymentData] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState<string>("15:00");
+
+  useEffect(() => {
+    if (!paymentData) return;
+
+    // Start 15 minutes countdown
+    let secondsTotal = 15 * 60;
+    
+    const timer = setInterval(() => {
+      secondsTotal--;
+      if (secondsTotal <= 0) {
+        clearInterval(timer);
+        setTimeLeft("EXPIRED");
+        return;
+      }
+      
+      const mins = Math.floor(secondsTotal / 60);
+      const secs = secondsTotal % 60;
+      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [paymentData]);
 
   const handleGenerateQRIS = async () => {
     if (!plan || !user || !db) return;
@@ -159,7 +182,7 @@ function CheckoutContent() {
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-2">
                          <Clock className="w-3 h-3" /> Payment Deadline
                       </p>
-                      <p className="text-3xl font-headline font-bold text-primary">14:59</p>
+                      <p className="text-3xl font-headline font-bold text-primary">{timeLeft}</p>
                    </div>
                    
                    <div className="flex flex-col gap-3">
