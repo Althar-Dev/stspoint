@@ -40,12 +40,6 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: profile, loading: profileLoading } = useDoc(userProfileRef);
 
-  const digiflazzRef = useMemoFirebase(() => {
-    if (!db || !user?.uid) return null;
-    return doc(db, "users", user.uid, "services", "digiflazz");
-  }, [db, user?.uid]);
-  const { data: digiflazz } = useDoc(digiflazzRef);
-
   const orderkuotaRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "orderkuota");
@@ -113,11 +107,10 @@ export default function OverviewPage() {
 
   const quotaUsageData = useMemo(() => {
     return [
-      { name: "DigiFlazz", value: digiflazz?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 1.2) },
       { name: "Orderkuota", value: orderkuota?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.8) },
       { name: "GoMerchant", value: gomerchant?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.5) },
     ];
-  }, [digiflazz, orderkuota, gomerchant, weeklyUsageTrend]);
+  }, [orderkuota, gomerchant, weeklyUsageTrend]);
 
   const formatTransactionDate = (timestamp: any) => {
     if (!isMounted || !timestamp) return "...";

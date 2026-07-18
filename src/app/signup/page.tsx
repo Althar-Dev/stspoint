@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -116,8 +115,8 @@ export default function SignUpPage() {
 
       await setDoc(userRef, userData);
 
-      // 4. Save Provider Data to Sub-Collection
-      const providers = ['digiflazz', 'orderkuota', 'gomerchant'];
+      // 4. Save Provider Data to Sub-Collection (Excluding DigiFlazz)
+      const providers = ['orderkuota', 'gomerchant'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
         await setDoc(providerRef, {
@@ -135,7 +134,7 @@ export default function SignUpPage() {
         });
       }
 
-      // 5. Initialize AI Config (Default to Pro instead of Starter)
+      // 5. Initialize AI Config
       const aiConfigRef = doc(db, 'users', user.uid, 'ai', 'config');
       await setDoc(aiConfigRef, {
         id: "config",

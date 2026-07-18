@@ -60,7 +60,6 @@ const mainMenuItems = [
     items: [
       { title: "STSPay", url: "/pay" },
       { title: "OrderKuota", url: "/orkut" },
-      { title: "DigiFlazz", url: "/digi" },
       { title: "GoMerchant", url: "/gopay" },
     ]
   },

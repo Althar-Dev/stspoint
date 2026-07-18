@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -9,36 +8,6 @@ import { Zap, Check, ShieldCheck, Crown, Star, CreditCard, Building2, Rocket, Br
 import React from "react";
 
 const servicePlans = {
-  digiflazz: [
-    {
-      name: "Pro",
-      price: "Rp 99.000",
-      description: "Ideal untuk bisnis PPOB yang baru berkembang.",
-      features: ["3 API Keys", "Standard Queue", "Standard Support", "Basic Webhooks"],
-      icon: Briefcase,
-      button: "Subscribe Pro",
-      current: true,
-    },
-    {
-      name: "Premium",
-      price: "Rp 250.000",
-      description: "Optimalkan performa transaksi PPOB Anda.",
-      features: ["Unlimited API Keys", "Priority Queue", "Dedicated Server", "Advanced Webhooks", "24/7 Priority Support"],
-      icon: Crown,
-      button: "Upgrade Premium",
-      current: false,
-      highlight: true,
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      description: "Solusi volume besar untuk korporasi.",
-      features: ["Custom SLA", "Dedicated Account Manager", "Auto-Scale Infrastructure", "API Whitelabeling", "Zero Latency Path"],
-      icon: Building2,
-      button: "Contact Sales",
-      current: false,
-    }
-  ],
   orderkuota: [
     {
       name: "Pro",
@@ -136,15 +105,9 @@ export default function SubscriptionPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="digiflazz" className="w-full">
+      <Tabs defaultValue="orderkuota" className="w-full">
         <div className="flex justify-center mb-8">
           <TabsList className="bg-muted p-1 rounded-2xl h-12 flex items-center">
-            <TabsTrigger 
-              value="digiflazz" 
-              className="rounded-xl px-3 sm:px-8 font-bold data-[state=active]:bg-background h-full text-[10px] sm:text-xs uppercase tracking-widest"
-            >
-              DigiFlazz
-            </TabsTrigger>
             <TabsTrigger 
               value="orderkuota" 
               className="rounded-xl px-3 sm:px-8 font-bold data-[state=active]:bg-background h-full text-[10px] sm:text-xs uppercase tracking-widest"
