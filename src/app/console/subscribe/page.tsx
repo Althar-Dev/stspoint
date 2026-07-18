@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, Check, ShieldCheck, Crown, Building2, Briefcase, X } from "lucide-react";
+import { Check, Crown, Building2, Briefcase, X } from "lucide-react";
 import React from "react";
 import Link from "next/link";
 
@@ -14,32 +14,32 @@ const servicePlans = {
       id: "pro",
       name: "Pro",
       price: "Rp 25.000",
-      description: "Paket dasar untuk integrasi GoPay otomatis.",
+      description: "Essential package for automatic GoPay integration.",
       features: [
         { text: "Rate Limit 60 RPM", available: true },
-        { text: "Transaction List 7 Hari", available: true },
-        { text: "Export Data (CSV/PDF)", available: true },
+        { text: "7-Day Transaction History", available: true },
+        { text: "Data Export (CSV/PDF)", available: true },
         { text: "Priority Support", available: false },
-        { text: "Priority Process", available: false },
+        { text: "Priority Processing", available: false },
       ],
       icon: Briefcase,
-      button: "Beli Paket Pro",
+      button: "Buy Pro Plan",
       current: false,
     },
     {
       id: "premium",
       name: "Premium",
       price: "Rp 50.000",
-      description: "Paket performa tinggi untuk bisnis menengah.",
+      description: "High-performance package for growing businesses.",
       features: [
         { text: "Rate Limit 180 RPM", available: true },
-        { text: "Transaction List 30 Hari", available: true },
-        { text: "Export Data (CSV/PDF)", available: true },
+        { text: "30-Day Transaction History", available: true },
+        { text: "Data Export (CSV/PDF)", available: true },
         { text: "Priority Support", available: true },
-        { text: "Priority Process", available: false },
+        { text: "Priority Processing", available: false },
       ],
       icon: Crown,
-      button: "Upgrade Premium",
+      button: "Upgrade to Premium",
       current: false,
       highlight: true,
     },
@@ -47,17 +47,17 @@ const servicePlans = {
       id: "enterprise",
       name: "Enterprise",
       price: "Custom",
-      description: "Infrastruktur eksklusif tanpa batasan.",
+      description: "Exclusive infrastructure without limits.",
       features: [
         { text: "Unlimited Rate Limit", available: true },
-        { text: "Unlimited Transaction List", available: true },
-        { text: "Export Data (Full Access)", available: true },
-        { text: "Dedicated Support 24/7", available: true },
-        { text: "Priority Process", available: true },
+        { text: "Unlimited History", available: true },
+        { text: "Full Data Export", available: true },
+        { text: "24/7 Dedicated Support", available: true },
+        { text: "Priority Processing", available: true },
         { text: "Custom Features", available: true },
       ],
       icon: Building2,
-      button: "Hubungi Sales",
+      button: "Contact Sales",
       current: false,
     }
   ],
@@ -66,20 +66,20 @@ const servicePlans = {
       id: "pro",
       name: "Pro",
       price: "Rp 49.000",
-      description: "Akses H2H produk Orderkuota dengan margin kompetitif.",
-      features: ["Akses Katalog Lengkap", "Auto-Refill", "Standard Margin", "Standard Support"],
+      description: "Access H2H Orderkuota products with competitive margins.",
+      features: ["Full Catalog Access", "Auto-Refill", "Standard Margin", "Standard Support"],
       icon: Briefcase,
-      button: "Beli Paket Pro",
+      button: "Buy Pro Plan",
       current: false,
     },
     {
       id: "premium",
       name: "Premium",
       price: "Rp 125.000",
-      description: "Harga khusus untuk reseller volume tinggi.",
-      features: ["VIP Margin (Termurah)", "Auto-Refill Pro", "Whitelabel Panel", "Priority API Access", "WhatsApp Support Langsung"],
+      description: "Special pricing for high-volume resellers.",
+      features: ["VIP Margin (Lowest)", "Auto-Refill Pro", "Whitelabel Panel", "Priority API Access", "Direct WhatsApp Support"],
       icon: Crown,
-      button: "Upgrade Premium",
+      button: "Upgrade to Premium",
       current: false,
       highlight: true,
     },
@@ -87,10 +87,10 @@ const servicePlans = {
       id: "enterprise",
       name: "Enterprise",
       price: "Custom",
-      description: "Solusi bisnis skala industri.",
-      features: ["Zero Margin Fees", "Private Server Instance", "Custom Integration", "Direct Infrastructure Support"],
+      description: "Industrial scale business solutions.",
+      features: ["Zero Margin Fees", "Private Server Instance", "Custom Integration", "Infrastructure Support"],
       icon: Building2,
-      button: "Hubungi Sales",
+      button: "Contact Sales",
       current: false,
     }
   ]
@@ -102,13 +102,13 @@ export default function SubscriptionPage() {
       {/* Centered Header Section */}
       <div className="flex flex-col items-center justify-center text-center gap-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-          Infrastruktur Premium
+          Premium Infrastructure
         </div>
         <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-foreground">
-          Upgrade <span className="text-primary/40">Bisnis</span> Anda.
+          Upgrade <span className="text-primary/40">Business</span> Account.
         </h1>
         <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
-          Pilih paket infrastruktur terbaik untuk mendukung pertumbuhan bisnis digital Anda tanpa batasan teknis.
+          Choose the best infrastructure plan to support your digital business growth without technical limitations.
         </p>
       </div>
 
@@ -144,7 +144,7 @@ export default function SubscriptionPage() {
                 >
                   {plan.highlight && (
                     <div className="absolute top-8 right-8">
-                      <Badge className="bg-primary text-primary-foreground border-none font-bold text-[9px] uppercase tracking-tighter px-3 py-1 rounded-md ring-2 ring-primary-foreground/20">REKOMENDASI</Badge>
+                      <Badge className="bg-primary text-primary-foreground border-none font-bold text-[9px] uppercase tracking-tighter px-3 py-1 rounded-md ring-2 ring-primary-foreground/20">RECOMMENDED</Badge>
                     </div>
                   )}
                   <CardHeader className="p-10 pb-6">
@@ -159,7 +159,7 @@ export default function SubscriptionPage() {
                   <CardContent className="px-10 pb-10 flex-1 space-y-10">
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-headline font-bold tracking-tight">{plan.price}</span>
-                      {plan.price !== "Custom" && <span className={`text-[10px] font-bold uppercase tracking-widest ml-1 ${plan.highlight ? 'text-primary-foreground/30' : 'text-muted-foreground/40'}`}>/ bulan</span>}
+                      {plan.price !== "Custom" && <span className={`text-[10px] font-bold uppercase tracking-widest ml-1 ${plan.highlight ? 'text-primary-foreground/30' : 'text-muted-foreground/40'}`}>/ month</span>}
                     </div>
                     
                     <div className={`h-px w-full ${plan.highlight ? 'bg-primary-foreground/10' : 'bg-border'}`} />
@@ -196,7 +196,7 @@ export default function SubscriptionPage() {
                         variant="outline" 
                         className="w-full rounded-2xl h-14 font-bold uppercase tracking-widest text-[11px] border-border hover:bg-primary hover:text-primary-foreground transition-all"
                       >
-                        <Link href="/support">Hubungi Kami</Link>
+                        <Link href="/support">Contact Us</Link>
                       </Button>
                     ) : (
                       <Button 
@@ -210,7 +210,7 @@ export default function SubscriptionPage() {
                         disabled={plan.current}
                       >
                         <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}`}>
-                          {plan.current ? "Paket Sedang Aktif" : plan.button}
+                          {plan.current ? "Plan Currently Active" : plan.button}
                         </Link>
                       </Button>
                     )}
@@ -223,7 +223,7 @@ export default function SubscriptionPage() {
       </Tabs>
 
       <div className="text-center pt-10 border-t border-border/50 max-w-4xl mx-auto">
-         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Pilih infrastruktur yang tepat untuk pertumbuhan Anda</p>
+         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Choose the right infrastructure for your growth</p>
       </div>
     </div>
   );

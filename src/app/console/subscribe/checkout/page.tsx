@@ -11,7 +11,8 @@ import {
   ShieldCheck, 
   Info,
   Clock,
-  Download
+  Download,
+  RefreshCcw
 } from "lucide-react";
 import { useState, useMemo, Suspense } from "react";
 import { useUser, useFirestore } from "@/firebase";
@@ -21,12 +22,12 @@ import { toast } from "@/hooks/use-toast";
 
 const PLAN_DETAILS: Record<string, Record<string, any>> = {
   orderkuota: {
-    pro: { name: "Orderkuota Pro", price: 49000, desc: "Akses H2H Katalog Lengkap" },
+    pro: { name: "Orderkuota Pro", price: 49000, desc: "Full H2H Catalog Access" },
     premium: { name: "Orderkuota Premium", price: 125000, desc: "VIP Margin & Priority API" },
   },
   gomerchant: {
-    pro: { name: "GoMerchant Pro", price: 25000, desc: "Rate Limit 60 RPM & 7 Hari Log" },
-    premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Support Prioritas" },
+    pro: { name: "GoMerchant Pro", price: 25000, desc: "Rate Limit 60 RPM & 7-Day History" },
+    premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support" },
   }
 };
 
@@ -77,12 +78,12 @@ function CheckoutContent() {
         });
 
         setPaymentData(res);
-        toast({ title: "QRIS Berhasil Dibuat", description: "Silakan selesaikan pembayaran Anda." });
+        toast({ title: "QRIS Generated", description: "Please complete your payment using the QR code below." });
       } else {
         throw new Error(res.message);
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Gagal", description: error.message });
+      toast({ variant: "destructive", title: "Failed", description: error.message });
     } finally {
       setIsGenerating(false);
     }
@@ -102,9 +103,9 @@ function CheckoutContent() {
   if (!plan) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <p className="text-muted-foreground font-medium">Paket langganan tidak ditemukan.</p>
+        <p className="text-muted-foreground font-medium">Subscription plan not found.</p>
         <Button onClick={() => router.push("/console/subscribe")} variant="outline" className="rounded-xl font-bold">
-          Kembali ke Dashboard
+          Back to Dashboard
         </Button>
       </div>
     );
@@ -117,27 +118,27 @@ function CheckoutContent() {
           variant="ghost" 
           size="sm" 
           onClick={() => router.back()}
-          className="rounded-xl px-4 hover:bg-accent font-bold text-xs"
+          className="rounded-xl px-3 hover:bg-accent font-bold text-xs"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
-          Kembali
+          Back
         </Button>
         <div className="h-4 w-px bg-border"></div>
-        <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Checkout Pembayaran</h1>
+        <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Payment Checkout</h1>
       </div>
 
       <Card className="border-border shadow-2xl rounded-[2.5rem] overflow-hidden bg-card">
         <CardHeader className="p-8 border-b border-border bg-muted/30">
            <div className="flex items-center justify-between">
-              <Badge className="bg-primary text-primary-foreground border-none text-[9px] font-bold uppercase px-3 py-1 rounded-md">Upgrade Akun</Badge>
+              <Badge className="bg-primary text-primary-foreground border-none text-[9px] font-bold uppercase px-3 py-1 rounded-md">Account Upgrade</Badge>
               <ShieldCheck className="w-5 h-5 text-primary" />
            </div>
-           <div className="pt-6 space-y-2">
+           <div className="pt-6 space-y-2 text-center">
               <CardTitle className="text-2xl md:text-3xl font-headline font-bold tracking-tight">{plan.name}</CardTitle>
               <CardDescription className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{plan.desc}</CardDescription>
            </div>
         </CardHeader>
-        <CardContent className="p-8 space-y-8">
+        <CardContent className="p-8">
            {paymentData ? (
              <div className="space-y-10 w-full animate-in zoom-in-95 duration-500 flex flex-col items-center text-center">
                 <div className="space-y-4">
@@ -148,7 +149,7 @@ function CheckoutContent() {
                         className="w-56 h-56 md:w-64 md:h-64 object-contain"
                       />
                       <div className="absolute inset-x-0 -bottom-3 flex justify-center">
-                         <Badge className="bg-primary text-primary-foreground border-none px-4 py-1 rounded-full font-bold text-[9px] uppercase tracking-widest shadow-lg">QRIS Resmi</Badge>
+                         <Badge className="bg-primary text-primary-foreground border-none px-4 py-1 rounded-full font-bold text-[9px] uppercase tracking-widest shadow-lg">Official QRIS</Badge>
                       </div>
                    </div>
                 </div>
@@ -156,14 +157,14 @@ function CheckoutContent() {
                 <div className="space-y-6 w-full">
                    <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-                         <Clock className="w-3 h-3" /> Batas Waktu Bayar
+                         <Clock className="w-3 h-3" /> Payment Deadline
                       </p>
                       <p className="text-3xl font-headline font-bold text-primary">14:59</p>
                    </div>
                    
                    <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-center text-sm border-t border-dashed border-border pt-4">
-                        <span className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Total Tagihan</span>
+                        <span className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Total Bill</span>
                         <span className="font-bold text-xl text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
                       </div>
                       
@@ -173,14 +174,14 @@ function CheckoutContent() {
                           variant="outline" 
                           className="flex-1 h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest border-border gap-2"
                         >
-                          <Download className="w-4 h-4" /> Unduh QR
+                          <Download className="w-4 h-4" /> Download QR
                         </Button>
                         <Button 
                           variant="ghost" 
                           className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors" 
                           onClick={() => setPaymentData(null)}
                         >
-                          Batalkan
+                          Cancel
                         </Button>
                       </div>
                    </div>
@@ -190,16 +191,16 @@ function CheckoutContent() {
              <div className="space-y-8">
                <div className="space-y-4">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-medium">Harga Paket</span>
+                    <span className="text-muted-foreground font-medium">Plan Price</span>
                     <span className="font-bold">Rp {plan.price.toLocaleString('id-ID')}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-medium">Biaya Layanan</span>
-                    <span className="font-bold text-primary italic">Gratis</span>
+                    <span className="text-muted-foreground font-medium">Service Fee</span>
+                    <span className="font-bold text-primary italic">Free</span>
                   </div>
                   <div className="pt-6 border-t border-dashed border-border flex justify-between items-end">
                     <div className="space-y-1">
-                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Total Tagihan</span>
+                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Total Bill</span>
                        <span className="text-3xl font-headline font-bold text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
                     </div>
                   </div>
@@ -211,7 +212,7 @@ function CheckoutContent() {
                 className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[11px] shadow-xl shadow-primary/10 gap-3 transition-all active:scale-95"
                >
                  {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <QrCode className="w-5 h-5" />}
-                 Tampilkan QRIS Pembayaran
+                 Generate QRIS Payment
                </Button>
 
                <div className="flex items-start gap-4 p-5 rounded-2xl bg-muted/50 border border-border">
@@ -219,9 +220,9 @@ function CheckoutContent() {
                      <Info className="w-5 h-5 text-primary" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[11px] font-bold uppercase tracking-tight">Informasi Penting</p>
+                    <p className="text-[11px] font-bold uppercase tracking-tight">Important Information</p>
                     <p className="text-[10px] leading-relaxed text-muted-foreground">
-                      Paket akan aktif secara otomatis setelah sistem mendeteksi pembayaran sukses. Pastikan Anda membayar sesuai dengan nominal yang tertera.
+                      The plan will activate automatically after the system detects a successful payment. Please ensure you pay the exact amount shown.
                     </p>
                   </div>
                </div>
@@ -242,7 +243,7 @@ export default function SubscriptionCheckoutPage() {
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Menyiapkan Transaksi...</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Preparing Transaction...</p>
       </div>
     }>
       <CheckoutContent />
