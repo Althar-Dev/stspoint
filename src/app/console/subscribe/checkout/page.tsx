@@ -24,7 +24,7 @@ import { doc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { requestPaymentInfo } from "@/services/stspay/v1/payment";
 import { manualCheckPaymentStatus } from "@/services/stspay/v1/check-status";
 import { toast } from "@/hooks/use-toast";
-import { addMinutes, isAfter, differenceInSeconds } from "date-fns";
+import { addMinutes, isAfter, differenceInSeconds, addDays } from "date-fns";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
@@ -66,7 +66,6 @@ function CheckoutContent() {
     const basePlan = PLAN_DETAILS[serviceId]?.[planId];
     if (!basePlan) return null;
     
-    // Override price if developer
     return {
       ...basePlan,
       price: isDev ? 1 : basePlan.price
@@ -112,7 +111,7 @@ function CheckoutContent() {
 
   // Status Polling Logic
   useEffect(() => {
-    if (!transaction || transaction.status !== 'PENDING') return;
+    if (!transaction || transaction.status !== 'PENDING' || !db || !user?.uid) return;
     
     const pollInterval = setInterval(async () => {
       const prId = transaction.payment_info?.pr_id;
@@ -121,7 +120,20 @@ function CheckoutContent() {
       try {
         const res = await manualCheckPaymentStatus(prId, 'Xendit');
         if (res.success && res.isPaid && transactionRef) {
+          // 1. Update Transaction Status
           await updateDoc(transactionRef, { status: 'PAID', updatedAt: serverTimestamp() });
+          
+          // 2. Update User Service Plan
+          const metadata = transaction.metadata || {};
+          if (metadata.serviceId && metadata.planId) {
+            const svcRef = doc(db, "users", user.uid, "services", metadata.serviceId);
+            await updateDoc(svcRef, {
+              plan: metadata.planId,
+              planExpiry: addDays(new Date(), 30), // Subscription lasts 30 days
+              updatedAt: serverTimestamp()
+            });
+          }
+
           toast({ title: "Payment Successful", description: "Your subscription has been activated." });
         }
       } catch (e) {
@@ -130,7 +142,7 @@ function CheckoutContent() {
     }, 15000);
 
     return () => clearInterval(pollInterval);
-  }, [transaction, transactionRef]);
+  }, [transaction, transactionRef, db, user?.uid]);
 
   const handleGenerateQRIS = async () => {
     if (!plan || !user || !db || !refId) return;

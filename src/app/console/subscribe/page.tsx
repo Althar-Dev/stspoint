@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Crown, Building2, Briefcase, X } from "lucide-react";
+import { Check, Crown, Building2, Briefcase, X, Loader2 } from "lucide-react";
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -26,7 +26,6 @@ const servicePlans = {
       ],
       icon: Briefcase,
       button: "Buy Pro Plan",
-      current: false,
     },
     {
       id: "premium",
@@ -42,7 +41,6 @@ const servicePlans = {
       ],
       icon: Crown,
       button: "Upgrade to Premium",
-      current: false,
       highlight: true,
     },
     {
@@ -60,7 +58,6 @@ const servicePlans = {
       ],
       icon: Building2,
       button: "Contact Sales",
-      current: false,
     }
   ],
   orderkuota: [
@@ -78,7 +75,6 @@ const servicePlans = {
       ],
       icon: Briefcase,
       button: "Buy Pro Plan",
-      current: false,
     },
     {
       id: "premium",
@@ -94,7 +90,6 @@ const servicePlans = {
       ],
       icon: Crown,
       button: "Upgrade to Premium",
-      current: false,
       highlight: true,
     },
     {
@@ -112,7 +107,6 @@ const servicePlans = {
       ],
       icon: Building2,
       button: "Contact Sales",
-      current: false,
     }
   ]
 };
@@ -125,13 +119,30 @@ export default function SubscriptionPage() {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid);
   }, [db, user?.uid]);
-
   const { data: profile } = useDoc(profileRef);
+
+  const orkutRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "orderkuota");
+  }, [db, user?.uid]);
+  const { data: orkutSvc, loading: orkutLoading } = useDoc(orkutRef);
+
+  const gmRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "gomerchant");
+  }, [db, user?.uid]);
+  const { data: gmSvc, loading: gmLoading } = useDoc(gmRef);
+
   const isDev = profile?.dev === true;
+
+  const currentPlans: Record<string, string> = {
+    orderkuota: orkutSvc?.plan || "",
+    gomerchant: gmSvc?.plan || ""
+  };
 
   return (
     <div className="w-full max-w-full overflow-hidden space-y-12 animate-in fade-in duration-500 px-1">
-      {/* Centered Header Section */}
+      {/* Header Section */}
       <div className="flex flex-col items-center justify-center text-center gap-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
           Premium Infrastructure
@@ -168,6 +179,7 @@ export default function SubscriptionPage() {
               {plans.map((plan, i) => {
                 const displayPrice = isDev && typeof plan.price === 'number' ? 1 : plan.price;
                 const priceString = typeof displayPrice === 'number' ? `Rp ${displayPrice.toLocaleString('id-ID')}` : displayPrice;
+                const isCurrent = currentPlans[serviceId] === plan.id;
 
                 return (
                   <Card 
@@ -178,7 +190,12 @@ export default function SubscriptionPage() {
                       : 'bg-card border border-border hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5'
                     }`}
                   >
-                    {plan.highlight && (
+                    {isCurrent && (
+                      <div className="absolute top-8 right-8">
+                        <Badge className="bg-emerald-500 text-white border-none font-bold text-[9px] uppercase tracking-tighter px-3 py-1 rounded-md ring-2 ring-emerald-400/20">ACTIVE PLAN</Badge>
+                      </div>
+                    )}
+                    {!isCurrent && plan.highlight && (
                       <div className="absolute top-8 right-8">
                         <Badge className="bg-primary text-primary-foreground border-none font-bold text-[9px] uppercase tracking-tighter px-3 py-1 rounded-md ring-2 ring-primary-foreground/20">RECOMMENDED</Badge>
                       </div>
@@ -251,11 +268,17 @@ export default function SubscriptionPage() {
                             ? 'bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-none' 
                             : 'border-border bg-card'
                           }`}
-                          disabled={plan.current}
+                          disabled={isCurrent}
                         >
-                          <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}&ref=STS${Math.random().toString(36).substring(2, 9).toUpperCase()}`}>
-                            {plan.current ? "Plan Currently Active" : plan.button}
-                          </Link>
+                          {isCurrent ? (
+                             <span className="flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4" /> Currently Active
+                             </span>
+                          ) : (
+                            <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}&ref=STS${Math.random().toString(36).substring(2, 9).toUpperCase()}`}>
+                              {plan.button}
+                            </Link>
+                          )}
                         </Button>
                       )}
                     </CardFooter>

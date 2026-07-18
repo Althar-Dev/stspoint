@@ -37,7 +37,7 @@ import { ReactNode, useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, updateDoc, deleteField, serverTimestamp, getDoc } from "firebase/firestore";
 
 const mainMenuItems = [
   {
@@ -98,12 +98,43 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
+  // Lazy Cleanup for Expired Plans
+  useEffect(() => {
+    if (!db || !user?.uid) return;
+
+    const checkExpirations = async () => {
+      const services = ['orderkuota', 'gomerchant'];
+      const now = new Date();
+
+      for (const svcId of services) {
+        const svcRef = doc(db, "users", user.uid, "services", svcId);
+        const svcSnap = await getDoc(svcRef);
+        
+        if (svcSnap.exists()) {
+          const data = svcSnap.data();
+          if (data.plan && data.planExpiry) {
+            const expiry = data.planExpiry.toDate ? data.planExpiry.toDate() : new Date(data.planExpiry);
+            if (now > expiry) {
+              await updateDoc(svcRef, {
+                plan: deleteField(),
+                planExpiry: deleteField(),
+                updatedAt: serverTimestamp()
+              });
+              console.log(`Plan expired and removed for service: ${svcId}`);
+            }
+          }
+        }
+      }
+    };
+
+    checkExpirations();
+  }, [db, user?.uid, pathname]);
+
   useEffect(() => {
     if (!authLoading && !profileLoading) {
       if (!user) {
         router.push("/signin");
       } else if (profile && profile.role === 'client' && !profile.dev) {
-        // Clients are not allowed in Merchant Console
         router.push("/client");
       }
     }
