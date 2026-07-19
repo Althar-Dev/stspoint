@@ -27,7 +27,8 @@ import {
   Plus,
   CheckCircle2,
   RefreshCcw,
-  ShieldAlert
+  ShieldAlert,
+  HelpCircle
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -615,7 +616,7 @@ echo $response;
       {/* --- WEBHOOKS --- */}
       {activeType === 'webhooks' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
-           <section className="space-y-8">
+           <section className="space-y-12">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
                 <Webhook className="w-3 h-3" />
@@ -623,8 +624,33 @@ echo $response;
               </div>
               <h1 className="text-4xl font-headline font-bold">Webhooks</h1>
               <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
-                Webhooks allow your application to receive real-time notifications when a specific event occurs in the STSPoint ecosystem. Instead of polling for updates, we push data to your server immediately.
+                Webhooks (Callbacks) allow STSPoint to push real-time data to your server as soon as an event occurs, eliminating the need for constant status polling.
               </p>
+            </div>
+
+            {/* Visual Overview */}
+            <div className="p-8 rounded-[2rem] bg-muted/50 border border-border space-y-8">
+               <div className="flex items-center gap-3">
+                  <HelpCircle className="w-5 h-5 text-primary" />
+                  <h3 className="font-bold text-base">How it works</h3>
+               </div>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                  <div className="space-y-3 relative z-10 text-center md:text-left">
+                     <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mx-auto md:mx-0">1</div>
+                     <h4 className="font-bold text-sm">Event Occurs</h4>
+                     <p className="text-xs text-muted-foreground leading-relaxed">A payment is completed (STSPay) or an order status changes (PPOB).</p>
+                  </div>
+                  <div className="space-y-3 relative z-10 text-center md:text-left">
+                     <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mx-auto md:mx-0">2</div>
+                     <h4 className="font-bold text-sm">Post JSON</h4>
+                     <p className="text-xs text-muted-foreground leading-relaxed">STSPoint sends a secure POST request to your registered Webhook URL.</p>
+                  </div>
+                  <div className="space-y-3 relative z-10 text-center md:text-left">
+                     <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mx-auto md:mx-0">3</div>
+                     <h4 className="font-bold text-sm">ACK & Process</h4>
+                     <p className="text-xs text-muted-foreground leading-relaxed">Your server responds with 200 OK and processes the transaction internally.</p>
+                  </div>
+               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -632,35 +658,35 @@ echo $response;
                 <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
                    <Zap className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-sm">Supported Services</h4>
+                <h4 className="font-bold text-sm">Active Services</h4>
                 <div className="flex flex-wrap gap-2">
                    <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">STSPay</Badge>
-                   <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">PPOB Orders</Badge>
+                   <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">PPOB</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">Callbacks are currently available for these two core services to notify you of payment and fulfillment statuses.</p>
+                <p className="text-xs text-muted-foreground">Webhooks are currently operational for these two core services. Bridge services like GoMerchant/Orkut rely on synchronous API results.</p>
               </Card>
               <Card className="border-border bg-card rounded-2xl p-6 space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
                    <ShieldAlert className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-sm">Security & Signing</h4>
+                <h4 className="font-bold text-sm">Security Verification</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Every webhook contains an <code className="font-bold text-foreground">X-STS-Signature</code> header. You must verify this signature using an **HMAC-SHA256** hash of the request body with your **Secret Key**.
+                  Every request includes an <code className="font-bold text-foreground">X-STS-Signature</code> header. Use **HMAC-SHA256** with your **Secret Key** to verify that the payload is genuine.
                 </p>
               </Card>
             </div>
 
-            <div className="space-y-6 pt-4">
+            <div className="space-y-6 pt-4 scroll-mt-24" id="webhook-example">
                <h3 className="text-2xl font-bold flex items-center gap-3">
                  <Terminal className="w-6 h-6 text-primary" />
-                 Integration Flow
+                 Example Payload
                </h3>
                <div className="space-y-4">
                  <p className="text-sm text-muted-foreground leading-relaxed">
-                   When an event occurs, STSPoint will send an <span className="font-bold text-foreground">HTTP POST</span> request to your registered Webhook URL with a JSON payload.
+                   Example JSON sent by STSPoint when a payment is marked as **PAID**.
                  </p>
                  <CodeBlock 
-                   title="Example Webhook Payload (Payment Success)"
+                   title="POST Webhook Payload"
                    type="json"
                    code={`{
   "event": "payment.success",
@@ -675,32 +701,15 @@ echo $response;
                  />
                </div>
 
-               <div className="p-6 rounded-2xl bg-muted/50 border border-border space-y-4">
+               <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-4">
                  <div className="flex items-center gap-2">
-                   <Info className="w-4 h-4 text-primary" />
-                   <h4 className="text-sm font-bold uppercase tracking-tight">Handling Responses</h4>
+                   <Info className="w-4 h-4 text-amber-600" />
+                   <h4 className="text-sm font-bold uppercase tracking-tight text-amber-900">Acknowledgement</h4>
                  </div>
-                 <p className="text-xs text-muted-foreground leading-relaxed">
-                   Your server must acknowledge receipt of the webhook by returning a <span className="text-emerald-600 font-bold">200 OK</span> HTTP status code. If our system receives any other code (e.g., 500, 404, or a timeout), it will attempt to resend the notification up to 3 times over a 24-hour period.
+                 <p className="text-xs text-amber-800 leading-relaxed">
+                   Your server **must** return an <span className="font-bold">HTTP 200</span> response within 10 seconds. If our system receives a timeout or any error code (4xx/500), it will attempt to redeliver the message up to 3 times.
                  </p>
                </div>
-            </div>
-
-            <div className="pt-8 border-t border-border">
-               <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Implementation Checklist</h4>
-               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                 {[
-                   "Endpoint reachable via public HTTPS",
-                   "Secret Key used for Signature verification",
-                   "Response within 10 seconds (200 OK)",
-                   "Idempotency handling for duplicate events"
-                 ].map((item, i) => (
-                   <li key={i} className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      {item}
-                   </li>
-                 ))}
-               </ul>
             </div>
           </section>
         </div>
