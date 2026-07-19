@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -25,7 +26,8 @@ import {
   Users,
   ChevronDown,
   LayoutGrid,
-  Package
+  Package,
+  Settings
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -53,6 +55,7 @@ const devMenuItems = [
       { title: "Transactions Log", url: "/dev/database?view=transactions", view: "transactions" },
       { title: "License Keys", url: "/dev/database?view=licenses", view: "licenses" },
       { title: "Payment Channels", url: "/dev/database?view=channels", view: "channels" },
+      { title: "Website Settings", url: "/dev/settings" },
     ]
   },
   { 

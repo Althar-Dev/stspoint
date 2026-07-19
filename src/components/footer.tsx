@@ -1,13 +1,27 @@
+
+"use client";
+
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Icon } from "@iconify/react";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 export function Footer() {
+  const db = useFirestore();
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, "settings", "global");
+  }, [db]);
+
+  const { data: settings } = useDoc(settingsRef);
+
   const socials = [
-    { icon: "mdi:instagram", href: "#" },
-    { icon: "mdi:whatsapp", href: "#" },
-    { icon: "mdi:linkedin", href: "#" },
-    { icon: "mdi:twitter", href: "#" },
+    { icon: "mdi:instagram", href: settings?.instagramUrl || "#", key: 'instagram' },
+    { icon: "mdi:whatsapp", href: settings?.whatsappUrl || "#", key: 'whatsapp' },
+    { icon: "mdi:linkedin", href: settings?.linkedinUrl || "#", key: 'linkedin' },
+    { icon: "mdi:twitter", href: settings?.twitterUrl || "#", key: 'twitter' },
   ];
 
   return (
@@ -43,10 +57,12 @@ export function Footer() {
         <div className="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground text-[10px] md:text-xs">© 2026 STSPoint. Infrastructure as a Service.</p>
           <div className="flex gap-4">
-            {socials.map((social, i) => (
+            {socials.map((social) => (
               <a 
-                key={i} 
+                key={social.key} 
                 href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center hover:bg-primary/10 cursor-pointer transition-colors text-muted-foreground hover:text-primary"
               >
                 <Icon icon={social.icon} className="w-5 h-5" />
