@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
 import { 
@@ -9,16 +10,26 @@ import {
   setDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
+import { createStsPayment } from '@/lib/xendit/create';
+import { createXenditPaymentRequest } from '@/lib/xendit/payment-request';
 
 /**
- * API: Create Payment Link (External Integration)
+ * API: Create Payment (Unified STSPay Entry Point)
  * Method: POST
  * URL: /api/payments/create
+ * Supports: payment_link, qris
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { merchant_id, secret_key, amount, payer_email, description } = body;
+    const { 
+      merchant_id, 
+      secret_key, 
+      amount, 
+      payer_email, 
+      description,
+      type = 'payment_link' 
+    } = body;
 
     // 1. Validasi Input Dasar
     if (!merchant_id || !secret_key || !amount || !payer_email) {
@@ -28,8 +39,12 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    if (isNaN(amount) || amount <= 0) {
-      return NextResponse.json({ success: false, message: 'Amount must be a positive number.' }, { status: 400 });
+    const baseAmount = Number(amount);
+    if (isNaN(baseAmount) || baseAmount < 100) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Amount must be at least 100.' 
+      }, { status: 400 });
     }
 
     const { firestore } = initializeFirebase();
@@ -50,39 +65,94 @@ export async function POST(request: Request) {
     const merchantData = authSnap.docs[0].data();
     const merchantUid = merchantData.uid;
 
-    // 3. Generate External ID & Checkout URL
-    const external_id = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-    
-    // Tentukan base URL untuk link checkout
+    // 3. Generate External ID
+    const external_id = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     const protocol = request.headers.get('x-forwarded-proto') || 'http';
     const host = request.headers.get('host');
     const checkout_url = `${protocol}://${host}/checkout/${external_id}`;
 
-    // 4. Simpan ke Firestore (stspay_transactions)
-    const transactionRef = doc(firestore, 'stspay_transactions', external_id);
-    const transactionData = {
-      id: external_id,
-      amount: Number(amount),
+    let responseData: any = {
+      external_id,
       status: 'PENDING',
-      payerEmail: payer_email,
-      description: description || 'External API Payment',
-      userId: merchantUid,
-      type: 'payment',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      amount: baseAmount
     };
 
-    await setDoc(transactionRef, transactionData);
+    let paymentInfo: any = {};
+
+    // 4. Handle specific payment types
+    if (type === 'qris') {
+      // Use Xendit V3 Payment Request for direct QRIS
+      const qrisRes = await createXenditPaymentRequest({
+        reference_id: external_id,
+        amount: baseAmount,
+        currency: 'IDR',
+        description: description || 'STSPay QRIS Payment',
+        payment_method: {
+          type: 'QR_CODE',
+          reusability: 'ONE_TIME_USE',
+          qr_code: {
+            channel_code: 'QRIS',
+            channel_properties: {}
+          }
+        }
+      });
+
+      if (!qrisRes.success) {
+        return NextResponse.json({ success: false, message: qrisRes.message }, { status: 500 });
+      }
+
+      const qrData = qrisRes.data;
+      paymentInfo = {
+        pr_id: qrData.id,
+        qr_string: qrData.payment_method.qr_code.channel_properties.qr_string,
+        provider: 'Xendit',
+        type: 'qris'
+      };
+
+      responseData.qr_string = paymentInfo.qr_string;
+    } else {
+      // Default: Payment Link (Xendit Invoice V2)
+      const invoiceRes = await createStsPayment({
+        external_id,
+        amount: baseAmount,
+        payer_email,
+        description: description || 'STSPay Payment Link',
+        client_name: merchantData.name || 'STS Merchant'
+      });
+
+      if (!invoiceRes.success) {
+        return NextResponse.json({ success: false, message: invoiceRes.message }, { status: 500 });
+      }
+
+      paymentInfo = {
+        invoice_id: invoiceRes.data?.id,
+        invoice_url: invoiceRes.data?.invoice_url,
+        provider: 'Xendit',
+        type: 'payment_link'
+      };
+
+      responseData.checkout_url = checkout_url;
+    }
+
+    // 5. Simpan ke Firestore
+    const transactionRef = doc(firestore, 'stspay_transactions', external_id);
+    await setDoc(transactionRef, {
+      id: external_id,
+      amount: baseAmount,
+      status: 'PENDING',
+      payerEmail: payer_email,
+      description: description || 'STSPay Payment',
+      userId: merchantUid,
+      type: 'payment',
+      mode: type,
+      payment_info: paymentInfo,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
 
     return NextResponse.json({
       success: true,
-      data: {
-        external_id: external_id,
-        checkout_url: checkout_url,
-        status: 'PENDING',
-        amount: Number(amount),
-        currency: 'IDR'
-      }
+      data: responseData
     });
 
   } catch (error: any) {
