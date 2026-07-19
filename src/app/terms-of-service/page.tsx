@@ -41,9 +41,9 @@ export default function TermsOfServicePage() {
       content: "STSPoint does not interfere with and is NOT responsible under any circumstances if a user utilizes our services for illegal activities. You are solely responsible for all legal consequences of using this service. We are strictly released from liability if: \n\n • Your account is blocked or closed by Upstream Providers (e.g., GoPay, Orkut) due to violations. \n • You face legal action, police investigations, or court proceedings resulting from your business activity. \n • You face administrative or criminal sanctions. \n • There are financial losses due to account freezes or legal actions. \n • There are claims from third parties related to your business activities. \n\n STSPoint provides technology tools ONLY and does NOT participate in your business operations."
     },
     {
-      title: "4. Strict Security Policy (No Private Data Requests)",
+      title: "4. Strict Security Policy (No Unnatural Data Requests)",
       icon: Lock,
-      content: "STSPoint prioritizes your security. WE WILL NEVER ASK for your recovery phrases, seed phrases, mnemonic keys (12/24 words), private keys, or passwords through email, WhatsApp, or any support channel. You are solely responsible for maintaining the confidentiality of your API Keys and account credentials. Any loss arising from the voluntary disclosure of sensitive data is your sole responsibility."
+      content: "STSPoint prioritizes your security. While we provide API Secret Keys for your integration, WE WILL NEVER ASK for 'unnatural' sensitive data such as: \n\n • Your 12 or 24-word recovery phrases (seed phrases). \n • Mnemonic keys or external private keys. \n • Your personal bank passwords or PINs. \n\n We will never request these via email, WhatsApp, or any support channel. You are solely responsible for maintaining the confidentiality of your STS API credentials. Any loss arising from the voluntary disclosure of sensitive data to third parties is your sole responsibility."
     },
     {
       title: "5. Primary Limitation of Liability",
@@ -96,9 +96,9 @@ export default function TermsOfServicePage() {
         <div className="p-6 rounded-[1.5rem] bg-amber-50 border border-amber-200 flex items-start gap-4 shadow-sm animate-in fade-in duration-700">
            <EyeOff className="w-6 h-6 text-amber-600 shrink-0 mt-1" />
            <div className="space-y-1">
-              <h4 className="font-bold text-amber-900 text-sm">Security Alert: No Private Key Requests</h4>
+              <h4 className="font-bold text-amber-900 text-sm">Security Alert: Data Privacy</h4>
               <p className="text-xs text-amber-800 leading-relaxed">
-                STSPoint will **never** ask you for your 24-word recovery phrase or private keys. If anyone claiming to be from STSPoint asks for these details, they are attempting to defraud you. Report such incidents immediately.
+                STSPoint will **never** ask you for your recovery phrases (seed phrases) or bank passwords. If anyone claiming to be from STSPoint asks for these details, they are attempting to defraud you. Report such incidents immediately.
               </p>
            </div>
         </div>
