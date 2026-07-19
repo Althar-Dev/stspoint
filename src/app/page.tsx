@@ -11,7 +11,19 @@ import { Zap, ShieldCheck, Cpu, Globe } from "lucide-react";
 import Script from "next/script";
 
 export default function Home() {
-  const structuredData = {
+  const websiteData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "STSPoint",
+    "url": "https://stspoint.id",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://stspoint.id/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  const softwareData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "STSPoint",
@@ -86,9 +98,14 @@ export default function Home() {
   return (
     <LandingLayout>
       <Script
-        id="structured-data"
+        id="website-data"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteData) }}
+      />
+      <Script
+        id="software-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareData) }}
       />
       <Script
         id="person-data"

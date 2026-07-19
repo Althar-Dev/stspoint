@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     title: 'STSPoint | Digital Infrastructure by AltharDev',
     description: 'Scale your business with robust payment and product distribution infrastructure by StarVale Technology Solution.',
     url: 'https://stspoint.id',
-    siteName: 'STSPoint Infrastructure',
+    siteName: 'STSPoint',
     images: [
       {
         url: '/assets/img/og-image.png',
