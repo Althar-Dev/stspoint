@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -10,24 +9,24 @@ import {
 
 const FAQS = [
   {
-    q: "How secure is the STSPoint Infrastructure?",
-    a: "We utilize enterprise-grade security protocols including AES-256 data encryption at rest and TLS 1.3 for all data in transit. Our internal bridges undergo regular security audits to ensure your business data and secret keys remain protected.",
+    q: "What is an Infrastructure Bridge and how does it work?",
+    a: "STSPoint acts as a technical intermediary (Bridge) between your system and high-level upstream providers like Xendit, GoPay, and Orderkuota. We provide a single, unified API that simplifies complex backend orchestration for payments, PPOB, and OTP services, allowing you to scale without managing multiple provider integrations.",
+  },
+  {
+    q: "How secure are my Merchant credentials and API keys?",
+    a: "Security is our highest priority. All data in transit is protected via TLS 1.3, and sensitive credentials are encrypted at rest. Furthermore, we maintain a strict security policy: STSPoint will never ask for your recovery phrases, bank passwords, or PINs. Your Secret Key is the only authentication needed for your API requests.",
   },
   {
     q: "Do you provide real-time transaction webhooks?",
-    a: "Yes. Our platform features a robust Webhook engine that delivers instant POST notifications to your server for every status update (Paid, Expired, Fulfilled). You can even use per-transaction dynamic callback URLs via our API headers.",
+    a: "Yes. Our platform features a robust Webhook engine that delivers instant POST notifications to your server for every status update, such as Successful Payments (PAID) or Product Delivery. You can configure global webhook URLs in your dashboard or provide dynamic callback URLs per-request via API headers.",
   },
   {
-    q: "What programming languages do you support?",
-    a: "STSPoint provides a RESTful JSON API that is compatible with any language capable of HTTP requests. We offer specialized SDK support and documentation examples for Node.js, Python, PHP, and cURL.",
-  },
-  {
-    q: "Is there a sandbox environment for testing?",
-    a: "Absolutely. All merchant accounts have access to a sandbox mode where you can simulate successful and failed payments without any real financial impact. This allows you to test your integration logic before going live.",
+    q: "Can I integrate STSPoint with any programming language?",
+    a: "Absolutely. STSPoint provides a standardized RESTful JSON API that is compatible with any language capable of making HTTP requests. We offer detailed documentation and implementation examples for Node.js, Python, PHP, and cURL to help you go live in minutes.",
   },
   {
     q: "What is your uptime guarantee (SLA)?",
-    a: "We guarantee a 99.9% uptime SLA for all our core API services. Our globally distributed infrastructure ensures that even during peak traffic, latency remains consistently low across all service modules.",
+    a: "We guarantee a 99.9% uptime SLA for our core API services. Our globally distributed Anycast network ensures that even during peak traffic periods, your business stays online with minimal latency and high reliability across all our infrastructure modules.",
   },
 ];
 
