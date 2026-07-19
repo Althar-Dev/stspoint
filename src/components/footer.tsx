@@ -3,24 +3,13 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Icon } from "@iconify/react";
-import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
 
 export function Footer() {
-  const db = useFirestore();
-
-  const settingsRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return doc(db, "settings", "global");
-  }, [db]);
-
-  const { data: settings } = useDoc(settingsRef);
-
   const socials = [
-    { icon: "mdi:instagram", href: settings?.instagramUrl || "#", key: 'instagram' },
-    { icon: "mdi:whatsapp", href: settings?.whatsappUrl || "#", key: 'whatsapp' },
-    { icon: "mdi:linkedin", href: settings?.linkedinUrl || "#", key: 'linkedin' },
-    { icon: "mdi:twitter", href: settings?.twitterUrl || "#", key: 'twitter' },
+    { icon: "mdi:instagram", href: "https://instagram.com/starvale.id", key: 'instagram' },
+    { icon: "mdi:whatsapp", href: "https://whatsapp.com/channel/0029VbAXqb3Chq6Gh1c3fd42", key: 'whatsapp' },
+    { icon: "mdi:linkedin", href: "https://www.linkedin.com/in/starvaleid", key: 'linkedin' },
+    { icon: "mdi:twitter", href: "https://x.com/StarValeID", key: 'twitter' },
   ];
 
   return (

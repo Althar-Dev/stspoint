@@ -4,19 +4,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, 
-  ShieldCheck, 
-  Scale, 
-  AlertCircle, 
   Clock,
   Zap,
-  Code2,
   Wallet,
   Unplug,
   Gavel,
   ShieldAlert,
   Ban,
   Lock,
-  Search,
   EyeOff
 } from "lucide-react";
 import { Footer } from "@/components/footer";
@@ -120,25 +115,6 @@ export default function TermsOfServicePage() {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Support Note */}
-        <div className="p-8 md:p-12 rounded-[2.5rem] bg-zinc-900 text-white flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32"></div>
-           <div className="flex items-start gap-6 relative z-10">
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 mt-1">
-                 <Scale className="w-8 h-8 text-primary" />
-              </div>
-              <div className="space-y-2">
-                 <h4 className="font-headline font-bold text-xl">Legal Clarification</h4>
-                 <p className="text-sm text-zinc-400 leading-relaxed max-w-md">
-                   By accessing our API, you agree that you are fully responsible for all legal and financial outcomes of your business. For compliance inquiries, contact <span className="font-bold text-white">legal@stspoint.id</span>.
-                 </p>
-              </div>
-           </div>
-           <Button asChild className="rounded-xl font-bold h-14 px-10 bg-white text-black hover:bg-zinc-200 uppercase text-[11px] tracking-widest shadow-xl relative z-10 shrink-0">
-              <a href="/support">Consult Support</a>
-           </Button>
         </div>
       </main>
 
