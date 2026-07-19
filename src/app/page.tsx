@@ -5,7 +5,6 @@ import { LandingLayout } from "@/components/layouts/landing-layout";
 import { HeroSection } from "@/components/sections/hero";
 import { ServicesSection } from "@/components/sections/services";
 import { HowItWorksSection } from "@/components/sections/how-it-works";
-import { CatalogSection } from "@/components/sections/catalog";
 import { TestimonialsSection } from "@/components/sections/testimonials";
 import { FAQSection } from "@/components/sections/faq";
 import { CTASection } from "@/components/sections/cta";
@@ -44,7 +43,6 @@ export default function Home() {
         <div className="max-w-screen-2xl mx-auto px-6 space-y-32">
           <ServicesSection />
           <HowItWorksSection />
-          <CatalogSection />
           <TestimonialsSection />
           <FAQSection />
           <CTASection />
