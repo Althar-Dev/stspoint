@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -348,6 +349,7 @@ function DocsContent() {
                     type="curl"
                     code={`curl -X POST https://api.stspoint.id/api/payments/create \\
   -H "Content-Type: application/json" \\
+  -H "X-Callback-URL: https://your-server.com/callback" \\
   -d '{
     "merchant_id": "STS-XXXXXXXX",
     "secret_key": "STS-Key-XXXXXXXX",
@@ -365,7 +367,10 @@ function DocsContent() {
                     type="node"
                     code={`const response = await fetch('https://api.stspoint.id/api/payments/create', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 
+    'Content-Type': 'application/json',
+    'X-Callback-URL': 'https://your-server.com/callback'
+  },
   body: JSON.stringify({
     merchant_id: 'STS-XXXXXXXX',
     secret_key: 'STS-Key-XXXXXXXX',
@@ -388,6 +393,9 @@ console.log(result);`}
                     code={`import requests
 
 url = "https://api.stspoint.id/api/payments/create"
+headers = {
+    "X-Callback-URL": "https://your-server.com/callback"
+}
 payload = {
     "merchant_id": "STS-XXXXXXXX",
     "secret_key": "STS-Key-XXXXXXXX",
@@ -397,7 +405,7 @@ payload = {
     "description": "Digital Product Purchase"
 }
 
-response = requests.post(url, json=payload)
+response = requests.post(url, json=payload, headers=headers)
 print(response.json())`}
                   />
                 </TabsContent>
@@ -421,7 +429,10 @@ $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'X-Callback-URL: https://your-server.com/callback'
+]);
 
 $response = curl_exec($ch);
 curl_close($ch);
@@ -511,7 +522,7 @@ echo $response;
                    <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold text-amber-600">FAILED</Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
-                  For better efficiency, we highly recommend setting up **Webhooks** to receive real-time notifications when a payment is completed.
+                  For better efficiency, we highly recommend using dynamic **Webhooks** via the `X-Callback-URL` header.
                 </p>
               </div>
             </div>
@@ -547,6 +558,12 @@ echo $response;
   "ref_id": "MY-ORDER-001"
 }`}
             />
+            <div className="p-6 rounded-2xl bg-muted/50 border border-border">
+               <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Dynamic Webhook Header</p>
+               <p className="text-xs text-muted-foreground leading-relaxed">
+                  Similar to STSPay, you can include the <code className="font-bold text-foreground">X-Callback-URL</code> header in your PPOB requests to receive real-time order status updates at a specific URL.
+               </p>
+            </div>
           </section>
         </div>
       )}
@@ -637,13 +654,13 @@ echo $response;
                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                   <div className="space-y-3 relative z-10 text-center md:text-left">
                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mx-auto md:mx-0">1</div>
-                     <h4 className="font-bold text-sm">Event Occurs</h4>
-                     <p className="text-xs text-muted-foreground leading-relaxed">A payment is completed (STSPay) or an order status changes (PPOB).</p>
+                     <h4 className="font-bold text-sm">Request with URL</h4>
+                     <p className="text-xs text-muted-foreground leading-relaxed">Provide your callback URL in the <code className="font-bold text-foreground">X-Callback-URL</code> header during an API request.</p>
                   </div>
                   <div className="space-y-3 relative z-10 text-center md:text-left">
                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mx-auto md:mx-0">2</div>
                      <h4 className="font-bold text-sm">Post JSON</h4>
-                     <p className="text-xs text-muted-foreground leading-relaxed">STSPoint sends a secure POST request to your registered Webhook URL.</p>
+                     <p className="text-xs text-muted-foreground leading-relaxed">STSPoint sends a secure POST request to that specific URL when the event happens.</p>
                   </div>
                   <div className="space-y-3 relative z-10 text-center md:text-left">
                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mx-auto md:mx-0">3</div>
@@ -658,12 +675,10 @@ echo $response;
                 <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
                    <Zap className="w-5 h-5" />
                 </div>
-                <h4 className="font-bold text-sm">Active Services</h4>
-                <div className="flex flex-wrap gap-2">
-                   <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">STSPay</Badge>
-                   <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">PPOB</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">Webhooks are currently operational for these two core services. Bridge services like GoMerchant/Orkut rely on synchronous API results.</p>
+                <h4 className="font-bold text-sm">Dynamic Endpoints</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Unlike legacy systems, we do not require a global static URL. You can specify a different callback URL for every single transaction via headers.
+                </p>
               </Card>
               <Card className="border-border bg-card rounded-2xl p-6 space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
@@ -689,7 +704,7 @@ echo $response;
                    title="POST Webhook Payload"
                    type="json"
                    code={`{
-  "event": "payment.success",
+  "event": "payment.paid",
   "data": {
     "external_id": "PAY-1730-XXXX",
     "status": "PAID",

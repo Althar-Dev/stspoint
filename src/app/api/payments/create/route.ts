@@ -18,6 +18,7 @@ import { createXenditPaymentRequest } from '@/lib/xendit/payment-request';
  * Method: POST
  * URL: /api/payments/create
  * Supports: payment_link, qris
+ * Header: x-callback-url (Optional dynamic webhook)
  */
 export async function POST(request: Request) {
   try {
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
       description,
       type = 'payment_link' 
     } = body;
+
+    // Capture dynamic callback URL from header
+    const callbackUrl = request.headers.get('x-callback-url');
 
     // 1. Validasi Input Dasar
     if (!merchant_id || !secret_key || !amount || !payer_email) {
@@ -145,6 +149,7 @@ export async function POST(request: Request) {
       userId: merchantUid,
       type: 'payment',
       mode: type,
+      callbackUrl: callbackUrl || null, // Store dynamic webhook URL
       payment_info: paymentInfo,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
