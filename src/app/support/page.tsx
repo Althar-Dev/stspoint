@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, Mail, MapPin, Send, MessageCircle } from "lucide-react";
+import { ChevronLeft, Mail, Send, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Footer } from "@/components/footer";
 
@@ -26,25 +26,24 @@ export default function ContactPage() {
         </Button>
       </div>
 
-      <main className="max-w-6xl mx-auto px-6 pt-32 pb-20 flex-1">
+      <main className="max-w-6xl mx-auto px-6 pt-32 pb-20 flex-1 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           
           {/* Contact Information */}
           <div className="lg:col-span-5 space-y-12">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tighter leading-tight">
-                Hubungi <span className="text-primary">Tim Ahli</span> Kami.
+                Contact Our <span className="text-primary">Expert Team</span>.
               </h1>
               <p className="text-muted-foreground leading-relaxed text-lg">
-                Kami siap membantu menjawab pertanyaan teknis Anda mengenai integrasi API, kemitraan bisnis, atau dukungan teknis lainnya.
+                We're here to help answer your technical questions about API integration, business partnerships, or other technical support.
               </p>
             </div>
 
             <div className="space-y-8">
               {[
-                { icon: Mail, label: "Email Bisnis", value: "hello@stspoint.com" },
+                { icon: Mail, label: "Business Email", value: "hello@stspoint.com" },
                 { icon: MessageCircle, label: "WhatsApp Support", value: "+62 812 3456 7890" },
-                { icon: MapPin, label: "Kantor Pusat", value: "Jakarta Selatan, Indonesia" },
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 items-center group">
                   <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
@@ -59,14 +58,14 @@ export default function ContactPage() {
             </div>
 
             <div className="p-8 rounded-xl bg-slate-50 border border-border space-y-4">
-              <h4 className="font-bold">Waktu Operasional</h4>
+              <h4 className="font-bold">Operational Hours</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-tighter">Senin - Jumat</p>
+                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-tighter">Mon - Fri</p>
                   <p className="font-medium">09:00 - 18:00 WIB</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-tighter">Sabtu - Minggu</p>
+                  <p className="text-muted-foreground text-xs uppercase font-bold tracking-tighter">Sat - Sun</p>
                   <p className="font-medium">10:00 - 15:00 WIB</p>
                 </div>
               </div>
@@ -78,38 +77,38 @@ export default function ContactPage() {
             <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card">
               <CardContent className="p-8 md:p-12 space-y-8">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold">Kirim Pesan</h3>
-                  <p className="text-sm text-muted-foreground">Tim kami akan merespons permintaan Anda dalam waktu 24 jam.</p>
+                  <h3 className="text-2xl font-bold">Send Message</h3>
+                  <p className="text-sm text-muted-foreground">Our team will respond to your request within 24 hours.</p>
                 </div>
 
                 <form className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Lengkap</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Full Name</label>
                       <Input placeholder="John Doe" className="rounded-xl h-12 bg-muted border-transparent focus:bg-background focus:border-border transition-all" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Bisnis</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Business Email</label>
                       <Input placeholder="john@company.com" className="rounded-xl h-12 bg-muted border-transparent focus:bg-background focus:border-border transition-all" />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Subjek</label>
-                    <Input placeholder="Pertanyaan Integrasi API" className="rounded-xl h-12 bg-muted border-transparent focus:bg-background focus:border-border transition-all" />
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Subject</label>
+                    <Input placeholder="API Integration Inquiry" className="rounded-xl h-12 bg-muted border-transparent focus:bg-background focus:border-border transition-all" />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Pesan</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Message</label>
                     <Textarea 
-                      placeholder="Bagaimana kami bisa membantu Anda hari ini?" 
+                      placeholder="How can we assist you today?" 
                       className="rounded-xl min-h-[150px] bg-muted border-transparent focus:bg-background focus:border-border transition-all resize-none" 
                     />
                   </div>
 
                   <Button className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-xl shadow-primary/10 transition-all active:scale-[0.98]">
                     <Send className="w-4 h-4 mr-2" />
-                    Kirim Sekarang
+                    Send Now
                   </Button>
                 </form>
               </CardContent>
