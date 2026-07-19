@@ -16,7 +16,8 @@ import {
   ArrowLeft,
   Smartphone,
   Globe,
-  Settings
+  Settings,
+  Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +29,7 @@ const DOCS_NAV = [
   {
     title: "Core",
     items: [
-      { id: "general", title: "General Info", icon: BookOpen, href: "/docs?v=general" },
-      { id: "auth", title: "Authentication", icon: ShieldCheck, href: "/docs?v=general#auth" },
+      { id: "general", title: "Get Started", icon: Rocket, href: "/docs?v=general" },
     ],
   },
   {
@@ -137,7 +137,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
             <span>Documentation</span>
             <ChevronRight className="w-3 h-3 opacity-30" />
-            <span className="text-foreground capitalize">{activeType === 'general' ? 'Core Reference' : `${activeType} API`}</span>
+            <span className="text-foreground capitalize">{activeType === 'general' ? 'Get Started' : `${activeType} API`}</span>
           </div>
 
           <div className="flex items-center gap-3">

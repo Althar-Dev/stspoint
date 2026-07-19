@@ -19,7 +19,10 @@ import {
   ArrowRight,
   Server,
   RefreshCcw,
-  BookOpen
+  BookOpen,
+  Rocket,
+  Lock,
+  Key
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -67,46 +70,79 @@ function DocsContent() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      {/* --- GENERAL DOCS --- */}
+      {/* --- GET STARTED --- */}
       {activeType === 'general' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section id="intro" className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
+              <Rocket className="w-3 h-3" />
+              Developer Onboarding
+            </div>
             <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">
-              API <span className="text-primary/40">Reference.</span>
+              Get <span className="text-primary/40">Started.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-              Selamat datang di dokumentasi teknis STSPoint. Integrasikan berbagai layanan infrastruktur digital kami ke dalam aplikasi Anda dengan mudah.
+              Selamat datang di dokumentasi teknis STSPoint. Platform kami dirancang untuk memudahkan integrasi layanan infrastruktur digital ke dalam aplikasi Anda dengan performa tinggi dan keamanan enterprise.
             </p>
           </section>
 
-          <section id="auth" className="space-y-8">
+          <section id="auth" className="space-y-8 scroll-mt-24 pt-4">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <ShieldCheck className="w-6 h-6 text-primary" />
-                Autentikasi
+                Authentication
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Setiap permintaan API harus menyertakan <code className="text-primary font-bold">secret_key</code> di dalam body JSON untuk memvalidasi identitas merchant Anda.
+                Keamanan adalah prioritas utama kami. Setiap permintaan API harus menyertakan kredensial merchant yang valid untuk memverifikasi hak akses Anda.
               </p>
             </div>
-            <CodeBlock 
-              title="Authentication Header & Body"
-              type="auth-json"
-              code={`{
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <Card className="border-border shadow-none bg-muted/20">
+                  <CardContent className="p-6 space-y-4">
+                     <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                        <Lock className="w-5 h-5" />
+                     </div>
+                     <div className="space-y-1">
+                        <h4 className="font-bold text-sm">Secret Key</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Gunakan untuk autentikasi request di body JSON atau header. Jangan bagikan key ini ke pihak lain.</p>
+                     </div>
+                  </CardContent>
+               </Card>
+               <Card className="border-border shadow-none bg-muted/20">
+                  <CardContent className="p-6 space-y-4">
+                     <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                        <Key className="w-5 h-5" />
+                     </div>
+                     <div className="space-y-1">
+                        <h4 className="font-bold text-sm">Merchant ID</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">ID unik akun Anda untuk referensi data pada integrasi tertentu (seperti STSPay).</p>
+                     </div>
+                  </CardContent>
+               </Card>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm font-bold text-foreground">Contoh Payload Autentikasi:</p>
+              <CodeBlock 
+                title="API Authentication Body"
+                type="auth-json"
+                code={`{
   "secret_key": "STS-Key-XXXXXXXX",
   "merchant_id": "STS-XXXXXXXX"
 }`}
-            />
+              />
+            </div>
           </section>
 
-          <section id="webhooks" className="space-y-8">
+          <section id="webhooks" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <Webhook className="w-6 h-6 text-primary" />
                 Webhooks
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Terima notifikasi status transaksi secara real-time melalui Webhook POST. Pastikan server Anda siap menerima payload JSON.
+                Terima notifikasi status transaksi secara real-time melalui Webhook POST. Pastikan server Anda siap menerima payload JSON dan merespon dengan HTTP 200.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
@@ -114,7 +150,7 @@ function DocsContent() {
               <div className="space-y-1">
                 <p className="text-sm font-bold text-amber-900">Keamanan Webhook</p>
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  Validasi payload menggunakan signature pada header <code className="font-bold">X-STS-Signature</code> menggunakan HMAC-SHA256 untuk memastikan data berasal dari STSPoint.
+                  Kami merekomendasikan validasi payload menggunakan signature pada header <code className="font-bold">X-STS-Signature</code> menggunakan HMAC-SHA256 untuk memastikan data berasal dari STSPoint.
                 </p>
               </div>
             </div>
@@ -131,7 +167,7 @@ function DocsContent() {
                 <Zap className="w-8 h-8 text-[#00AED6]" />
                 STSPay Gateway
               </h2>
-              <p className="text-muted-foreground text-sm">Integrasi link pembayaran otomatis dengan UI checkout modern.</p>
+              <p className="text-muted-foreground text-sm">Integrasi link pembayaran otomatis dengan UI checkout modern yang mendukung QRIS, VA, dan E-Wallet.</p>
               <div className="flex items-center gap-4 mt-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
                 <code className="text-sm font-bold text-primary">/api/payments/create</code>
@@ -162,7 +198,7 @@ function DocsContent() {
                 PPOB H2H Engine
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Lakukan pengisian Pulsa, Paket Data, atau Token Listrik secara otomatis melalui satu koneksi API.
+                Lakukan pengisian Pulsa, Paket Data, atau Token Listrik secara otomatis melalui satu koneksi API terpadu.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
@@ -206,7 +242,7 @@ function DocsContent() {
                 Orderkuota Bridge
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Gunakan saldo Orderkuota Anda untuk menghasilkan QRIS dinamis di website Anda sendiri.
+                Gunakan saldo Orderkuota Anda untuk menghasilkan QRIS dinamis di website Anda sendiri dengan sistem mutasi otomatis.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
@@ -228,14 +264,14 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-primary" />
-                Mutation Sync
+                Orkut: Mutation Sync
               </h2>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
                 <code className="text-sm font-bold text-primary">/api/orkut/status</code>
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Verifikasi pembayaran otomatis dengan mengecek mutasi masuk (IN) di akun Orderkuota.
+                Verifikasi pembayaran otomatis dengan mengecek mutasi masuk (IN) di akun Orderkuota sesuai nominal unik.
               </p>
             </div>
           </section>
@@ -252,7 +288,7 @@ function DocsContent() {
                 GoMerchant API
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Bridge API untuk menerima pembayaran GoPay otomatis menggunakan akun GoBiz Anda.
+                Bridge API untuk menerima pembayaran GoPay otomatis menggunakan akun GoBiz dengan integrasi nominal unik.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
@@ -274,7 +310,7 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-[#00AED6]" />
-                Mutation Reconciliation
+                Gopay: Mutation Recon
               </h2>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
