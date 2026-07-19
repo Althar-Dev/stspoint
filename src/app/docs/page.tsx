@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,7 +28,10 @@ import {
   CheckCircle2,
   RefreshCcw,
   ShieldAlert,
-  HelpCircle
+  HelpCircle,
+  Coins,
+  Percent,
+  Hash
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -775,10 +777,6 @@ echo $response;
           </section>
         </div>
       )}
-
-      <div className="pt-20 text-center border-t border-border">
-         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Documentation Engine v2.1.0-stable</p>
-      </div>
     </div>
   );
 }
