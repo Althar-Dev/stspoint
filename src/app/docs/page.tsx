@@ -22,7 +22,8 @@ import {
   BookOpen,
   Rocket,
   Lock,
-  Key
+  Key,
+  X
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -81,8 +82,8 @@ function DocsContent() {
             <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">
               Get <span className="text-primary/40">Started.</span>
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-              Selamat datang di dokumentasi teknis STSPoint. Platform kami dirancang untuk memudahkan integrasi layanan infrastruktur digital ke dalam aplikasi Anda dengan performa tinggi dan keamanan enterprise.
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
+              Platform kami dirancang untuk memudahkan integrasi layanan infrastruktur digital ke dalam aplikasi Anda dengan performa tinggi dan keamanan enterprise.
             </p>
           </section>
 
@@ -158,14 +159,14 @@ function DocsContent() {
         </div>
       )}
 
-      {/* --- STSPAY DOCS --- */}
+      {/* --- STSPAY --- */}
       {activeType === 'stspay' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-3xl font-bold flex items-center gap-3">
                 <Zap className="w-8 h-8 text-[#00AED6]" />
-                STSPay Gateway
+                STSPay
               </h2>
               <p className="text-muted-foreground text-sm">Integrasi link pembayaran otomatis dengan UI checkout modern yang mendukung QRIS, VA, dan E-Wallet.</p>
               <div className="flex items-center gap-4 mt-4">
@@ -264,7 +265,7 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-primary" />
-                Orderkuota: Mutation Sync
+                Mutation Sync
               </h2>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
@@ -288,7 +289,7 @@ function DocsContent() {
                 GoMerchant
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Bridge API untuk menerima pembayaran GoPay otomatis menggunakan akun GoBiz dengan integrasi nominal unik.
+                Terima pembayaran GoPay otomatis menggunakan akun GoBiz dengan integrasi nominal unik.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
@@ -310,7 +311,7 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-[#00AED6]" />
-                GoMerchant: Mutation Recon
+                Mutation Recon
               </h2>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>

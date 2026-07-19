@@ -121,8 +121,8 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-72 flex flex-col">
-        {/* Header - Mobile & Shared */}
-        <header className="h-16 lg:h-20 flex items-center justify-between px-6 lg:px-12 sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border">
+        {/* Header - Fixed h-16 to match sidebar */}
+        <header className="h-16 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
@@ -142,13 +142,14 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
         </header>
 
         <main className="flex-1">
-          <div className="max-w-4xl mx-auto px-6 lg:px-12 py-10 lg:py-16">
+          {/* Optimized padding and max-width for better desktop display */}
+          <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
             {children}
           </div>
         </main>
 
-        <footer className="px-6 lg:px-12 py-10 border-t border-border bg-muted/20">
-           <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        <footer className="px-6 lg:px-10 py-10 border-t border-border bg-muted/20">
+           <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-xs text-muted-foreground">© 2024 STSPoint Infrastructure. Built for speed.</p>
               <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
                 <a href="#" className="hover:text-primary transition-colors">Github</a>
