@@ -1,4 +1,3 @@
-
 "use client";
 
 import { LandingLayout } from "@/components/layouts/landing-layout";
@@ -9,10 +8,53 @@ import { TestimonialsSection } from "@/components/sections/testimonials";
 import { FAQSection } from "@/components/sections/faq";
 import { CTASection } from "@/components/sections/cta";
 import { Zap, ShieldCheck, Cpu, Globe } from "lucide-react";
+import Script from "next/script";
 
 export default function Home() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "STSPoint",
+    "operatingSystem": "Web",
+    "applicationCategory": "BusinessApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "IDR"
+    },
+    "description": "Integrated digital infrastructure for modern business. Support API payments, AI, and digital goods distribution.",
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "1240"
+    }
+  };
+
+  const organizationData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "STSPoint Infrastructure",
+    "url": "https://stspoint.id",
+    "logo": "https://stspoint.id/assets/img/icon.png",
+    "sameAs": [
+      "https://instagram.com/starvale.id",
+      "https://x.com/StarValeID"
+    ]
+  };
+
   return (
     <LandingLayout>
+      <Script
+        id="structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <Script
+        id="org-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
+      />
+      
       <div className="space-y-24 pb-20">
         <HeroSection />
 
