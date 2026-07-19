@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { Icon } from "@iconify/react";
 
 export function Footer() {
+  const socials = [
+    { icon: "mdi:instagram", href: "#" },
+    { icon: "mdi:whatsapp", href: "#" },
+    { icon: "mdi:linkedin", href: "#" },
+    { icon: "mdi:twitter", href: "#" },
+  ];
+
   return (
     <footer className="bg-secondary/30 w-full py-16 px-6 md:px-12 lg:px-20 border-t border-black/5">
       <div className="w-full max-w-screen-2xl mx-auto">
@@ -33,17 +41,17 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-[10px] md:text-xs">© 2024 STSPoint. Infrastructure as a Service.</p>
+          <p className="text-muted-foreground text-[10px] md:text-xs">© 2026 STSPoint. Infrastructure as a Service.</p>
           <div className="flex gap-4">
-            <div className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center hover:bg-primary/10 cursor-pointer transition-colors">
-              <span className="text-xs font-bold">IG</span>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center hover:bg-primary/10 cursor-pointer transition-colors">
-              <span className="text-xs font-bold">TW</span>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center hover:bg-primary/10 cursor-pointer transition-colors">
-              <span className="text-xs font-bold">FB</span>
-            </div>
+            {socials.map((social, i) => (
+              <a 
+                key={i} 
+                href={social.href}
+                className="w-10 h-10 rounded-full bg-black/5 flex items-center justify-center hover:bg-primary/10 cursor-pointer transition-colors text-muted-foreground hover:text-primary"
+              >
+                <Icon icon={social.icon} className="w-5 h-5" />
+              </a>
+            ))}
           </div>
         </div>
       </div>
