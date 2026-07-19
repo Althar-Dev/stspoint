@@ -1,4 +1,3 @@
-
 "use client";
 
 import { ReactNode, useState } from "react";
@@ -17,6 +16,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
