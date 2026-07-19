@@ -16,7 +16,7 @@ import {
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
 
 /**
- * API: Create Orderkuota QRIS Transaction
+ * API: Create Orderkuota QRIS Transaction with Strict Plan Validation
  * Method: POST
  * URL: /api/orkut/create
  */
@@ -70,19 +70,34 @@ export async function POST(request: Request) {
     }
 
     const orkutData = orkutSnap.data();
-    let plan = (orkutData.plan || "starter").toLowerCase();
+    
+    // --- STRICT PLAN CHECK ---
+    let plan = orkutData.plan;
+    if (!plan) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Access Denied: No active subscription plan found.' 
+      }, { status: 403 });
+    }
+    plan = plan.toLowerCase();
 
     // --- CEK EXPIRED ---
-    if (orkutData.planExpiry && plan !== 'enterprise') {
+    if (plan !== 'enterprise') {
+      if (!orkutData.planExpiry) {
+        return NextResponse.json({ success: false, message: 'Access Denied: Invalid plan configuration.' }, { status: 403 });
+      }
       const expiry = orkutData.planExpiry.toDate ? orkutData.planExpiry.toDate() : new Date(orkutData.planExpiry);
       if (new Date() > expiry) {
-        plan = "starter"; // Downgrade jika expired
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Access Denied: Your subscription has expired. Please renew.' 
+        }, { status: 403 });
       }
     }
     
     // --- LOGIKA RPM (Requests Per Minute) ---
-    // Pro: 100, Premium: 300, Enterprise: Unlimited, Starter: 10
-    const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 10;
+    // Pro: 100, Premium: 300, Enterprise: Unlimited
+    const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
     const lastReset = orkutData.rpmLastReset?.toMillis() || 0;
     const requestsThisMinute = orkutData.rpmRequestsCount || 0;

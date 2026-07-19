@@ -16,7 +16,7 @@ import {
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
 
 /**
- * API: Create GoPay QRIS Transaction with RPM & Expiry Validation
+ * API: Create GoPay QRIS Transaction with Strict Plan Validation
  * Method: POST
  * URL: /api/gopay/create
  */
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Check Service Config & Plan Expiry
+    // 3. Check Service Config & Plan Validation
     const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
     const gomerchantSnap = await getDoc(gomerchantRef);
 
@@ -70,18 +70,33 @@ export async function POST(request: Request) {
     }
 
     const gomerchantData = gomerchantSnap.data();
-    let plan = (gomerchantData.plan || "starter").toLowerCase();
+    
+    // --- STRICT PLAN CHECK ---
+    let plan = gomerchantData.plan;
+    if (!plan) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Access Denied: No active subscription plan found.' 
+      }, { status: 403 });
+    }
+    plan = plan.toLowerCase();
 
     // --- EXPIRY CHECK ---
-    if (gomerchantData.planExpiry && plan !== 'enterprise') {
+    if (plan !== 'enterprise') {
+      if (!gomerchantData.planExpiry) {
+        return NextResponse.json({ success: false, message: 'Access Denied: Invalid plan configuration.' }, { status: 403 });
+      }
       const expiry = gomerchantData.planExpiry.toDate ? gomerchantData.planExpiry.toDate() : new Date(gomerchantData.planExpiry);
       if (new Date() > expiry) {
-        plan = "starter"; // Downgrade functionality if expired
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Access Denied: Your subscription has expired. Please renew in the dashboard.' 
+        }, { status: 403 });
       }
     }
     
     // --- RPM RATE LIMITING LOGIC ---
-    const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 10;
+    const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
     const lastReset = gomerchantData.rpmLastReset?.toMillis() || 0;
     const requestsThisMinute = gomerchantData.rpmRequestsCount || 0;
