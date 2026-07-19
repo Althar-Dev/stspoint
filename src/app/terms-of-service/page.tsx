@@ -88,7 +88,7 @@ export default function TermsOfServicePage() {
           </h1>
           <p className="text-muted-foreground text-sm flex items-center justify-center gap-2 font-medium">
             <Clock className="w-3.5 h-3.5" />
-            Last Updated: October 24, 2024
+            Last Updated: July 20, 2026
           </p>
         </section>
 
