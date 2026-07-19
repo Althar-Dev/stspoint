@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, 
-  FileText, 
   ShieldCheck, 
   Scale, 
   AlertCircle, 
@@ -12,7 +11,10 @@ import {
   Zap,
   Code2,
   Wallet,
-  Unplug
+  Unplug,
+  Gavel,
+  ShieldAlert,
+  Ban
 } from "lucide-react";
 import { Footer } from "@/components/footer";
 
@@ -21,39 +23,39 @@ export default function TermsOfServicePage() {
 
   const sections = [
     {
-      title: "1. Acceptance of Terms",
-      icon: ShieldCheck,
-      content: "By accessing and using the STSPoint Infrastructure Platform (the \"Service\"), you agree to be bound by these Terms of Service. If you do not agree to these terms, you must immediately cease all use of our infrastructure, APIs, and dashboard services."
-    },
-    {
-      title: "2. Description of Service",
+      title: "1. Scope of Infrastructure Services",
       icon: Zap,
-      content: "STSPoint provides a suite of digital infrastructure tools, including but not limited to: Payment Gateways (STSPay), PPOB Distribution APIs, OTP Verification Bridges, and AI-powered automation. We reserve the right to modify, suspend, or discontinue any aspect of the Service at any time."
+      content: "STSPoint provides a unified digital infrastructure platform. Our services include technical bridges for: (a) Payment Processing (STSPay); (b) Digital Goods Distribution (PPOB & Game); (c) Virtual Number Provisioning (OTP Center); and (d) Social Media Engine Bridges (SMM Panel). All services are provided 'AS IS' and 'AS AVAILABLE'."
     },
     {
-      title: "3. API Bridge Nature & No Responsibility",
+      title: "2. The 'API Bridge' Nature",
       icon: Unplug,
-      content: "STSPoint acts solely as a technical bridge (intermediary) between your system and Third-Party Providers (Upstream Providers). We do not own, control, or hold custody over the funds, products, or services provided by these third parties. You acknowledge that any transaction processed is subject to the availability and performance of the respective Upstream Provider."
+      content: "You explicitly acknowledge that STSPoint acts solely as a technical intermediary (Bridge) between your system and Third-Party Upstream Providers (e.g., GoPay Merchant, Orderkuota, DigiFlazz). We do not hold, manage, or take custody of your funds or products. Any successful transaction is entirely dependent on the stability and policies of the respective Upstream Provider."
     },
     {
-      title: "4. Account Responsibilities",
+      title: "3. Illegal Activity & Legal Disclaimer",
+      icon: Gavel,
+      content: "STSPoint does not interfere with and is NOT responsible under any circumstances if a user utilizes our services for illegal activities. You are solely responsible for: (a) Compliance with local laws; (b) Any police investigations or court proceedings resulting from your business activity; (c) Any administrative or criminal sanctions; (d) Financial losses due to account freezes or legal actions. STSPoint provides technology tools ONLY and does not participate in your business operations."
+    },
+    {
+      title: "4. User Obligations & Account Security",
       icon: Code2,
-      content: "You are responsible for maintaining the confidentiality of your account credentials, including Secret Keys and API tokens. Any action performed through your account is deemed your responsibility. You must notify STSPoint immediately of any unauthorized access."
+      content: "Users must: (a) Maintain absolute confidentiality of API Keys and Secrets; (b) Use the service only for lawful purposes; (c) Not attempt to reverse engineer or 'stress test' the infrastructure. You agree to indemnify and hold harmless STSPoint and its staff from any third-party claims arising from your use of the platform."
     },
     {
-      title: "5. API Usage & Restrictions",
-      icon: Code2,
-      content: "Users are granted a limited, non-exclusive right to access our APIs. You agree not to: (a) Reverse engineer any part of the infrastructure; (b) Use the service for fraudulent activities; (c) Circumvent rate limits; (d) Resell the API access without explicit written permission."
+      title: "5. Comprehensive Limitation of Liability",
+      icon: ShieldAlert,
+      content: "STSPoint (including owners, developers, and staff) is strictly released from all liability regarding: \n\n • Upstream Account Status: Any bans, suspensions, or closures of your merchant accounts (e.g., GoPay, Orderkuota) by the providers. \n • Transaction Disputes: Any claims or disputes between you and your customers regarding payments or product fulfillment. \n • Upstream Downtime: Unavailability of third-party APIs or maintenance periods. \n • Data Integrity: Loss of transaction logs or technical errors caused by external system failures. \n • Financial Impact: Any direct or indirect financial losses arising from service interruptions."
     },
     {
-      title: "6. Payments & Financial Transactions",
+      title: "6. Payments, Subscriptions & Finality",
       icon: Wallet,
-      content: "All transactions processed through our gateway are final. STSPoint acts as an infrastructure layer and is not responsible for disputes between you and your end-customers. Fees for subscriptions or processing are non-refundable unless specified otherwise."
+      content: "All subscription fees and transaction fees paid to STSPoint are final and non-refundable. Since we provide infrastructure access, costs are incurred at the moment of provisioning. Users are responsible for ensuring their integration logic is correct before processing live high-value transactions."
     },
     {
-      title: "7. Limitation of Liability",
-      icon: Scale,
-      content: "In no event shall STSPoint be liable for any indirect, incidental, or consequential damages resulting from: (a) Upstream provider downtime or technical failures; (b) Incorrect data sent by the client system; (c) Loss of business due to API latencies. Our total liability is strictly limited to the amount paid for the service in the last 30 days."
+      title: "7. Termination of Access",
+      icon: Ban,
+      content: "We reserve the right to terminate or suspend access to our infrastructure immediately, without prior notice or liability, for any reason, including but not limited to a breach of these Terms or suspected fraudulent activity that could jeopardize the integrity of our bridge network."
     }
   ];
 
@@ -76,47 +78,49 @@ export default function TermsOfServicePage() {
         {/* Header */}
         <section className="space-y-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
-            Legal Documentation
+            Legal Framework
           </div>
-          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight">Terms of <span className="text-primary">Service.</span></h1>
+          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-foreground">
+            Terms of <span className="text-primary/40">Service.</span>
+          </h1>
           <p className="text-muted-foreground text-sm flex items-center justify-center gap-2">
             <Clock className="w-3.5 h-3.5" />
-            Last Updated: January 2026
+            Last Updated: October 2024
           </p>
         </section>
 
         {/* Content Sections */}
         <div className="space-y-12">
           {sections.map((section, i) => (
-            <div key={i} className="space-y-4">
+            <div key={i} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
               <h3 className="text-xl font-bold flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
                    <section.icon className="w-5 h-5" />
                 </div>
                 {section.title}
               </h3>
-              <p className="text-muted-foreground leading-relaxed text-sm md:text-base pl-13">
+              <div className="text-muted-foreground leading-relaxed text-sm md:text-base pl-0 md:pl-13 whitespace-pre-line">
                 {section.content}
-              </p>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Support Note */}
-        <div className="p-8 rounded-3xl bg-slate-50 border border-border flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="p-8 rounded-[2rem] bg-slate-50 border border-border flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
            <div className="flex items-start gap-4">
               <div className="p-2 rounded-lg bg-white border border-border mt-1">
-                 <AlertCircle className="w-5 h-5 text-primary" />
+                 <Scale className="w-5 h-5 text-primary" />
               </div>
               <div className="space-y-1">
-                 <h4 className="font-bold">Need legal clarification?</h4>
-                 <p className="text-xs text-muted-foreground leading-relaxed">
-                   If you have questions regarding our API Bridge policies, please contact our legal department at <span className="font-bold text-foreground">legal@stspoint.com</span>.
+                 <h4 className="font-bold">Legal Clarification</h4>
+                 <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
+                   By using STSPoint, you agree that you are fully responsible for all legal and financial outcomes of your business. For compliance inquiries, contact <span className="font-bold text-foreground">legal@stspoint.id</span>.
                  </p>
               </div>
            </div>
-           <Button asChild className="rounded-xl font-bold h-11 px-8 uppercase text-[10px] tracking-widest shadow-sm">
-              <a href="/support">Contact Support</a>
+           <Button asChild className="rounded-xl font-bold h-11 px-8 uppercase text-[10px] tracking-widest shadow-md">
+              <a href="/support">Consult Support</a>
            </Button>
         </div>
       </main>
