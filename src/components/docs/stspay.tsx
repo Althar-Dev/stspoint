@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -15,7 +14,7 @@ export function DocsStsPay() {
           <Zap className="w-3 h-3" />
           Unified Gateway
         </div>
-        <h1 className="text-4xl font-headline font-bold tracking-tight">STSPay</h1>
+        <h1 className="text-4xl font-headline font-bold tracking-tight text-foreground">STSPay</h1>
         <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
           STSPay is our core payment orchestration layer. It supports two main creation modes: hosting a checkout page for your customers or retrieving a raw QRIS payload for custom frontend implementations.
         </p>
@@ -41,14 +40,14 @@ export function DocsStsPay() {
              <Braces className="w-3.5 h-3.5" />
              Request Parameters
            </h4>
-           <div className="rounded-2xl border border-border overflow-x-auto bg-card">
+           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm">
               <table className="w-full text-left text-xs border-collapse">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Type</th>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Default</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Description</th>
+                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Description</th>
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-border">
@@ -56,31 +55,31 @@ export function DocsStsPay() {
                        <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">merchant_id</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Your unique STS Merchant ID. Found in Console dashboard.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your unique STS Merchant ID. Found in Console dashboard.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">secret_key</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Your private API Secret Key. Used for authentication.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your private API Secret Key. Used for authentication.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">type</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Enum</td>
                        <td className="px-6 py-4 font-mono text-[9px] whitespace-nowrap">payment_link</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Creation mode. Use <code className="text-primary font-bold">payment_link</code> for hosted checkout or <code className="text-primary font-bold">qris</code> for raw string.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Creation mode. Options: <code className="text-primary font-bold">payment_link</code> or <code className="text-primary font-bold">qris</code>.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">amount</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
                        <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Total transaction amount in Indonesian Rupiah (IDR). Min: 100.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Total transaction amount in IDR. Min: 100.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">payer_email</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Customer email address for invoice delivery and identification.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Customer email address for identification.</td>
                     </tr>
                  </tbody>
               </table>
@@ -239,7 +238,7 @@ echo $response;
 
       <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold flex items-center gap-3">
+          <h2 className="text-2xl font-bold flex items-center gap-3 text-foreground">
             <RefreshCcw className="w-6 h-6 text-primary" />
             Status Verification
           </h2>
@@ -271,7 +270,7 @@ echo $response;
         <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex items-start gap-4">
           <Activity className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="space-y-2">
-            <p className="text-sm font-bold">Transaction States</p>
+            <p className="text-sm font-bold text-foreground">Transaction States</p>
             <div className="flex flex-wrap gap-2">
                <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold">PENDING</Badge>
                <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold text-emerald-600">PAID</Badge>
