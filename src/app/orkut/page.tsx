@@ -376,12 +376,11 @@ export default function OrkutPage() {
                     Withdraw
                   </Button>
                   <Button 
+                    asChild
                     variant="outline" 
                     className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider transition-all active:scale-95"
-                    onClick={handleManualRefresh}
-                    disabled={mutationsLoading}
                   >
-                    {mutationsLoading ? "Loading..." : "Refresh Status"}
+                    <Link href="/orkut/qris">Generate QRIS</Link>
                   </Button>
                 </div>
               </>
@@ -425,7 +424,7 @@ export default function OrkutPage() {
                         Disconnect
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-3xl border-border">
+                    <AlertDialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                       <AlertDialogHeader>
                         <AlertDialogTitle className="font-headline font-bold">Disconnect Orderkuota Account?</AlertDialogTitle>
                         <AlertDialogDescription className="text-sm">
@@ -553,6 +552,16 @@ export default function OrkutPage() {
                  <Activity className="w-3 h-3" />
                  {serviceStatus === 'Unstable' ? 'unstable' : serviceStatus}
                </Badge>
+               <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-[11px] font-bold hover:bg-accent h-8"
+                onClick={handleManualRefresh}
+                disabled={mutationsLoading || !isConnected}
+              >
+                {mutationsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-3 h-3" />}
+                Refresh Logs
+              </Button>
                <Button variant="ghost" size="sm" asChild className="text-[11px] font-bold hover:bg-accent h-8">
                 <Link href="/orkut/transactions">
                   View All Logs
