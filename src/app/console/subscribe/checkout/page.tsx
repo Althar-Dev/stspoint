@@ -39,8 +39,8 @@ const PLAN_DETAILS: Record<string, Record<string, any>> = {
     premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support", quota: 15000 },
   },
   orderkuota: {
-    pro: { name: "Orderkuota Pro", price: 25000, desc: "Standard API Speed & 7-Day History", quota: 5000 },
-    premium: { name: "Orderkuota Premium", price: 50000, desc: "High Speed API & Priority Support", quota: 15000 },
+    pro: { name: "Orderkuota Pro", price: 15000, desc: "Rate Limit 100 RPM & 3.000 API Quota", quota: 3000 },
+    premium: { name: "Orderkuota Premium", price: 30000, desc: "Rate Limit 300 RPM & 10.000 API Quota", quota: 10000 },
   }
 };
 

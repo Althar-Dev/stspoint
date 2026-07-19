@@ -63,48 +63,51 @@ const servicePlans = {
     {
       id: "pro",
       name: "Pro",
-      price: 25000,
-      description: "Essential package for PPOB & OTP automation.",
+      price: 15000,
+      description: "Paket hemat untuk otomatisasi PPOB & OTP standar.",
       features: [
-        { text: "5,000 API Quota Requests", available: true },
-        { text: "Standard API Speed", available: true },
-        { text: "7-Day History", available: true },
-        { text: "Export Data", available: true },
+        { text: "3,000 API Quota Requests", available: true },
+        { text: "Rate Limit 100 RPM", available: true },
+        { text: "Transaction List 7 Day", available: true },
+        { text: "Export Data (CSV/PDF)", available: true },
         { text: "Priority Support", available: false },
+        { text: "Priority Process", available: false },
       ],
       icon: Briefcase,
-      button: "Buy Pro Plan",
+      button: "Beli Paket Pro",
     },
     {
       id: "premium",
       name: "Premium",
-      price: 50000,
-      description: "High-performance package for high-volume transactions.",
+      price: 30000,
+      description: "Performa tinggi untuk transaksi volume besar.",
       features: [
-        { text: "15,000 API Quota Requests", available: true },
-        { text: "High Speed API", available: true },
-        { text: "30-Day History", available: true },
-        { text: "Export Data", available: true },
+        { text: "10,000 API Quota Requests", available: true },
+        { text: "Rate Limit 300 RPM", available: true },
+        { text: "Transaction List 30 Day", available: true },
+        { text: "Export Data (CSV/PDF)", available: true },
         { text: "Priority Support", available: true },
+        { text: "Priority Process", available: false },
       ],
       icon: Crown,
-      button: "Upgrade to Premium",
+      button: "Upgrade ke Premium",
       highlight: true,
     },
     {
       id: "enterprise",
       name: "Enterprise",
       price: "Custom",
-      description: "Exclusive infrastructure for industrial scale.",
+      description: "Infrastruktur eksklusif untuk skala industri.",
       features: [
         { text: "Unlimited API Quota", available: true },
-        { text: "Unlimited Speed", available: true },
+        { text: "Unlimited RPM Speed", available: true },
         { text: "Unlimited History", available: true },
         { text: "Full Data Export", available: true },
         { text: "24/7 Dedicated Support", available: true },
+        { text: "Priority Process", available: true },
       ],
       icon: Building2,
-      button: "Contact Sales",
+      button: "Hubungi Sales",
     }
   ]
 };
@@ -149,7 +152,7 @@ export default function SubscriptionPage() {
           Upgrade <span className="text-primary/40">Business</span> Account.
         </h1>
         <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
-          Choose the best infrastructure plan to support your digital business growth without technical limitations.
+          Pilih paket infrastruktur terbaik untuk mendukung pertumbuhan bisnis digital Anda tanpa batasan teknis.
         </p>
       </div>
 
@@ -255,7 +258,7 @@ export default function SubscriptionPage() {
                           variant="outline" 
                           className="w-full rounded-2xl h-14 font-bold uppercase tracking-widest text-[11px] border-border hover:bg-primary hover:text-primary-foreground transition-all"
                         >
-                          <Link href="/support">Contact Us</Link>
+                          <Link href="/support">Hubungi Kami</Link>
                         </Button>
                       ) : (
                         <Button 
@@ -289,7 +292,7 @@ export default function SubscriptionPage() {
       </Tabs>
 
       <div className="text-center pt-10 border-t border-border/50 max-w-4xl mx-auto">
-         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Choose the right infrastructure for your growth</p>
+         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Infrastruktur tepat untuk pertumbuhan yang cepat</p>
       </div>
     </div>
   );
