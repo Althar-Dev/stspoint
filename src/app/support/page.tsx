@@ -42,8 +42,8 @@ export default function ContactPage() {
 
             <div className="space-y-8">
               {[
-                { icon: Mail, label: "Business Email", value: "hello@stspoint.com" },
-                { icon: MessageCircle, label: "WhatsApp Support", value: "+62 812 3456 7890" },
+                { icon: Mail, label: "Support Email", value: "help@stspoint.id" },
+                { icon: MessageCircle, label: "WhatsApp Support", value: "+62 889 7657 7650" },
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 items-center group">
                   <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
