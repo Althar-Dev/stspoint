@@ -14,7 +14,10 @@ import {
   Unplug,
   Gavel,
   ShieldAlert,
-  Ban
+  Ban,
+  Lock,
+  Search,
+  EyeOff
 } from "lucide-react";
 import { Footer } from "@/components/footer";
 
@@ -33,24 +36,24 @@ export default function TermsOfServicePage() {
       content: "You explicitly acknowledge that STSPoint acts solely as a technical intermediary (Bridge) between your system and Third-Party Upstream Providers (e.g., GoPay Merchant, Orderkuota, DigiFlazz). We do not hold, manage, or take custody of your funds or products. Any successful transaction is entirely dependent on the stability and policies of the respective Upstream Provider."
     },
     {
-      title: "3. Illegal Activity & Legal Disclaimer",
+      title: "3. Disclaimer of Responsibility for Illegal Activities",
       icon: Gavel,
-      content: "STSPoint does not interfere with and is NOT responsible under any circumstances if a user utilizes our services for illegal activities. You are solely responsible for: (a) Compliance with local laws; (b) Any police investigations or court proceedings resulting from your business activity; (c) Any administrative or criminal sanctions; (d) Financial losses due to account freezes or legal actions. STSPoint provides technology tools ONLY and does not participate in your business operations."
+      content: "STSPoint does not interfere with and is NOT responsible under any circumstances if a user utilizes our services for illegal activities. You are solely responsible for all legal consequences of using this service. We are strictly released from liability if: \n\n • Your account is blocked or closed by Upstream Providers (e.g., GoPay, Orkut) due to violations. \n • You face legal action, police investigations, or court proceedings resulting from your business activity. \n • You face administrative or criminal sanctions. \n • There are financial losses due to account freezes or legal actions. \n • There are claims from third parties related to your business activities. \n\n STSPoint provides technology tools ONLY and does NOT participate in your business operations."
     },
     {
-      title: "4. User Obligations & Account Security",
-      icon: Code2,
-      content: "Users must: (a) Maintain absolute confidentiality of API Keys and Secrets; (b) Use the service only for lawful purposes; (c) Not attempt to reverse engineer or 'stress test' the infrastructure. You agree to indemnify and hold harmless STSPoint and its staff from any third-party claims arising from your use of the platform."
+      title: "4. Strict Security Policy (No Private Data Requests)",
+      icon: Lock,
+      content: "STSPoint prioritizes your security. WE WILL NEVER ASK for your recovery phrases, seed phrases, mnemonic keys (12/24 words), private keys, or passwords through email, WhatsApp, or any support channel. You are solely responsible for maintaining the confidentiality of your API Keys and account credentials. Any loss arising from the voluntary disclosure of sensitive data is your sole responsibility."
     },
     {
-      title: "5. Comprehensive Limitation of Liability",
+      title: "5. Primary Limitation of Liability",
       icon: ShieldAlert,
-      content: "STSPoint (including owners, developers, and staff) is strictly released from all liability regarding: \n\n • Upstream Account Status: Any bans, suspensions, or closures of your merchant accounts (e.g., GoPay, Orderkuota) by the providers. \n • Transaction Disputes: Any claims or disputes between you and your customers regarding payments or product fulfillment. \n • Upstream Downtime: Unavailability of third-party APIs or maintenance periods. \n • Data Integrity: Loss of transaction logs or technical errors caused by external system failures. \n • Financial Impact: Any direct or indirect financial losses arising from service interruptions."
+      content: "Under no circumstances shall STSPoint (including owners, developers, and staff) be held liable for: \n\n • Upstream Account Status: Any bans, suspensions, or closures of your merchant accounts by third-party providers. \n • Transaction Disputes: Any claims or disputes between you and your customers regarding payments or product fulfillment. \n • Service Downtime: Temporary unavailability of third-party APIs or system maintenance. \n • Data Integrity: Loss of transaction logs or technical errors caused by external system failures. \n • Financial Impact: Any direct or indirect financial losses arising from the use or inability to use our services. \n • Legal Consequences: Any form of legal action or sanctions you face regarding your business operations."
     },
     {
       title: "6. Payments, Subscriptions & Finality",
       icon: Wallet,
-      content: "All subscription fees and transaction fees paid to STSPoint are final and non-refundable. Since we provide infrastructure access, costs are incurred at the moment of provisioning. Users are responsible for ensuring their integration logic is correct before processing live high-value transactions."
+      content: "All subscription fees and transaction fees paid to STSPoint are final and non-refundable. Since we provide infrastructure access, costs are incurred at the moment of provisioning. Users are responsible for ensuring their integration logic is correct before processing live transactions."
     },
     {
       title: "7. Termination of Access",
@@ -78,28 +81,41 @@ export default function TermsOfServicePage() {
         {/* Header */}
         <section className="space-y-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
-            Legal Framework
+            Legal & Security Framework
           </div>
           <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-foreground">
             Terms of <span className="text-primary/40">Service.</span>
           </h1>
-          <p className="text-muted-foreground text-sm flex items-center justify-center gap-2">
+          <p className="text-muted-foreground text-sm flex items-center justify-center gap-2 font-medium">
             <Clock className="w-3.5 h-3.5" />
-            Last Updated: October 2024
+            Last Updated: October 24, 2024
           </p>
         </section>
 
+        {/* Security Alert Banner */}
+        <div className="p-6 rounded-[1.5rem] bg-amber-50 border border-amber-200 flex items-start gap-4 shadow-sm animate-in fade-in duration-700">
+           <EyeOff className="w-6 h-6 text-amber-600 shrink-0 mt-1" />
+           <div className="space-y-1">
+              <h4 className="font-bold text-amber-900 text-sm">Security Alert: No Private Key Requests</h4>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                STSPoint will **never** ask you for your 24-word recovery phrase or private keys. If anyone claiming to be from STSPoint asks for these details, they are attempting to defraud you. Report such incidents immediately.
+              </p>
+           </div>
+        </div>
+
         {/* Content Sections */}
-        <div className="space-y-12">
+        <div className="space-y-16">
           {sections.map((section, i) => (
-            <div key={i} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
-              <h3 className="text-xl font-bold flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
-                   <section.icon className="w-5 h-5" />
+            <div key={i} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10 shadow-sm">
+                   <section.icon className="w-6 h-6" />
                 </div>
-                {section.title}
-              </h3>
-              <div className="text-muted-foreground leading-relaxed text-sm md:text-base pl-0 md:pl-13 whitespace-pre-line">
+                <h3 className="text-xl md:text-2xl font-headline font-bold text-foreground">
+                  {section.title}
+                </h3>
+              </div>
+              <div className="text-muted-foreground leading-relaxed text-sm md:text-base pl-0 md:pl-16 whitespace-pre-line border-l-0 md:border-l border-border md:ml-6">
                 {section.content}
               </div>
             </div>
@@ -107,19 +123,20 @@ export default function TermsOfServicePage() {
         </div>
 
         {/* Support Note */}
-        <div className="p-8 rounded-[2rem] bg-slate-50 border border-border flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-           <div className="flex items-start gap-4">
-              <div className="p-2 rounded-lg bg-white border border-border mt-1">
-                 <Scale className="w-5 h-5 text-primary" />
+        <div className="p-8 md:p-12 rounded-[2.5rem] bg-zinc-900 text-white flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32"></div>
+           <div className="flex items-start gap-6 relative z-10">
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 mt-1">
+                 <Scale className="w-8 h-8 text-primary" />
               </div>
-              <div className="space-y-1">
-                 <h4 className="font-bold">Legal Clarification</h4>
-                 <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
-                   By using STSPoint, you agree that you are fully responsible for all legal and financial outcomes of your business. For compliance inquiries, contact <span className="font-bold text-foreground">legal@stspoint.id</span>.
+              <div className="space-y-2">
+                 <h4 className="font-headline font-bold text-xl">Legal Clarification</h4>
+                 <p className="text-sm text-zinc-400 leading-relaxed max-w-md">
+                   By accessing our API, you agree that you are fully responsible for all legal and financial outcomes of your business. For compliance inquiries, contact <span className="font-bold text-white">legal@stspoint.id</span>.
                  </p>
               </div>
            </div>
-           <Button asChild className="rounded-xl font-bold h-11 px-8 uppercase text-[10px] tracking-widest shadow-md">
+           <Button asChild className="rounded-xl font-bold h-14 px-10 bg-white text-black hover:bg-zinc-200 uppercase text-[11px] tracking-widest shadow-xl relative z-10 shrink-0">
               <a href="/support">Consult Support</a>
            </Button>
         </div>
