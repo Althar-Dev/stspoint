@@ -191,7 +191,7 @@ function DocsContent() {
               <CodeBlock 
                 title="cURL Authentication"
                 type="curl"
-                code={`curl -X POST https://api.stspoint.id/api/payments/create \\
+                code={`curl -X POST https://api.stspoint.id/payments/create \\
   -H "Content-Type: application/json" \\
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
@@ -275,7 +275,7 @@ function DocsContent() {
               </p>
               <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px] h-5">POST</Badge>
-                <span className="text-primary">/api/payments/create</span>
+                <span className="text-primary">/payments/create</span>
               </div>
             </div>
 
@@ -347,7 +347,7 @@ function DocsContent() {
                   <CodeBlock 
                     title="Shell / cURL"
                     type="curl"
-                    code={`curl -X POST https://api.stspoint.id/api/payments/create \\
+                    code={`curl -X POST https://api.stspoint.id/payments/create \\
   -H "Content-Type: application/json" \\
   -H "X-Callback-URL: https://your-server.com/callback" \\
   -d '{
@@ -365,7 +365,7 @@ function DocsContent() {
                   <CodeBlock 
                     title="Node.js (Fetch API)"
                     type="node"
-                    code={`const response = await fetch('https://api.stspoint.id/api/payments/create', {
+                    code={`const response = await fetch('https://api.stspoint.id/payments/create', {
   method: 'POST',
   headers: { 
     'Content-Type': 'application/json',
@@ -392,7 +392,7 @@ console.log(result);`}
                     type="python"
                     code={`import requests
 
-url = "https://api.stspoint.id/api/payments/create"
+url = "https://api.stspoint.id/payments/create"
 headers = {
     "X-Callback-URL": "https://your-server.com/callback"
 }
@@ -415,7 +415,7 @@ print(response.json())`}
                     title="PHP (cURL)"
                     type="php"
                     code={`<?php
-$url = "https://api.stspoint.id/api/payments/create";
+$url = "https://api.stspoint.id/payments/create";
 $payload = [
     "merchant_id" => "STS-XXXXXXXX",
     "secret_key" => "STS-Key-XXXXXXXX",
@@ -491,7 +491,7 @@ echo $response;
               </p>
               <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px] h-5">POST</Badge>
-                <span className="text-primary">/api/payments/status</span>
+                <span className="text-primary">/payments/status</span>
               </div>
             </div>
 
@@ -545,7 +545,7 @@ echo $response;
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/ppob/order</code>
+                <code className="text-sm font-bold text-primary">/ppob/order</code>
               </div>
             </div>
             <CodeBlock 
@@ -583,7 +583,7 @@ echo $response;
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/orkut/create</code>
+                <code className="text-sm font-bold text-primary">/orkut/create</code>
               </div>
             </div>
             <CodeBlock 
@@ -614,7 +614,7 @@ echo $response;
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/gopay/create</code>
+                <code className="text-sm font-bold text-primary">/gopay/create</code>
               </div>
             </div>
             <CodeBlock 

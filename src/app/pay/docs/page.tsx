@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,7 +77,7 @@ export default function STSPayDocsPage() {
             </div>
             <div className="flex items-center gap-4">
               <Badge className="bg-emerald-500/10 text-emerald-600 border-none px-3 font-bold">POST</Badge>
-              <code className="text-xs font-bold text-primary">/api/payments/create</code>
+              <code className="text-xs font-bold text-primary">/payments/create</code>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Endpoint ini digunakan untuk menginisialisasi transaksi baru dan mendapatkan tautan halaman checkout kustom STSPay.
@@ -106,7 +107,7 @@ export default function STSPayDocsPage() {
                 <p className="pl-4">"success": true,</p>
                 <p className="pl-4">"data": {"{"}</p>
                 <p className="pl-8">"external_id": "PAY-1730-XXXX",</p>
-                <p className="pl-8">"checkout_url": <span className="text-emerald-400">"https://stspoint.com/checkout/..."</span>,</p>
+                <p className="pl-8">"checkout_url": <span className="text-emerald-400">"https://api.stspoint.id/checkout/..."</span>,</p>
                 <p className="pl-8">"status": "PENDING"</p>
                 <p className="pl-4">{"}"}</p>
                 <p>{"}"}</p>
