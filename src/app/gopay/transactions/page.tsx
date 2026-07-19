@@ -79,7 +79,7 @@ export default function GopayTransactionsPage() {
 
   const handleRefresh = () => {
     fetchMutations();
-    toast({ title: "Syncing", description: "Fetching latest mutation data from GoBiz." });
+    toast({ title: "Syncing", description: "Fetching latest mutation data from GoPay Merchant." });
   };
 
   const filteredMutations = mutations.filter(m => 
@@ -279,7 +279,7 @@ export default function GopayTransactionsPage() {
                         </div>
                         <div className="space-y-1">
                           <p className="font-bold text-base uppercase tracking-widest text-foreground">Account Not Connected</p>
-                          <p className="text-sm max-w-xs mx-auto">Please connect your GoMerchant account on the main Dashboard to view mutation history.</p>
+                          <p className="text-sm max-w-xs mx-auto">Please connect your GoPay Merchant account on the main Dashboard to view mutation history.</p>
                         </div>
                       </div>
                     </td>

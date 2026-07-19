@@ -27,11 +27,11 @@ export function DocsGoMerchant() {
       <section className="space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/5 border border-cyan-500/10 text-[10px] font-bold uppercase tracking-widest text-cyan-600">
           <Globe className="w-3 h-3" />
-          GoBiz Merchant Bridge
+          GoPay Merchant Bridge
         </div>
         <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">GoMerchant API</h1>
         <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
-          The GoMerchant API allows you to automate GoPay collections by bridging directly to your GoBiz merchant account. It generates dynamic QRIS payloads and provides real-time transaction reconciliation through automated mutation scanning.
+          The GoMerchant API allows you to automate GoPay collections by bridging directly to your GoPay merchant account. It generates dynamic QRIS payloads and provides real-time transaction reconciliation through automated mutation scanning.
         </p>
       </section>
 
@@ -206,7 +206,7 @@ echo $response;
   "success": true,
   "data": {
     "external_id": "GPY-1730-XXXX",
-    "qr_string": "00020101021226660011ID.CO.GOBIZ.WWW...",
+    "qr_string": "00020101021226660011ID.CO.GOPAY.WWW...",
     "amount": 50428,
     "base_amount": 50000,
     "random_code": 428,
@@ -226,7 +226,7 @@ echo $response;
             Verify Payment Status
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Check the current state of a GoPay transaction. The system will perform a live reconciliation against your GoBiz settlement reports.
+            Check the current state of a GoPay transaction. The system will perform a live reconciliation against your GoPay merchant settlement reports.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>

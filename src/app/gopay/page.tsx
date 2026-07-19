@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,12 +148,12 @@ export default function GopayPage() {
 
   const handleManualRefresh = () => {
     setRefreshKey(prev => prev + 1);
-    toast({ title: "Syncing data...", description: "Fetching latest mutations from GoBiz." });
+    toast({ title: "Syncing data...", description: "Fetching latest mutations from GoPay Merchant." });
   };
 
   const handleRequestOtp = async () => {
     if (!phone) {
-      toast({ variant: "destructive", title: "Phone Number Required", description: "Please enter your GoBiz phone number." });
+      toast({ variant: "destructive", title: "Phone Number Required", description: "Please enter your GoPay Merchant phone number." });
       return;
     }
     setIsProcessing(true);
@@ -200,7 +201,7 @@ export default function GopayPage() {
         setStep(1);
         setPhone("");
         setOtpCode("");
-        toast({ title: "Connected!", description: "Your GoMerchant account has been successfully verified." });
+        toast({ title: "Connected!", description: "Your GoPay Merchant account has been successfully verified." });
         setRefreshKey(prev => prev + 1);
       } else {
         throw new Error(res.message || "Invalid or expired OTP code.");
@@ -290,7 +291,7 @@ export default function GopayPage() {
                 <div className="space-y-1">
                   <h3 className="font-bold text-lg">GoPay Not Connected</h3>
                   <p className="text-xs text-muted-foreground max-w-xs">
-                    Connect your GoMerchant account to start monitoring balances and automatic transactions.
+                    Connect your GoPay Merchant account to start monitoring balances and automatic transactions.
                   </p>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -305,11 +306,11 @@ export default function GopayPage() {
                   <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-sm">
                     <DialogHeader>
                       <DialogTitle className="font-headline font-bold">
-                        {step === 1 ? "Connect GoPay" : "Verify OTP"}
+                        {step === 1 ? "Connect GoPay Merchant" : "Verify OTP"}
                       </DialogTitle>
                       <DialogDescription className="text-xs">
                         {step === 1 
-                          ? "Enter the phone number registered in your GoBiz app."
+                          ? "Enter the phone number registered in your GoPay Merchant app."
                           : "Enter the OTP code sent to your number."}
                       </DialogDescription>
                     </DialogHeader>
@@ -317,7 +318,7 @@ export default function GopayPage() {
                     {step === 1 ? (
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">GoBiz Phone Number</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Merchant Phone Number</Label>
                           <div className="relative">
                             <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
@@ -473,7 +474,7 @@ export default function GopayPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{gomerchant?.username}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active GoBiz Account</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active GoPay Merchant Account</p>
                     </div>
                   </div>
                   
