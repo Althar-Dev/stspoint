@@ -100,7 +100,7 @@ export function DocsStsPay() {
                 <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
               </TabsList>
             </div>
-            
+ // AltharDev Gianteng           
             <TabsContent value="curl" className="w-full outline-none">
               <CodeBlock 
                 title="Shell / cURL"
