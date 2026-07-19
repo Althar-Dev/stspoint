@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +42,7 @@ export default function AiDashboardPage() {
                 <Link href="/ai/chat">Coba Chat AI</Link>
               </Button>
               <Button variant="outline" asChild className="border-zinc-700 bg-zinc-800/50 text-white hover:bg-zinc-800 font-bold rounded-xl h-14 px-8">
-                <Link href="/console/developer/docs">Dokumentasi SDK</Link>
+                <Link href="/docs">Dokumentasi SDK</Link>
               </Button>
             </div>
           </div>

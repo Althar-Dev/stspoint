@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -23,7 +24,7 @@ import {
   ChevronDown,
   Package,
   Settings,
-  Loader2
+  BookOpen
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -68,7 +69,7 @@ const mainMenuItems = [
     icon: Key,
     items: [
       { title: "API Keys", url: "/console/developer/api-keys" },
-      { title: "Documentations", url: "/console/developer/docs" },
+      { title: "Documentations", url: "/docs" },
     ]
   }
 ];

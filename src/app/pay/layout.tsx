@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -75,7 +76,7 @@ const stspayMenuItems = [
     icon: Terminal,
     items: [
       { title: "API Keys", url: "/console/developer/api-keys" },
-      { title: "Documentation", url: "/pay/docs" },
+      { title: "Documentation", url: "/docs" },
       { title: "Webhooks", url: "/pay/webhooks" },
       { title: "Payment Link", url: "/pay/payment-link" },
       { title: "Logs", url: "/pay/logs" },

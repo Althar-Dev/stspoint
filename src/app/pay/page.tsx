@@ -225,7 +225,7 @@ export default function STSPayDashboard() {
               </p>
            </div>
            <Button asChild className="bg-white text-black hover:bg-white/90 font-bold rounded-md px-10 h-12 uppercase tracking-widest text-[11px] shrink-0">
-             <Link href="/console/developer/docs">Baca Dokumentasi API</Link>
+             <Link href="/docs">Baca Dokumentasi API</Link>
            </Button>
         </div>
       </Card>
