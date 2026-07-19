@@ -13,7 +13,8 @@ import {
   Package,
   Layers,
   Webhook,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2
 } from "lucide-react";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -83,10 +84,15 @@ export function DocsPpob() {
            </div>
         </div>
 
-        <CodeBlock 
-          title="Product Response Example"
-          type="json"
-          code={`{
+        <div className="space-y-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2 px-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Response Example (Product Array)
+          </p>
+          <CodeBlock 
+            title="Product List JSON"
+            type="json"
+            code={`{
   "success": true,
   "data": [
     {
@@ -101,7 +107,8 @@ export function DocsPpob() {
     }
   ]
 }`}
-        />
+          />
+        </div>
       </section>
 
       {/* Create Order */}
@@ -136,6 +143,11 @@ export function DocsPpob() {
                  </thead>
                  <tbody className="divide-y divide-border">
                     <tr>
+                       <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">secret_key</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Kunci rahasia API Anda.</td>
+                    </tr>
+                    <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">sku</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Kode SKU produk (didapat dari GET /ppob/order).</td>
@@ -158,7 +170,7 @@ export function DocsPpob() {
         <div className="space-y-4 w-full min-w-0 overflow-hidden">
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Code2 className="w-3.5 h-3.5" />
-             Implementation Examples
+             Request Implementation
           </h4>
           <Tabs defaultValue="curl" className="w-full">
               <div className="w-full overflow-x-auto no-scrollbar mb-2 block">
@@ -166,6 +178,7 @@ export function DocsPpob() {
                   <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
                   <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
                   <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
+                  <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
                 </TabsList>
               </div>
               
@@ -187,7 +200,7 @@ export function DocsPpob() {
 
               <TabsContent value="node" className="w-full outline-none">
                 <CodeBlock 
-                  title="Node.js (Fetch)"
+                  title="Node.js (Fetch API)"
                   type="node"
                   code={`const response = await fetch('https://api.stspoint.id/ppob/order', {
   method: 'POST',
@@ -214,19 +227,71 @@ console.log(result);`}
                   type="python"
                   code={`import requests
 
+url = "https://api.stspoint.id/ppob/order"
+headers = {"X-Callback-URL": "https://your-server.com/ppob-webhook"}
 payload = {
     "secret_key": "STS-Key-XXXXXXXX",
     "sku": "TSEL10",
     "target": "081234567890",
     "ref_id": "ORDER-9921"
 }
-headers = {"X-Callback-URL": "https://your-server.com/ppob-webhook"}
 
-response = requests.post("https://api.stspoint.id/ppob/order", json=payload, headers=headers)
+response = requests.post(url, json=payload, headers=headers)
 print(response.json())`}
                 />
               </TabsContent>
+
+              <TabsContent value="php" className="w-full outline-none">
+                <CodeBlock 
+                  title="PHP (cURL)"
+                  type="php"
+                  code={`<?php
+$url = "https://api.stspoint.id/ppob/order";
+$payload = [
+    "secret_key" => "STS-Key-XXXXXXXX",
+    "sku" => "TSEL10",
+    "target" => "081234567890",
+    "ref_id" => "ORDER-9921"
+];
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'X-Callback-URL: https://your-server.com/ppob-webhook'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+?>`}
+                />
+              </TabsContent>
           </Tabs>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2 px-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Order Success Response
+          </p>
+          <CodeBlock 
+            title="Order Initialized JSON"
+            type="json"
+            code={`{
+  "success": true,
+  "message": "Transaction is being processed",
+  "data": {
+    "ref_id": "ORDER-9921",
+    "sku": "TSEL10",
+    "target": "081234567890",
+    "status": "Pending"
+  }
+}`}
+          />
         </div>
       </section>
 
@@ -247,7 +312,7 @@ print(response.json())`}
         </div>
 
         <CodeBlock 
-          title="Status Response"
+          title="Status Response (Success Flow)"
           type="json"
           code={`{
   "success": true,
