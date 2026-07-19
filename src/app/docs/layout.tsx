@@ -138,8 +138,8 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
-        {/* Header - Fixed h-16 to match sidebar */}
-        <header className="h-16 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border shrink-0">
+        {/* Header - Changed from sticky to relative flow */}
+        <header className="h-16 flex items-center justify-between px-6 lg:px-10 bg-background border-b border-border shrink-0">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
