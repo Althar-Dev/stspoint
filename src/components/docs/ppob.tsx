@@ -31,7 +31,7 @@ export function DocsPpob() {
         </div>
         <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">PPOB Service</h1>
         <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
-          Layanan PPOB (Payment Point Online Bank) memungkinkan Anda untuk melakukan transaksi produk digital seperti pulsa, paket data, token PLN, hingga tagihan pascabayar secara otomatis melalui satu koneksi API terpadu.
+          The PPOB (Payment Point Online Bank) service allows you to automatically process digital product transactions such as credit, data packages, PLN tokens, and postpaid bills through a single unified API connection.
         </p>
       </section>
 
@@ -43,7 +43,7 @@ export function DocsPpob() {
             Get Product List
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Ambil daftar produk yang tersedia, harga modal, dan status terkini dari seluruh provider yang terhubung dalam ekosistem STSPoint.
+            Retrieve the list of available products, base prices, and real-time status from all providers connected to the STSPoint ecosystem.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-blue-500 text-white border-none uppercase font-bold text-[10px]">GET</UiBadge>
@@ -71,13 +71,13 @@ export function DocsPpob() {
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">secret_key</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-rose-500 font-bold whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Kunci rahasia API Anda untuk autentikasi.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your API secret key for authentication.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">type</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Enum</td>
                        <td className="px-6 py-4 text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Filter tipe produk: <code className="text-primary font-bold">prepaid</code> atau <code className="text-primary font-bold">pasca</code>.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Filter product type: <code className="text-primary font-bold">prepaid</code> or <code className="text-primary font-bold">pasca</code>.</td>
                     </tr>
                  </tbody>
               </table>
@@ -97,13 +97,13 @@ export function DocsPpob() {
   "data": [
     {
       "buyer_sku_code": "TSEL10",
-      "product_name": "Telkomsel 10.000",
-      "category": "Pulsa",
+      "product_name": "Telkomsel 10,000",
+      "category": "Credit",
       "brand": "TELKOMSEL",
       "type": "Prepaid",
       "price": 10250,
       "buyer_product_status": true,
-      "desc": "Pulsa Reguler Telkomsel 10rb"
+      "desc": "Telkomsel Regular Credit 10k"
     }
   ]
 }`}
@@ -111,7 +111,7 @@ export function DocsPpob() {
         </div>
       </section>
 
-      {/* Create Order */}
+      {/* Place Order */}
       <section id="create-order" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
@@ -119,7 +119,7 @@ export function DocsPpob() {
             Place Order
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Kirim instruksi transaksi ke server bridge untuk diproses oleh provider. Saldo Anda akan terpotong secara otomatis jika produk bertipe Prepaid.
+            Send transaction instructions to the bridge server to be processed by the provider. Your balance will be deducted automatically for Prepaid products.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
@@ -145,22 +145,22 @@ export function DocsPpob() {
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">secret_key</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Kunci rahasia API Anda.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your API secret key.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">sku</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Kode SKU produk (didapat dari GET /ppob/order).</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Product SKU code (obtained from GET /ppob/order).</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">target</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nomor tujuan (HP, No. Meteran, ID Pelanggan).</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Destination number (Phone, Meter No, Customer ID).</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">ref_id</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">ID transaksi unik dari sistem Anda (External ID).</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your system's unique transaction ID (External ID).</td>
                     </tr>
                  </tbody>
               </table>
@@ -170,7 +170,7 @@ export function DocsPpob() {
         <div className="space-y-4 w-full min-w-0 overflow-hidden">
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Code2 className="w-3.5 h-3.5" />
-             Request Implementation
+             Implementation Snippets
           </h4>
           <Tabs defaultValue="curl" className="w-full">
               <div className="w-full overflow-x-auto no-scrollbar mb-2 block">
@@ -295,7 +295,7 @@ echo $response;
         </div>
       </section>
 
-      {/* Transaction Status */}
+      {/* Check Status */}
       <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
@@ -303,7 +303,7 @@ echo $response;
             Check Order Status
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Lakukan sinkronisasi status transaksi secara manual menggunakan <code className="font-bold text-foreground">ref_id</code> yang Anda kirimkan saat pembuatan pesanan.
+            Synchronize transaction status manually using the <code className="font-bold text-foreground">ref_id</code> you sent during order creation.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-blue-500 text-white border-none uppercase font-bold text-[10px]">GET</UiBadge>
@@ -317,7 +317,7 @@ echo $response;
           code={`{
   "success": true,
   "status": "Success",
-  "message": "Transaksi berhasil",
+  "message": "Transaction successful",
   "data": {
     "ref_id": "ORDER-9921",
     "sku": "TSEL10",
@@ -336,7 +336,7 @@ echo $response;
                Real-time Callbacks
             </h2>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-               Gunakan header <code className="text-primary font-bold">X-Callback-URL</code> untuk menerima notifikasi otomatis saat status transaksi berubah menjadi <strong>Success</strong> atau <strong>Failed</strong>.
+               Use the <code className="text-primary font-bold">X-Callback-URL</code> header to receive automatic notifications when a transaction status changes to <strong>Success</strong> or <strong>Failed</strong>.
             </p>
          </div>
 
@@ -351,7 +351,7 @@ echo $response;
     "target": "081234567890",
     "status": "Success",
     "sn": "83294829384923",
-    "message": "Transaksi berhasil",
+    "message": "Transaction successful",
     "timestamp": "2024-10-24T08:42:11Z"
   }
 }`}
@@ -362,7 +362,7 @@ echo $response;
             <div className="space-y-1">
                <p className="text-sm font-bold text-blue-900 uppercase tracking-tight">Security Header</p>
                <p className="text-xs text-blue-800 leading-relaxed">
-                  Setiap webhook akan menyertakan header <code className="font-bold">X-STS-Signature</code> (HMAC-SHA256) untuk memastikan data berasal dari infrastruktur resmi STSPoint.
+                  Every webhook will include an <code className="font-bold">X-STS-Signature</code> header (HMAC-SHA256) to ensure the data originates from official STSPoint infrastructure.
                </p>
             </div>
          </div>
