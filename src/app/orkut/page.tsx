@@ -26,6 +26,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Wallet, 
   RefreshCcw,
@@ -40,7 +47,9 @@ import {
   Save,
   Loader2,
   Activity,
-  Copy
+  Copy,
+  Settings as SettingsIcon,
+  Hash
 } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -55,7 +64,7 @@ export default function OrkutPage() {
   const db = useFirestore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isBaseQrDialogOpen, setIsBaseQrDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
   // Service Health
@@ -72,6 +81,7 @@ export default function OrkutPage() {
   const [otp, setOtp] = useState("");
   const [otpInfo, setOtpInfo] = useState("");
   const [baseQrInput, setBaseQrInput] = useState("");
+  const [digitSetting, setDigitSetting] = useState<string>("3");
 
   const orderkuotaRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -83,8 +93,9 @@ export default function OrkutPage() {
   const isConnected = !!orderkuota?.token;
 
   useEffect(() => {
-    if (orderkuota?.baseQr) {
-      setBaseQrInput(orderkuota.baseQr);
+    if (orderkuota) {
+      setBaseQrInput(orderkuota.baseQr || "");
+      setDigitSetting(orderkuota.randomDigit?.toString() || "3");
     }
   }, [orderkuota]);
 
@@ -178,18 +189,19 @@ export default function OrkutPage() {
     }
   };
 
-  const handleSaveBaseQr = async () => {
+  const handleSaveSettings = async () => {
     if (!orderkuotaRef) return;
     setIsProcessing(true);
     try {
       await updateDoc(orderkuotaRef, {
         baseQr: baseQrInput,
+        randomDigit: parseInt(digitSetting),
         updatedAt: serverTimestamp()
       });
-      toast({ title: "Settings Saved", description: "Orderkuota BaseQr has been updated." });
-      setIsBaseQrDialogOpen(false);
+      toast({ title: "Settings Saved", description: "Orderkuota configuration has been updated." });
+      setIsSettingsOpen(false);
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Save Failed", description: "Failed to update BaseQr settings." });
+      toast({ variant: "destructive", title: "Save Failed", description: "Failed to update settings." });
     } finally {
       setIsProcessing(false);
     }
@@ -464,18 +476,18 @@ export default function OrkutPage() {
                     </div>
                   </div>
                   
-                  <Dialog open={isBaseQrDialogOpen} onOpenChange={setIsBaseQrDialogOpen}>
+                  <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-primary/20 transition-all">
-                        <QrCode className="w-3.5 h-3.5 text-primary" />
-                        Edit BaseQr
+                        <SettingsIcon className="w-3.5 h-3.5 text-primary" />
+                        Settings
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-3xl border-border max-w-sm">
                       <DialogHeader>
-                        <DialogTitle className="font-headline font-bold">Setup BaseQr</DialogTitle>
+                        <DialogTitle className="font-headline font-bold">Orderkuota Settings</DialogTitle>
                         <DialogDescription className="text-xs">
-                          Configure the base QR string data used for transaction identification.
+                          Configure your BaseQr string and random nominal settings.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
@@ -488,13 +500,31 @@ export default function OrkutPage() {
                             className="rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[150px] text-xs font-mono break-all"
                           />
                         </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                            <Hash className="w-3 h-3" />
+                            Random Nominal Digit
+                          </Label>
+                          <Select value={digitSetting} onValueChange={setDigitSetting}>
+                            <SelectTrigger className="h-11 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold text-xs">
+                              <SelectValue placeholder="Select digit" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-border">
+                              <SelectItem value="2" className="text-xs">2 Digits (10 - 99)</SelectItem>
+                              <SelectItem value="3" className="text-xs">3 Digits (100 - 999)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-[9px] text-muted-foreground ml-1">Digunakan untuk menghasilkan nominal unik saat sinkronisasi.</p>
+                        </div>
+
                         <Button 
-                          onClick={handleSaveBaseQr} 
+                          onClick={handleSaveSettings} 
                           className="w-full h-11 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/10" 
                           disabled={isProcessing}
                         >
                           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                          Save QR Configuration
+                          Save Configuration
                         </Button>
                       </div>
                     </DialogContent>

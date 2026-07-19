@@ -15,7 +15,7 @@ import {
 import { getGoMerchantMutations } from '@/lib/gomerchant/mutation';
 
 /**
- * API: Check GoPay Transaction Status with RPM Rate Limiting
+ * API: Check GoPay Transaction Status with RPM & Expiry Validation
  * Method: POST
  * URL: /api/gopay/status
  */
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Fetch Service Config & Check Quota + RPM
+    // 3. Fetch Service Config & Check Expiry
     const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
     const gomerchantSnap = await getDoc(gomerchantRef);
 
@@ -61,7 +61,15 @@ export async function POST(request: Request) {
     }
 
     const gomerchantData = gomerchantSnap.data();
-    const plan = (gomerchantData.plan || "starter").toLowerCase();
+    let plan = (gomerchantData.plan || "starter").toLowerCase();
+
+    // --- EXPIRY CHECK ---
+    if (gomerchantData.planExpiry && plan !== 'enterprise') {
+      const expiry = gomerchantData.planExpiry.toDate ? gomerchantData.planExpiry.toDate() : new Date(gomerchantData.planExpiry);
+      if (new Date() > expiry) {
+        plan = "starter";
+      }
+    }
 
     // --- RPM RATE LIMITING LOGIC ---
     const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 10;
