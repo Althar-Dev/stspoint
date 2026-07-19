@@ -3,11 +3,10 @@
 
 import {
   Accordion,
-  AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  AccordionContent,
 } from "@/components/ui/accordion";
-import { HelpCircle } from "lucide-react";
 
 const FAQS = [
   {
@@ -34,26 +33,26 @@ const FAQS = [
 
 export function FAQSection() {
   return (
-    <section id="faq" className="py-12 max-w-4xl mx-auto scroll-mt-24">
-      <div className="text-center space-y-4 mb-16">
+    <section id="faq" className="py-12 md:py-24 max-w-4xl mx-auto scroll-mt-24 px-4">
+      <div className="text-center space-y-4 mb-12 md:mb-16">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
           Knowledge Base
         </div>
-        <h2 className="text-3xl md:text-5xl font-headline font-bold tracking-tight">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold tracking-tight">
           Common <span className="text-primary/40">Inquiries.</span>
         </h2>
-        <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
+        <p className="text-muted-foreground text-xs md:text-base max-w-xl mx-auto leading-relaxed">
           Technical and operational answers to help you understand our infrastructure capabilities.
         </p>
       </div>
 
-      <Accordion type="single" collapsible className="w-full space-y-4">
+      <Accordion type="single" collapsible className="w-full space-y-3 md:space-y-4">
         {FAQS.map((faq, i) => (
-          <AccordionItem key={i} value={`item-${i}`} className="border border-black/5 rounded-3xl px-6 md:px-10 bg-white shadow-sm hover:shadow-md transition-all">
-            <AccordionTrigger className="hover:no-underline font-bold text-left py-8 text-base md:text-lg">
+          <AccordionItem key={i} value={`item-${i}`} className="border border-black/5 rounded-2xl md:rounded-3xl px-5 md:px-10 bg-white shadow-sm hover:shadow-md transition-all">
+            <AccordionTrigger className="hover:no-underline font-bold text-left py-6 md:py-8 text-sm md:text-lg">
               {faq.q}
             </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground leading-relaxed pb-8 text-sm md:text-base">
+            <AccordionContent className="text-muted-foreground leading-relaxed pb-6 md:pb-8 text-xs md:text-base">
               {faq.a}
             </AccordionContent>
           </AccordionItem>

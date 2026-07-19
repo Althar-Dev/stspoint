@@ -28,12 +28,12 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
   return (
-    <section id="about" className="py-12 scroll-mt-24">
-      <div className="text-center space-y-4 mb-20">
+    <section id="about" className="py-12 md:py-24 scroll-mt-24">
+      <div className="text-center space-y-4 mb-12 md:mb-20 px-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
           Partner Success
         </div>
-        <h2 className="text-3xl md:text-5xl font-headline font-bold tracking-tight">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold tracking-tight">
           Trusted by <span className="text-primary/40">Innovators.</span>
         </h2>
         <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
@@ -41,15 +41,15 @@ export function TestimonialsSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
         {TESTIMONIALS.map((t, i) => (
-          <Card key={i} className="border border-black/5 shadow-sm rounded-[2.5rem] bg-white overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-            <CardContent className="p-10 space-y-8 relative">
-              <Quote className="absolute top-8 right-8 w-10 h-10 text-primary/5" />
+          <Card key={i} className="border border-black/5 shadow-sm rounded-2xl md:rounded-[2.5rem] bg-white overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+            <CardContent className="p-6 md:p-10 space-y-6 md:space-y-8 relative">
+              <Quote className="absolute top-6 right-6 md:top-8 md:right-8 w-8 h-8 md:w-10 md:h-10 text-primary/5" />
               
               <div className="flex gap-1 text-primary">
                 {[...Array(5)].map((_, idx) => (
-                  <Star key={idx} className="w-4 h-4 fill-current" />
+                  <Star key={idx} className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" />
                 ))}
               </div>
               
@@ -57,14 +57,14 @@ export function TestimonialsSection() {
                 "{t.comment}"
               </p>
               
-              <div className="flex items-center gap-4 pt-4">
-                <Avatar className="w-14 h-14 border-2 border-primary/5 shadow-sm rounded-2xl">
+              <div className="flex items-center gap-3 md:gap-4 pt-2 md:pt-4">
+                <Avatar className="w-10 h-10 md:w-14 md:h-14 border-2 border-primary/5 shadow-sm rounded-xl md:rounded-2xl">
                   <AvatarImage src={t.avatar} alt={t.name} />
-                  <AvatarFallback className="bg-primary/5 font-bold">{t.name[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/5 font-bold text-xs md:text-sm">{t.name[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h4 className="font-bold text-sm md:text-base">{t.name}</h4>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{t.role}</p>
+                  <h4 className="font-bold text-xs md:text-base">{t.name}</h4>
+                  <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{t.role}</p>
                 </div>
               </div>
             </CardContent>
