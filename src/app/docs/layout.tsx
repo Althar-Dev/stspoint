@@ -132,14 +132,14 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background selection:bg-primary/10 selection:text-primary overflow-x-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-card/50 backdrop-blur-xl z-40">
+      <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-card/50 backdrop-blur-xl z-50">
         <SidebarContent activeType={activeType} />
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
-        {/* Header - Sticky follows the scroll */}
-        <header className="sticky top-0 h-16 flex items-center justify-between px-6 lg:px-10 bg-background/80 backdrop-blur-md border-b border-border z-30 shrink-0">
+        {/* Header - Fixed to top to ensure it follows the scroll */}
+        <header className="fixed top-0 right-0 left-0 lg:left-72 h-16 flex items-center justify-between px-6 lg:px-10 bg-background/80 backdrop-blur-md border-b border-border z-40">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
@@ -169,6 +169,9 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           </div>
         </header>
 
+        {/* Spacer to push content below the fixed header */}
+        <div className="h-16 shrink-0" />
+
         <main className="flex-1 min-w-0">
           <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10 w-full overflow-hidden">
             {children}
@@ -189,7 +192,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[60] lg:hidden">
            <div className="absolute inset-0 bg-black/80" onClick={() => setIsMobileMenuOpen(false)}></div>
            <aside className="absolute inset-y-0 left-0 w-72 bg-background border-r border-border animate-in slide-in-from-left duration-300">
               <SidebarContent activeType={activeType} onItemClick={() => setIsMobileMenuOpen(false)} />
