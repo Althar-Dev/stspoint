@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import { Zap, Plus, Braces, Code2, RefreshCcw, Activity } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Zap, Plus, Braces, Code2, RefreshCcw, Activity, CheckCircle2 } from "lucide-react";
+import { Badge as UiBadge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CodeBlock } from "./shared/code-block";
 
 export function DocsStsPay() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2">
+    <div className="space-y-16 animate-in slide-in-from-bottom-2 max-w-full overflow-hidden">
       <section className="space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
           <Zap className="w-3 h-3" />
@@ -30,18 +30,18 @@ export function DocsStsPay() {
             Initialize a transaction. Use the <code className="font-bold text-foreground">type</code> parameter to switch between a hosted link or a direct QRIS string.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
             <span className="text-primary">/payments/create</span>
           </div>
         </div>
 
-        <div className="space-y-6">
-           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <div className="space-y-6 w-full overflow-hidden">
+           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Braces className="w-3.5 h-3.5" />
              Request Parameters
            </h4>
-           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm">
-              <table className="w-full text-left text-xs border-collapse">
+           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full">
+              <table className="w-full text-left text-xs border-collapse min-w-[600px]">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
@@ -86,20 +86,22 @@ export function DocsStsPay() {
            </div>
         </div>
 
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <div className="space-y-4 w-full overflow-hidden">
+          <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Code2 className="w-3.5 h-3.5" />
              Implementation Examples
           </h4>
           <Tabs defaultValue="curl" className="w-full">
-            <TabsList className="bg-muted p-1 rounded-xl h-11">
-              <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
-              <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
-              <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
-              <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
-            </TabsList>
+            <div className="w-full overflow-x-auto no-scrollbar mb-2">
+              <TabsList className="bg-muted p-1 rounded-xl h-11 w-max min-w-full justify-start">
+                <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
+                <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
+                <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
+                <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
+              </TabsList>
+            </div>
             
-            <TabsContent value="curl">
+            <TabsContent value="curl" className="w-full">
               <CodeBlock 
                 title="Shell / cURL"
                 type="curl"
@@ -117,7 +119,7 @@ export function DocsStsPay() {
               />
             </TabsContent>
 
-            <TabsContent value="node">
+            <TabsContent value="node" className="w-full">
               <CodeBlock 
                 title="Node.js (Fetch API)"
                 type="node"
@@ -142,7 +144,7 @@ console.log(result);`}
               />
             </TabsContent>
 
-            <TabsContent value="python">
+            <TabsContent value="python" className="w-full">
               <CodeBlock 
                 title="Python (Requests)"
                 type="python"
@@ -166,7 +168,7 @@ print(response.json())`}
               />
             </TabsContent>
 
-            <TabsContent value="php">
+            <TabsContent value="php" className="w-full">
               <CodeBlock 
                 title="PHP (CURL)"
                 type="php"
@@ -200,9 +202,9 @@ echo $response;
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div className="space-y-4">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mode: Payment Link</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full overflow-hidden">
+           <div className="space-y-4 w-full overflow-hidden">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Mode: Payment Link</p>
               <CodeBlock 
                 title="Hosted Checkout Response"
                 type="json"
@@ -217,8 +219,8 @@ echo $response;
 }`}
               />
            </div>
-           <div className="space-y-4">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mode: QRIS</p>
+           <div className="space-y-4 w-full overflow-hidden">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Mode: QRIS</p>
               <CodeBlock 
                 title="Direct QRIS Payload"
                 type="json"
@@ -246,7 +248,7 @@ echo $response;
             Poll the current state of a transaction using the <code className="font-bold text-foreground">external_id</code>.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
             <span className="text-primary">/payments/status</span>
           </div>
         </div>
@@ -272,10 +274,10 @@ echo $response;
           <div className="space-y-2">
             <p className="text-sm font-bold text-foreground">Transaction States</p>
             <div className="flex flex-wrap gap-2">
-               <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold">PENDING</Badge>
-               <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold text-emerald-600">PAID</Badge>
-               <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold text-rose-600">EXPIRED</Badge>
-               <Badge variant="outline" className="bg-background text-[9px] uppercase font-bold text-amber-600">FAILED</Badge>
+               <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold">PENDING</UiBadge>
+               <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold text-emerald-600">PAID</UiBadge>
+               <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold text-rose-600">EXPIRED</UiBadge>
+               <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold text-amber-600">FAILED</UiBadge>
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
               For better efficiency, we highly recommend using dynamic **Webhooks** via the `X-Callback-URL` header.

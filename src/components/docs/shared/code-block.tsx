@@ -56,14 +56,14 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
   };
 
   return (
-    <div className="space-y-3 my-6">
+    <div className="space-y-3 my-6 w-full max-w-full">
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Terminal className="w-3 h-3" />
           {title}
         </span>
       </div>
-      <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-[#0D0D0D]">
+      <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-[#0D0D0D] w-full max-w-full">
         <div className="bg-white/5 px-4 h-10 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/40"></div>
@@ -77,8 +77,8 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="p-6 font-mono text-[12px] leading-relaxed text-zinc-300 overflow-x-auto">
-          <pre dangerouslySetInnerHTML={{ __html: highlight(code) }} />
+        <div className="p-4 md:p-6 font-mono text-[11px] md:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar">
+          <pre className="w-fit" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
         </div>
       </div>
     </div>
