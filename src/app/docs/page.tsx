@@ -18,15 +18,11 @@ import {
   Braces,
   ArrowRight,
   Server,
-  RefreshCcw,
-  BookOpen,
   Rocket,
   Lock,
   Key,
   X,
   Activity,
-  Cpu,
-  Layers,
   Fingerprint
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
@@ -44,38 +40,56 @@ function DocsContent() {
     setTimeout(() => setCopiedType(null), 2000);
   };
 
-  const CodeBlock = ({ title, code, type }: { title: string, code: string, type: string }) => (
-    <div className="space-y-3 my-6">
-      <div className="flex items-center justify-between px-1">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          <Terminal className="w-3 h-3" />
-          {title}
-        </span>
-      </div>
-      <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-[#0D0D0D]">
-        <div className="bg-white/5 px-4 h-10 flex items-center justify-between border-b border-white/5">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/40"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/40"></div>
+  const CodeBlock = ({ title, code, type }: { title: string, code: string, type: string }) => {
+    const highlight = (str: string) => {
+      if (type.includes('json')) {
+        return str
+          .replace(/"([^"]+)":/g, '<span class="text-amber-400">"$1"</span>:')
+          .replace(/: "([^"]+)"/g, ': <span class="text-emerald-400">"$1"</span>')
+          .replace(/: (\d+)/g, ': <span class="text-blue-400">$1</span>')
+          .replace(/: (true|false)/g, ': <span class="text-blue-400">$1</span>');
+      }
+      if (type.includes('curl') || type.includes('shell')) {
+        return str
+          .replace(/^(curl)/g, '<span class="text-emerald-400 font-bold">$1</span>')
+          .replace(/(-X POST|-X GET|-H |-d)/g, '<span class="text-blue-400">$1</span>');
+      }
+      return str;
+    };
+
+    return (
+      <div className="space-y-3 my-6">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <Terminal className="w-3 h-3" />
+            {title}
+          </span>
+        </div>
+        <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-[#0D0D0D]">
+          <div className="bg-white/5 px-4 h-10 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500/40"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500/40"></div>
+            </div>
+            <button 
+              onClick={() => copyToClipboard(code, type)}
+              className="p-1.5 rounded hover:bg-white/5 text-muted-foreground hover:text-white transition-all"
+            >
+              {copiedType === type ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </div>
-          <button 
-            onClick={() => copyToClipboard(code, type)}
-            className="p-1.5 rounded hover:bg-white/5 text-muted-foreground hover:text-white transition-all"
-          >
-            {copiedType === type ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-        <div className="p-6 font-mono text-[12px] leading-relaxed text-zinc-300 overflow-x-auto">
-          <pre>{code}</pre>
+          <div className="p-6 font-mono text-[12px] leading-relaxed text-zinc-300 overflow-x-auto">
+            <pre dangerouslySetInnerHTML={{ __html: highlight(code) }} />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      {/* --- GET STARTED (GENERAL) --- */}
+      {/* --- GET STARTED --- */}
       {activeType === 'general' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section id="intro" className="space-y-6">
@@ -87,7 +101,7 @@ function DocsContent() {
               Get <span className="text-primary/40">Started.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
-              The STSPoint Infrastructure API provides a unified interface to programmatically manage global payments, digital product fulfillment (PPOB), and automation bridges. This documentation covers authentication, standardized responses, and core integration logic.
+              The STSPoint Infrastructure API provides a unified interface to programmatically manage global payments, digital product fulfillment, and automation bridges. This documentation covers authentication, standardized responses, and core integration logic.
             </p>
           </section>
 
@@ -114,7 +128,7 @@ function DocsContent() {
                 Authentication
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                STSPoint uses key-based authentication. You can find your unique credentials in the <span className="font-bold text-foreground">Console &gt; Developer &gt; API Keys</span> section.
+                STSPoint uses key-based authentication. You can find your unique credentials in the <span className="font-bold text-foreground">Developer &gt; API Keys</span> section of your Console.
               </p>
             </div>
 
@@ -146,20 +160,23 @@ function DocsContent() {
             <div className="space-y-4">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                 <Terminal className="w-3.5 h-3.5" />
-                Authentication Payload:
+                Auth Example (Shell):
               </p>
               <CodeBlock 
-                title="JSON Body Authentication"
-                type="auth-json"
-                code={`{
-  "secret_key": "STS-Key-XXXXXXXX",
-  "merchant_id": "STS-XXXXXXXX"
-}`}
+                title="cURL Authentication"
+                type="curl"
+                code={`curl -X POST https://stspoint.id/api/payments/create \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "secret_key": "STS-Key-XXXXXXXX",
+    "merchant_id": "STS-XXXXXXXX",
+    "amount": 50000
+  }'`}
               />
             </div>
           </section>
 
-          <section id="errors" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
+          <section id="responses" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <Activity className="w-6 h-6 text-primary" />
@@ -175,71 +192,34 @@ function DocsContent() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
                   <Check className="w-3 h-3" /> Success (HTTP 200)
                 </p>
-                <div className="p-5 rounded-2xl bg-[#0D0D0D] text-zinc-400 font-mono text-[11px] shadow-xl">
-                  <p>{"{"}</p>
-                  <p className="pl-4">"success": <span className="text-blue-400">true</span>,</p>
-                  <p className="pl-4">"data": {"{ ... }"}</p>
-                  <p>{"}"}</p>
-                </div>
+                <CodeBlock 
+                  title="Success Wrapper"
+                  type="json"
+                  code={`{
+  "success": true,
+  "data": {
+    "external_id": "PAY-12345",
+    "status": "PENDING",
+    "amount": 50000
+  }
+}`}
+                />
               </div>
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 flex items-center gap-2">
                   <X className="w-3 h-3" /> Error (HTTP 4xx/500)
                 </p>
-                <div className="p-5 rounded-2xl bg-[#0D0D0D] text-zinc-400 font-mono text-[11px] shadow-xl">
-                  <p>{"{"}</p>
-                  <p className="pl-4">"success": <span className="text-rose-400">false</span>,</p>
-                  <p className="pl-4">"message": <span className="text-amber-400">"Invalid secret_key"</span></p>
-                  <p>{"}"}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* --- WEBHOOKS --- */}
-      {activeType === 'webhooks' && (
-        <div className="space-y-16 animate-in slide-in-from-bottom-2">
-           <section className="space-y-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
-                <Webhook className="w-3 h-3" />
-                Real-time Notifications
-              </div>
-              <h2 className="text-3xl font-bold">Webhooks</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Webhooks allow your server to receive real-time POST notifications when specific events occur. This eliminates the need for constant polling.
-              </p>
-              <div className="flex gap-2">
-                 <Badge variant="outline" className="text-[10px] uppercase font-bold h-5 px-1.5 border-blue-200 text-blue-600 bg-blue-50">STSPay</Badge>
-                 <Badge variant="outline" className="text-[10px] uppercase font-bold h-5 px-1.5 border-blue-200 text-blue-600 bg-blue-50">PPOB</Badge>
-              </div>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
-              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="text-sm font-bold text-amber-900">Security & Signature Verification</p>
-                <p className="text-xs text-amber-800/80 leading-relaxed">
-                  Every webhook includes an <code className="font-bold">X-STS-Signature</code> header. This is an <span className="font-bold">HMAC-SHA256</span> hash of the raw request body. Use your <span className="font-bold">Webhook Secret</span> to verify it.
-                </p>
-              </div>
-            </div>
-
-            <CodeBlock 
-              title="Webhook Payload Example"
-              type="webhook-ex"
-              code={`{
-  "event": "payment.success",
-  "data": {
-    "external_id": "PAY-12345",
-    "status": "PAID",
-    "amount": 50000,
-    "timestamp": "2024-10-24T08:42:11Z"
-  }
+                <CodeBlock 
+                  title="Error Wrapper"
+                  type="json"
+                  code={`{
+  "success": false,
+  "message": "Invalid secret_key",
+  "error_code": "AUTH_FAILED"
 }`}
-            />
+                />
+              </div>
+            </div>
           </section>
         </div>
       )}
@@ -264,7 +244,7 @@ function DocsContent() {
             </div>
             <CodeBlock 
               title="Create Payment Request"
-              type="pay-create-req"
+              type="json"
               code={`{
   "merchant_id": "STS-XXXX",
   "secret_key": "STS-XXXX",
@@ -288,7 +268,7 @@ function DocsContent() {
               </div>
               <h2 className="text-3xl font-bold">PPOB</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Purchase digital products like Airtime, Data, and Tokens.
+                Purchase digital products like Airtime, Data, and Tokens with real-time status updates.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -297,7 +277,7 @@ function DocsContent() {
             </div>
             <CodeBlock 
               title="PPOB Order Body"
-              type="ppob-create-req"
+              type="json"
               code={`{
   "secret_key": "STS-Key-XXXX",
   "sku": "TSEL10",
@@ -315,12 +295,12 @@ function DocsContent() {
           <section className="space-y-8">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
-                <Code2 className="w-3 h-3" />
+                <Braces className="w-3 h-3" />
                 Account Bridge
               </div>
               <h2 className="text-3xl font-bold">Orderkuota</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Automated QRIS and mutation checking for Orderkuota users.
+                Manage automated QRIS generation and mutation checking for linked Orderkuota accounts.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -329,7 +309,7 @@ function DocsContent() {
             </div>
             <CodeBlock 
               title="Dynamic QRIS Request"
-              type="orkut-create-req"
+              type="json"
               code={`{
   "secret_key": "STS-Key-XXXX",
   "amount": 25000,
@@ -351,7 +331,7 @@ function DocsContent() {
               </div>
               <h2 className="text-3xl font-bold">GoMerchant</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Bridge GoPay payments with unique nominal verification.
+                Integrate GoPay payments directly through GoBiz bridge with automated nominal verification.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -360,11 +340,53 @@ function DocsContent() {
             </div>
             <CodeBlock 
               title="GoPay Request"
-              type="gopay-create-req"
+              type="json"
               code={`{
   "secret_key": "STS-Key-XXXX",
   "amount": 10500,
   "description": "Order #442"
+}`}
+            />
+          </section>
+        </div>
+      )}
+
+      {/* --- WEBHOOKS --- */}
+      {activeType === 'webhooks' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+           <section className="space-y-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
+                <Webhook className="w-3 h-3" />
+                Real-time Notifications
+              </div>
+              <h2 className="text-3xl font-bold">Webhooks</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Webhooks allow your server to receive real-time POST notifications when specific events occur. This is currently supported for **STSPay** and **PPOB** services.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
+              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-amber-900">Security Signature</p>
+                <p className="text-xs text-amber-800/80 leading-relaxed">
+                  Every webhook includes an <code className="font-bold">X-STS-Signature</code> header. This is an <span className="font-bold">HMAC-SHA256</span> hash of the raw body using your Secret Key.
+                </p>
+              </div>
+            </div>
+
+            <CodeBlock 
+              title="Webhook Payload Example"
+              type="json"
+              code={`{
+  "event": "payment.success",
+  "data": {
+    "external_id": "PAY-12345",
+    "status": "PAID",
+    "amount": 50000,
+    "timestamp": "2024-10-24T08:42:11Z"
+  }
 }`}
             />
           </section>
@@ -378,10 +400,10 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-3xl font-bold flex items-center gap-3">
                 <X className="w-8 h-8 text-rose-500" />
-                Error Reference
+                Error Codes
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                List of common error codes returned by the STSPoint API.
+                Reference list for common error codes returned by the API.
               </p>
             </div>
             
@@ -389,7 +411,7 @@ function DocsContent() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted/50 border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">HTTP Code</th>
+                    <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">HTTP</th>
                     <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">Message</th>
                     <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">Description</th>
                   </tr>
@@ -398,17 +420,17 @@ function DocsContent() {
                   <tr>
                     <td className="px-6 py-4 font-mono font-bold text-amber-600">401</td>
                     <td className="px-6 py-4 font-medium">Invalid secret_key</td>
-                    <td className="px-6 py-4 text-muted-foreground">The authentication key is missing or incorrect.</td>
+                    <td className="px-6 py-4 text-muted-foreground text-xs">Authentication key is missing or incorrect.</td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 font-mono font-bold text-amber-600">403</td>
                     <td className="px-6 py-4 font-medium">Service not initialized</td>
-                    <td className="px-6 py-4 text-muted-foreground">The requested service is not configured for your account.</td>
+                    <td className="px-6 py-4 text-muted-foreground text-xs">The service is not configured for your account.</td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 font-mono font-bold text-amber-600">429</td>
                     <td className="px-6 py-4 font-medium">Rate limit exceeded</td>
-                    <td className="px-6 py-4 text-muted-foreground">Too many requests in a short period. Slow down.</td>
+                    <td className="px-6 py-4 text-muted-foreground text-xs">Too many requests in a short period.</td>
                   </tr>
                 </tbody>
               </table>

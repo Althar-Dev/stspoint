@@ -54,7 +54,7 @@ const DOCS_NAV = [
 function SidebarContent({ activeType, onItemClick }: { activeType: string, onItemClick?: () => void }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="h-16 flex items-center px-6 border-b border-border">
+      <div className="h-16 flex items-center px-6 border-b border-border shrink-0">
         <Link href="/console" className="flex items-center gap-2 group">
           <Logo className="w-8 h-8 transition-transform group-hover:scale-105" />
           <span className="font-headline font-bold text-lg tracking-tighter">Docs</span>
@@ -95,7 +95,7 @@ function SidebarContent({ activeType, onItemClick }: { activeType: string, onIte
           ))}
         </div>
       </ScrollArea>
-      <div className="h-16 flex items-center px-4 border-t border-border">
+      <div className="h-16 flex items-center px-4 border-t border-border shrink-0">
         <Button asChild variant="ghost" className="w-full justify-start gap-2 text-xs font-bold rounded-xl h-10">
           <Link href="/console">
             <ArrowLeft className="w-4 h-4" />
@@ -122,7 +122,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-72 flex flex-col">
         {/* Header - Fixed h-16 to match sidebar */}
-        <header className="h-16 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border">
+        <header className="h-16 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border shrink-0">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="w-6 h-6" />
@@ -149,7 +149,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           </div>
         </main>
 
-        <footer className="h-16 flex items-center border-t border-border bg-background/50">
+        <footer className="h-16 flex items-center border-t border-border bg-background/50 shrink-0">
            <div className="max-w-5xl mx-auto w-full px-6 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">© 2024 STSPoint Infrastructure</p>
               <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">
