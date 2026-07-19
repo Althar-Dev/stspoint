@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { 
   QrCode, 
   Upload, 
@@ -255,7 +255,7 @@ export default function QrisStringPage() {
                      <FileText className="w-5 h-5 text-primary" />
                      Gunakan Base QRIS Anda
                    </h3>
-                   <p className="text-[11px] text-white/50 leading-relaxed max-w-sm">
+                   <p className="text-[11px] text-white/50 leading-relaxed max-sm:max-w-full max-w-sm">
                      Tempelkan string hasil decode ini ke halaman pengaturan **Orderkuota** atau **GoMerchant** untuk mengaktifkan fitur pembayaran otomatis.
                    </p>
                 </div>
