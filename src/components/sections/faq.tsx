@@ -10,7 +10,7 @@ import {
 const FAQS = [
   {
     q: "What is an Infrastructure Bridge and how does it work?",
-    a: "STSPoint acts as a technical intermediary (Bridge) between your system and high-level upstream providers like Xendit, GoPay, and Orderkuota. We provide a single, unified API that simplifies complex backend orchestration for payments, PPOB, and OTP services, allowing you to scale without managing multiple provider integrations.",
+    a: "STSPoint acts as a technical intermediary between your system and high-level upstream distribution networks. We provide a single, unified API that simplifies complex backend orchestration for payments, digital products, and communication services, allowing you to scale without managing multiple individual provider integrations.",
   },
   {
     q: "How secure are my Merchant credentials and API keys?",
@@ -18,7 +18,7 @@ const FAQS = [
   },
   {
     q: "Do you provide real-time transaction webhooks?",
-    a: "Yes. Our platform features a robust Webhook engine that delivers instant POST notifications to your server for every status update, such as Successful Payments (PAID) or Product Delivery. You can configure global webhook URLs in your dashboard or provide dynamic callback URLs per-request via API headers.",
+    a: "Yes. Our platform features a robust Webhook engine that delivers instant POST notifications to your server for every status update, such as successful payments or product fulfillment. You can configure global webhook URLs in your dashboard or provide dynamic callback URLs per-request via API headers.",
   },
   {
     q: "Can I integrate STSPoint with any programming language?",
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "What is your uptime guarantee (SLA)?",
-    a: "We guarantee a 99.9% uptime SLA for our core API services. Our globally distributed Anycast network ensures that even during peak traffic periods, your business stays online with minimal latency and high reliability across all our infrastructure modules.",
+    a: "We guarantee a 99.9% uptime SLA for our core API services. Our distributed infrastructure ensures that even during peak traffic periods, your business stays online with minimal latency and high reliability across all our service modules.",
   },
 ];
 
