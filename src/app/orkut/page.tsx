@@ -278,7 +278,7 @@ export default function OrkutPage() {
                       Connect Account
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-border max-w-sm">
+                  <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-sm">
                     <DialogHeader>
                       <DialogTitle className="font-headline font-bold">
                         {step === 1 ? "Connect Orderkuota" : "Verify OTP"}
@@ -483,7 +483,7 @@ export default function OrkutPage() {
                         Settings
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="rounded-3xl border-border max-w-sm">
+                    <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                       <DialogHeader>
                         <DialogTitle className="font-headline font-bold">Orderkuota Settings</DialogTitle>
                         <DialogDescription className="text-xs">

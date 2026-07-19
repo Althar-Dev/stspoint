@@ -302,7 +302,7 @@ export default function GopayPage() {
                       Connect Account
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-border max-w-sm">
+                  <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-sm">
                     <DialogHeader>
                       <DialogTitle className="font-headline font-bold">
                         {step === 1 ? "Connect GoPay" : "Verify OTP"}
@@ -484,7 +484,7 @@ export default function GopayPage() {
                         Settings
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="rounded-3xl border-border max-sm">
+                    <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                       <DialogHeader>
                         <DialogTitle className="font-headline font-bold">GoPay Settings</DialogTitle>
                         <DialogDescription className="text-xs">
@@ -552,7 +552,7 @@ export default function GopayPage() {
                 onClick={handleManualRefresh}
                 disabled={mutationsLoading || !isConnected}
               >
-                {mutationsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCcw className="w-3 h-3" />}
+                {mutationsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-3 h-3" />}
                 Refresh
               </Button>
               <Button variant="ghost" size="sm" asChild className="text-[11px] font-bold hover:bg-accent h-8 cursor-pointer">
