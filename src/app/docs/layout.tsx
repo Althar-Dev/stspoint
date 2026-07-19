@@ -130,14 +130,14 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-background selection:bg-primary/10 selection:text-primary">
+    <div className="flex min-h-screen bg-background selection:bg-primary/10 selection:text-primary overflow-x-hidden">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-card/50 backdrop-blur-xl z-40">
         <SidebarContent activeType={activeType} />
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-72 flex flex-col">
+      <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
         {/* Header - Fixed h-16 to match sidebar */}
         <header className="h-16 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border shrink-0">
           <div className="flex items-center gap-4 lg:hidden">
@@ -169,8 +169,8 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1">
-          <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
+        <main className="flex-1 min-w-0">
+          <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10 w-full overflow-hidden">
             {children}
           </div>
         </main>

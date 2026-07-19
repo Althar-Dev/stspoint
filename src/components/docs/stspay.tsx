@@ -8,7 +8,7 @@ import { CodeBlock } from "./shared/code-block";
 
 export function DocsStsPay() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 max-w-full overflow-hidden">
+    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
       <section className="space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
           <Zap className="w-3 h-3" />
@@ -20,7 +20,7 @@ export function DocsStsPay() {
         </p>
       </section>
 
-      <section id="create-payment" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
+      <section id="create-payment" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
           <h2 className="text-2xl font-bold flex items-center gap-3">
             <Plus className="w-6 h-6 text-primary" />
@@ -35,12 +35,12 @@ export function DocsStsPay() {
           </div>
         </div>
 
-        <div className="space-y-6 w-full overflow-hidden">
+        <div className="space-y-6 w-full min-w-0">
            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Braces className="w-3.5 h-3.5" />
              Request Parameters
            </h4>
-           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full">
+           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
               <table className="w-full text-left text-xs border-collapse min-w-[600px]">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
@@ -86,14 +86,14 @@ export function DocsStsPay() {
            </div>
         </div>
 
-        <div className="space-y-4 w-full overflow-hidden">
+        <div className="space-y-4 w-full min-w-0 overflow-hidden">
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Code2 className="w-3.5 h-3.5" />
              Implementation Examples
           </h4>
           <Tabs defaultValue="curl" className="w-full">
-            <div className="w-full overflow-x-auto no-scrollbar mb-2">
-              <TabsList className="bg-muted p-1 rounded-xl h-11 w-max min-w-full justify-start">
+            <div className="w-full overflow-x-auto no-scrollbar mb-2 block">
+              <TabsList className="bg-muted p-1 rounded-xl h-11 w-max min-w-full justify-start flex">
                 <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
                 <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
                 <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
@@ -101,7 +101,7 @@ export function DocsStsPay() {
               </TabsList>
             </div>
             
-            <TabsContent value="curl" className="w-full">
+            <TabsContent value="curl" className="w-full outline-none">
               <CodeBlock 
                 title="Shell / cURL"
                 type="curl"
@@ -119,7 +119,7 @@ export function DocsStsPay() {
               />
             </TabsContent>
 
-            <TabsContent value="node" className="w-full">
+            <TabsContent value="node" className="w-full outline-none">
               <CodeBlock 
                 title="Node.js (Fetch API)"
                 type="node"
@@ -144,7 +144,7 @@ console.log(result);`}
               />
             </TabsContent>
 
-            <TabsContent value="python" className="w-full">
+            <TabsContent value="python" className="w-full outline-none">
               <CodeBlock 
                 title="Python (Requests)"
                 type="python"
@@ -168,7 +168,7 @@ print(response.json())`}
               />
             </TabsContent>
 
-            <TabsContent value="php" className="w-full">
+            <TabsContent value="php" className="w-full outline-none">
               <CodeBlock 
                 title="PHP (CURL)"
                 type="php"
@@ -202,8 +202,8 @@ echo $response;
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full overflow-hidden">
-           <div className="space-y-4 w-full overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full min-w-0">
+           <div className="space-y-4 min-w-0 overflow-hidden">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Mode: Payment Link</p>
               <CodeBlock 
                 title="Hosted Checkout Response"
@@ -219,7 +219,7 @@ echo $response;
 }`}
               />
            </div>
-           <div className="space-y-4 w-full overflow-hidden">
+           <div className="space-y-4 min-w-0 overflow-hidden">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Mode: QRIS</p>
               <CodeBlock 
                 title="Direct QRIS Payload"
@@ -238,7 +238,7 @@ echo $response;
         </div>
       </section>
 
-      <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
+      <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
           <h2 className="text-2xl font-bold flex items-center gap-3 text-foreground">
             <RefreshCcw className="w-6 h-6 text-primary" />

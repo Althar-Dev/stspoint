@@ -56,7 +56,7 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
   };
 
   return (
-    <div className="space-y-3 my-6 w-full max-w-full">
+    <div className="space-y-3 my-6 w-full max-w-full min-w-0">
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
           <Terminal className="w-3 h-3" />
@@ -77,8 +77,8 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="p-4 md:p-6 font-mono text-[11px] md:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar">
-          <pre className="w-fit" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
+        <div className="p-4 md:p-6 font-mono text-[11px] md:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar w-full">
+          <pre className="w-fit max-w-full break-words" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
         </div>
       </div>
     </div>
