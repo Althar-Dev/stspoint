@@ -95,8 +95,8 @@ function SidebarContent({ activeType, onItemClick }: { activeType: string, onIte
           ))}
         </div>
       </ScrollArea>
-      <div className="p-4 border-t border-border">
-        <Button asChild variant="ghost" className="w-full justify-start gap-2 text-xs font-bold rounded-xl">
+      <div className="h-16 flex items-center px-4 border-t border-border">
+        <Button asChild variant="ghost" className="w-full justify-start gap-2 text-xs font-bold rounded-xl h-10">
           <Link href="/console">
             <ArrowLeft className="w-4 h-4" />
             Back to Console
@@ -142,16 +142,15 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
         </header>
 
         <main className="flex-1">
-          {/* Optimized padding and max-width for better desktop display */}
           <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10">
             {children}
           </div>
         </main>
 
-        <footer className="px-6 lg:px-10 py-10 border-t border-border bg-muted/20">
-           <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-xs text-muted-foreground">© 2024 STSPoint Infrastructure. Built for speed.</p>
-              <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+        <footer className="h-16 flex items-center border-t border-border bg-background/50">
+           <div className="max-w-5xl mx-auto w-full px-6 lg:px-10 flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">© 2024 STSPoint Infrastructure</p>
+              <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/30">
                 <a href="#" className="hover:text-primary transition-colors">Github</a>
                 <a href="#" className="hover:text-primary transition-colors">Postman</a>
                 <a href="#" className="hover:text-primary transition-colors">Support</a>
