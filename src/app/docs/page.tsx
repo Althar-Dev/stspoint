@@ -88,7 +88,7 @@ function DocsContent() {
   };
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
+    <div id="docs-content" className="space-y-12 animate-in fade-in duration-700">
       {/* --- GET STARTED --- */}
       {activeType === 'general' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
@@ -239,7 +239,7 @@ function DocsContent() {
               </p>
               <div className="flex items-center gap-4 mt-6">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/payments/create</code>
+                <code className="text-sm font-bold text-primary">https://api.stspoint.id/api/payments/create</code>
               </div>
             </div>
             <CodeBlock 
@@ -272,7 +272,7 @@ function DocsContent() {
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/ppob/order</code>
+                <code className="text-sm font-bold text-primary">https://api.stspoint.id/api/ppob/order</code>
               </div>
             </div>
             <CodeBlock 
@@ -304,7 +304,7 @@ function DocsContent() {
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/orkut/create</code>
+                <code className="text-sm font-bold text-primary">https://api.stspoint.id/api/orkut/create</code>
               </div>
             </div>
             <CodeBlock 
@@ -335,7 +335,7 @@ function DocsContent() {
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/gopay/create</code>
+                <code className="text-sm font-bold text-primary">https://api.stspoint.id/api/gopay/create</code>
               </div>
             </div>
             <CodeBlock 

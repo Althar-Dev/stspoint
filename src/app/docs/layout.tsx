@@ -14,7 +14,7 @@ import {
   Code2,
   Rocket,
   X,
-  Link2
+  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -115,13 +115,17 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const activeType = searchParams.get("v") || "general";
 
-  const copyPageLink = () => {
+  const handleCopyPage = () => {
     if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      toast({ 
-        title: "Link Copied!", 
-        description: "The current documentation URL has been copied to your clipboard." 
-      });
+      const content = document.getElementById("docs-content");
+      if (content) {
+        const text = content.innerText;
+        navigator.clipboard.writeText(text);
+        toast({ 
+          title: "Page Copied!", 
+          description: "Documentation content has been copied to your clipboard." 
+        });
+      }
     }
   };
 
@@ -143,7 +147,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
             <Logo className="w-8 h-8" />
           </div>
           
-          <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+          <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest text-nowrap">
             <span>Documentation</span>
             <ChevronRight className="w-3 h-3 opacity-30" />
             <span className="text-foreground capitalize">
@@ -155,11 +159,11 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
              <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={copyPageLink}
+                onClick={handleCopyPage}
                 className="h-8 gap-2 text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-primary/5 hidden sm:flex"
              >
-                <Link2 className="w-3.5 h-3.5" />
-                Copy Link
+                <Copy className="w-3.5 h-3.5" />
+                Copy Page
              </Button>
              <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 font-bold text-[9px] uppercase h-6">v1.2.0 Stable</Badge>
           </div>
