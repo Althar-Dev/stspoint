@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     default: 'STSPoint | StarVale Digital Infrastructure & Payment Bridge',
     template: '%s | STSPoint by StarVale'
   },
-  description: 'Integrated digital gateway platform for modern businesses by StarVale Technology Solution. Providing high-speed APIs for PPOB, OTP, and STSPay payments with 99.9% uptime and low-latency infrastructure. Developed by Alhadi Adriano (AltharDev).',
+  description: 'The ultimate digital gateway platform by StarVale Technology Solution. Providing enterprise-grade API solutions for PPOB, OTP, and STSPay payment bridges with 99.9% uptime. Developed and engineered by Alhadi Adriano (AltharDev) for high-scale business automation.',
   keywords: [
     'digital infrastructure', 
     'payment gateway indonesia', 
@@ -22,11 +22,14 @@ export const metadata: Metadata = {
     'StarVale Technology Solution',
     'Alhadi Adriano',
     'AltharDev',
-    'AltharDev Infrastructure'
+    'AltharDev Infrastructure',
+    'StarVale ID',
+    'Indonesian API Provider',
+    'StarVale StarPoint'
   ],
   authors: [
     { name: 'Alhadi Adriano (AltharDev)', url: 'https://github.com/althardev' },
-    { name: 'StarVale Technology Solution' }
+    { name: 'StarVale Technology Solution', url: 'https://stspoint.id/about' }
   ],
   creator: 'Alhadi Adriano (AltharDev)',
   publisher: 'StarVale Technology Solution',
@@ -38,18 +41,22 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://stspoint.id'),
   alternates: {
     canonical: '/',
+    languages: {
+      'id-ID': '/id',
+      'en-US': '/en',
+    },
   },
   openGraph: {
-    title: 'STSPoint | StarVale Digital Infrastructure & Payment Bridge',
+    title: 'STSPoint | Digital Infrastructure by AltharDev',
     description: 'Scale your business with robust payment and product distribution infrastructure by StarVale Technology Solution.',
     url: 'https://stspoint.id',
-    siteName: 'STSPoint',
+    siteName: 'STSPoint Infrastructure',
     images: [
       {
         url: '/assets/img/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'STSPoint Infrastructure Dashboard by StarVale',
+        alt: 'STSPoint Infrastructure by StarVale Technology Solution',
       },
     ],
     locale: 'id_ID',
@@ -59,6 +66,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'STSPoint | Digital Infrastructure by AltharDev',
     description: 'High-speed APIs for payments and digital goods by StarVale Technology Solution.',
+    creator: '@StarValeID',
     images: ['/assets/img/twitter-image.png'],
   },
   robots: {
@@ -78,6 +86,16 @@ export const metadata: Metadata = {
     apple: '/assets/img/icon.png',
   },
   manifest: '/manifest.json',
+  other: {
+    'geo.region': 'ID-JK',
+    'geo.placename': 'Jakarta',
+    'geo.position': '-6.2088;106.8456',
+    'ICBM': '-6.2088, 106.8456',
+    'DC.title': 'STSPoint | Digital Infrastructure & Payment Bridge',
+    'DC.creator': 'Alhadi Adriano (AltharDev)',
+    'DC.publisher': 'StarVale Technology Solution',
+    'apple-mobile-web-app-title': 'STSPoint',
+  }
 };
 
 export const viewport: Viewport = {
@@ -100,12 +118,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <meta name="geo.region" content="ID-JK" />
-        <meta name="geo.placename" content="Jakarta" />
-        <meta name="geo.position" content="-6.2088;106.8456" />
-        <meta name="ICBM" content="-6.2088, 106.8456" />
-        <meta name="author" content="Alhadi Adriano (AltharDev)" />
-        <meta name="owner" content="StarVale Technology Solution" />
       </head>
       <body className="font-body antialiased selection:bg-primary/10 selection:text-primary min-h-screen">
         <FirebaseClientProvider>

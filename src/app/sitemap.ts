@@ -2,49 +2,62 @@ import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://stspoint.id';
+  const lastModified = new Date();
   
   return [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'monthly',
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/status`,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'always',
-      priority: 0.7,
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/support`,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/qris-string`,
+      lastModified,
+      changeFrequency: 'weekly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/terms-of-service`,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy-policy`,
-      lastModified: new Date(),
+      lastModified,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/qris-string`,
-      lastModified: new Date(),
+      url: `${baseUrl}/signin`,
+      lastModified,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
+    {
+      url: `${baseUrl}/signup`,
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    }
   ];
 }

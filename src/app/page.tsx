@@ -20,19 +20,42 @@ export default function Home() {
     "author": {
       "@type": "Person",
       "name": "Alhadi Adriano",
-      "alternateName": "AltharDev"
+      "alternateName": "AltharDev",
+      "url": "https://github.com/althardev"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "StarVale Technology Solution",
+      "logo": "https://stspoint.id/assets/img/icon.png"
     },
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "IDR"
     },
-    "description": "Integrated digital infrastructure for modern business by StarVale Technology Solution. Support API payments, AI, and digital goods distribution.",
+    "description": "Integrated digital infrastructure platform for modern business by StarVale Technology Solution. Expertly engineered by Alhadi Adriano (AltharDev) to support API payments, AI, and digital goods distribution.",
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.9",
       "reviewCount": "1240"
     }
+  };
+
+  const personData = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Alhadi Adriano",
+    "alternateName": "AltharDev",
+    "jobTitle": "Lead Engineer & Founder",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "StarVale Technology Solution"
+    },
+    "url": "https://github.com/althardev",
+    "sameAs": [
+      "https://www.linkedin.com/in/starvaleid",
+      "https://instagram.com/althardev"
+    ]
   };
 
   const organizationData = {
@@ -50,7 +73,14 @@ export default function Home() {
       "https://instagram.com/starvale.id",
       "https://x.com/StarValeID",
       "https://www.linkedin.com/in/starvaleid"
-    ]
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+62 889 7657 7650",
+      "contactType": "customer service",
+      "areaServed": "ID",
+      "availableLanguage": ["Indonesian", "English"]
+    }
   };
 
   return (
@@ -59,6 +89,11 @@ export default function Home() {
         id="structured-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <Script
+        id="person-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personData) }}
       />
       <Script
         id="org-data"
