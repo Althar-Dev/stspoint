@@ -77,8 +77,8 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="py-4 md:py-6 font-mono text-[11px] md:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar w-full">
-          <pre className="w-fit max-w-full px-6 md:px-8" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
+        <div className="py-8 md:py-10 font-mono text-[11px] md:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar w-full">
+          <pre className="w-fit max-w-full px-10 md:px-16" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
         </div>
       </div>
     </div>
