@@ -37,9 +37,9 @@ const DOCS_NAV = [
   {
     title: "Services",
     items: [
-      { id: "ppob", title: "PPOB H2H Engine", icon: Smartphone, href: "/docs?v=ppob" },
-      { id: "orderkuota", title: "Orderkuota Bridge", icon: Code2, href: "/docs?v=orderkuota" },
-      { id: "gopay", title: "GoMerchant API", icon: Globe, href: "/docs?v=gopay" },
+      { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs?v=ppob" },
+      { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs?v=orderkuota" },
+      { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs?v=gopay" },
     ],
   },
   {
@@ -133,7 +133,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
             <span>Documentation</span>
             <ChevronRight className="w-3 h-3 opacity-30" />
-            <span className="text-foreground capitalize">{activeType === 'general' ? 'Get Started' : `${activeType} API`}</span>
+            <span className="text-foreground capitalize">{activeType === 'general' ? 'Get Started' : `${activeType}`}</span>
           </div>
 
           <div className="flex items-center gap-3">

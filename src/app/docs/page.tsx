@@ -188,14 +188,14 @@ function DocsContent() {
         </div>
       )}
 
-      {/* --- PPOB H2H DOCS --- */}
+      {/* --- PPOB --- */}
       {activeType === 'ppob' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-3xl font-bold flex items-center gap-3">
                 <Smartphone className="w-8 h-8 text-blue-500" />
-                PPOB H2H Engine
+                PPOB
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Lakukan pengisian Pulsa, Paket Data, atau Token Listrik secara otomatis melalui satu koneksi API terpadu.
@@ -232,14 +232,14 @@ function DocsContent() {
         </div>
       )}
 
-      {/* --- ORDERKUOTA DOCS --- */}
+      {/* --- ORDERKUOTA --- */}
       {activeType === 'orderkuota' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-3xl font-bold flex items-center gap-3">
                 <Code2 className="w-8 h-8 text-primary" />
-                Orderkuota Bridge
+                Orderkuota
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Gunakan saldo Orderkuota Anda untuk menghasilkan QRIS dinamis di website Anda sendiri dengan sistem mutasi otomatis.
@@ -264,7 +264,7 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-primary" />
-                Orkut: Mutation Sync
+                Orderkuota: Mutation Sync
               </h2>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
@@ -278,14 +278,14 @@ function DocsContent() {
         </div>
       )}
 
-      {/* --- GOMERCHANT DOCS --- */}
+      {/* --- GOMERCHANT --- */}
       {activeType === 'gopay' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-3xl font-bold flex items-center gap-3">
                 <Globe className="w-8 h-8 text-[#00AED6]" />
-                GoMerchant API
+                GoMerchant
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Bridge API untuk menerima pembayaran GoPay otomatis menggunakan akun GoBiz dengan integrasi nominal unik.
@@ -310,7 +310,7 @@ function DocsContent() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-[#00AED6]" />
-                Gopay: Mutation Recon
+                GoMerchant: Mutation Recon
               </h2>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
