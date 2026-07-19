@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,7 +26,8 @@ import {
   Fingerprint,
   Plus,
   CheckCircle2,
-  RefreshCcw
+  RefreshCcw,
+  ShieldAlert
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -619,37 +619,89 @@ echo $response;
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
                 <Webhook className="w-3 h-3" />
-                Integration Support
+                Real-time Events
               </div>
               <h1 className="text-4xl font-headline font-bold">Webhooks</h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Receive real-time notifications about your transactions. Webhooks are currently available for **STSPay** and **PPOB** services.
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
+                Webhooks allow your application to receive real-time notifications when a specific event occurs in the STSPoint ecosystem. Instead of polling for updates, we push data to your server immediately.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
-              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="text-sm font-bold text-amber-900">Security Signature</p>
-                <p className="text-xs text-amber-800/80 leading-relaxed">
-                  Every webhook request includes an <code className="font-bold">X-STS-Signature</code> header. Verify this header using an **HMAC-SHA256** hash of the request body with your Secret Key.
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border-border bg-card rounded-2xl p-6 space-y-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                   <Zap className="w-5 h-5" />
+                </div>
+                <h4 className="font-bold text-sm">Supported Services</h4>
+                <div className="flex flex-wrap gap-2">
+                   <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">STSPay</Badge>
+                   <Badge variant="outline" className="bg-muted text-[10px] font-bold uppercase">PPOB Orders</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">Callbacks are currently available for these two core services to notify you of payment and fulfillment statuses.</p>
+              </Card>
+              <Card className="border-border bg-card rounded-2xl p-6 space-y-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                   <ShieldAlert className="w-5 h-5" />
+                </div>
+                <h4 className="font-bold text-sm">Security & Signing</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Every webhook contains an <code className="font-bold text-foreground">X-STS-Signature</code> header. You must verify this signature using an **HMAC-SHA256** hash of the request body with your **Secret Key**.
                 </p>
-              </div>
+              </Card>
             </div>
 
-            <CodeBlock 
-              title="Success Webhook Payload"
-              type="json"
-              code={`{
+            <div className="space-y-6 pt-4">
+               <h3 className="text-2xl font-bold flex items-center gap-3">
+                 <Terminal className="w-6 h-6 text-primary" />
+                 Integration Flow
+               </h3>
+               <div className="space-y-4">
+                 <p className="text-sm text-muted-foreground leading-relaxed">
+                   When an event occurs, STSPoint will send an <span className="font-bold text-foreground">HTTP POST</span> request to your registered Webhook URL with a JSON payload.
+                 </p>
+                 <CodeBlock 
+                   title="Example Webhook Payload (Payment Success)"
+                   type="json"
+                   code={`{
   "event": "payment.success",
   "data": {
-    "external_id": "PAY-12345",
+    "external_id": "PAY-1730-XXXX",
     "status": "PAID",
     "amount": 50000,
+    "payer_email": "customer@email.com",
     "timestamp": "2024-10-24T08:42:11Z"
   }
 }`}
-            />
+                 />
+               </div>
+
+               <div className="p-6 rounded-2xl bg-muted/50 border border-border space-y-4">
+                 <div className="flex items-center gap-2">
+                   <Info className="w-4 h-4 text-primary" />
+                   <h4 className="text-sm font-bold uppercase tracking-tight">Handling Responses</h4>
+                 </div>
+                 <p className="text-xs text-muted-foreground leading-relaxed">
+                   Your server must acknowledge receipt of the webhook by returning a <span className="text-emerald-600 font-bold">200 OK</span> HTTP status code. If our system receives any other code (e.g., 500, 404, or a timeout), it will attempt to resend the notification up to 3 times over a 24-hour period.
+                 </p>
+               </div>
+            </div>
+
+            <div className="pt-8 border-t border-border">
+               <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Implementation Checklist</h4>
+               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                 {[
+                   "Endpoint reachable via public HTTPS",
+                   "Secret Key used for Signature verification",
+                   "Response within 10 seconds (200 OK)",
+                   "Idempotency handling for duplicate events"
+                 ].map((item, i) => (
+                   <li key={i} className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      {item}
+                   </li>
+                 ))}
+               </ul>
+            </div>
           </section>
         </div>
       )}
