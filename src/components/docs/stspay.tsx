@@ -93,7 +93,7 @@ export function DocsStsPay() {
           </h4>
           <Tabs defaultValue="curl" className="w-full">
             <div className="w-full overflow-x-auto no-scrollbar mb-2 block">
-              <TabsList className="bg-muted p-1 rounded-xl h-11 w-max min-w-full justify-start flex">
+              <TabsList className="bg-muted p-1 rounded-xl h-11 w-fit min-w-0 justify-start flex">
                 <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
                 <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
                 <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
