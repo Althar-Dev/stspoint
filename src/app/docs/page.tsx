@@ -114,7 +114,7 @@ function DocsContent() {
                 Authentication
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                STSPoint uses key-based authentication. You can find your unique credentials in the <span className="font-bold text-foreground">Developer > API Keys</span> section of your Console.
+                STSPoint uses key-based authentication. You can find your unique credentials in the <span className="font-bold text-foreground">Developer &gt; API Keys</span> section of your Console.
               </p>
             </div>
 
