@@ -28,7 +28,9 @@ import {
   ExternalLink,
   CreditCard,
   Mail,
-  FileText
+  FileText,
+  Plus,
+  CheckCircle2
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
