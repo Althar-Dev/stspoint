@@ -12,23 +12,23 @@ export function Footer() {
               <span className="font-headline font-bold text-2xl tracking-tighter">Point</span>
             </div>
             <p className="text-muted-foreground text-sm max-w-sm">
-              Platform infrastruktur gerbang digital terintegrasi untuk bisnis modern. Kami menyediakan solusi API, pembayaran, dan layanan cloud dalam satu pintu.
+              Integrated digital gateway infrastructure platform for modern business. We provide API solutions, payments, and cloud services in one place.
             </p>
           </div>
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Layanan</h4>
+            <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Services</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/console/developer/docs" className="hover:text-primary transition-colors">Dokumentasi API</Link></li>
-              <li><Link href="/console" className="hover:text-primary transition-colors">Dashboard H2H</Link></li>
-              <li><Link href="/support" className="hover:text-primary transition-colors">Pusat Bantuan</Link></li>
+              <li><Link href="/docs" className="hover:text-primary transition-colors">API Documentation</Link></li>
+              <li><Link href="/console" className="hover:text-primary transition-colors">H2H Dashboard</Link></li>
+              <li><Link href="/support" className="hover:text-primary transition-colors">Help Center</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Perusahaan</h4>
+            <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-primary transition-colors">Tentang Kami</Link></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Syarat & Ketentuan</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Kebijakan Privasi</a></li>
+              <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Terms & Conditions</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
             </ul>
           </div>
         </div>
