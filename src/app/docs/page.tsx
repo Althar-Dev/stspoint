@@ -116,7 +116,7 @@ function DocsContent() {
               </p>
               <div className="flex items-center gap-3 px-5 h-14 rounded-2xl bg-muted/50 border border-border w-fit font-mono text-xs font-bold text-primary shadow-sm">
                 <Server className="w-4 h-4 opacity-30" />
-                https://stspoint.id
+                https://api.stspoint.id
               </div>
             </div>
           </section>
@@ -165,7 +165,7 @@ function DocsContent() {
               <CodeBlock 
                 title="cURL Authentication"
                 type="curl"
-                code={`curl -X POST https://stspoint.id/api/payments/create \\
+                code={`curl -X POST https://api.stspoint.id/api/payments/create \\
   -H "Content-Type: application/json" \\
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
@@ -229,7 +229,7 @@ function DocsContent() {
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00AED6]/5 border border-[#00AED6]/10 text-[10px] font-bold uppercase tracking-widest text-[#00AED6]">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
                 <Zap className="w-3 h-3" />
                 Payment Gateway
               </div>
@@ -325,7 +325,7 @@ function DocsContent() {
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
           <section className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00AED6]/5 border border-[#00AED6]/10 text-[10px] font-bold uppercase tracking-widest text-[#00AED6]">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
                 <Globe className="w-3 h-3" />
                 GoBiz Bridge
               </div>

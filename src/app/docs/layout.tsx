@@ -13,13 +13,15 @@ import {
   Webhook,
   Code2,
   Rocket,
-  X
+  X,
+  Link2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const DOCS_NAV = [
   {
@@ -110,7 +112,18 @@ function SidebarContent({ activeType, onItemClick }: { activeType: string, onIte
 function DocsLayoutInner({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const activeType = searchParams.get("v") || "general";
+
+  const copyPageLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      toast({ 
+        title: "Link Copied!", 
+        description: "The current documentation URL has been copied to your clipboard." 
+      });
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background selection:bg-primary/10 selection:text-primary">
@@ -139,6 +152,15 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
+             <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={copyPageLink}
+                className="h-8 gap-2 text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-primary/5 hidden sm:flex"
+             >
+                <Link2 className="w-3.5 h-3.5" />
+                Copy Link
+             </Button>
              <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 font-bold text-[9px] uppercase h-6">v1.2.0 Stable</Badge>
           </div>
         </header>
