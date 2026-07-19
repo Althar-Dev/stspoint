@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -42,7 +43,7 @@ export function DocsGoMerchant() {
             Create GoPay Payment
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Initialize a GoPay transaction. The system will generate a dynamic QRIS string and a hosted checkout URL that your customers can use to complete the payment.
+            Initialize a GoPay transaction. The system will generate a dynamic QRIS string that you can render as a QR code in your own application.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
@@ -210,7 +211,7 @@ echo $response;
     "base_amount": 50000,
     "random_code": 428,
     "status": "PENDING",
-    "checkout_url": "https://api.stspoint.id/checkout/GPY-1730-XXXX"
+    "remaining_quota": 14999
   }
 }`}
           />

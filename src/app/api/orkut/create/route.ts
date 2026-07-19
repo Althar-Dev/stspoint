@@ -196,8 +196,7 @@ export async function POST(request: Request) {
         base_amount: baseAmount,
         random_code: randomSuffix,
         status: 'PENDING',
-        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1,
-        checkout_url: `${request.headers.get('x-forwarded-proto') || 'http'}://${request.headers.get('host')}/checkout/${trxId}`
+        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
       }
     });
 
