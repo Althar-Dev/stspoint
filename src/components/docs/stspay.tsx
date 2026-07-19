@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -30,7 +31,7 @@ export function DocsStsPay() {
             Initialize a transaction. Use the <code className="font-bold text-foreground">type</code> parameter to switch between a hosted link or a direct QRIS string.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px] h-5">POST</Badge>
+            <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
             <span className="text-primary">/payments/create</span>
           </div>
         </div>
@@ -40,46 +41,46 @@ export function DocsStsPay() {
              <Braces className="w-3.5 h-3.5" />
              Request Parameters
            </h4>
-           <div className="rounded-2xl border border-border overflow-hidden">
-              <table className="w-full text-left text-xs">
+           <div className="rounded-2xl border border-border overflow-x-auto bg-card">
+              <table className="w-full text-left text-xs border-collapse">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Parameter</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Type</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Default</th>
+                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
+                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Type</th>
+                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Default</th>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Description</th>
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-border">
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600">merchant_id</td>
-                       <td className="px-6 py-4 text-muted-foreground">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed">Your unique STS Merchant ID.</td>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">merchant_id</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
+                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
+                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Your unique STS Merchant ID. Found in Console dashboard.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600">secret_key</td>
-                       <td className="px-6 py-4 text-muted-foreground">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed">Your private API Secret Key.</td>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">secret_key</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
+                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
+                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Your private API Secret Key. Used for authentication.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600">type</td>
-                       <td className="px-6 py-4 text-muted-foreground">Enum</td>
-                       <td className="px-6 py-4 font-mono text-[9px]">payment_link</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed">Options: <code className="text-primary font-bold">payment_link</code> or <code className="text-primary font-bold">qris</code>.</td>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">type</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Enum</td>
+                       <td className="px-6 py-4 font-mono text-[9px] whitespace-nowrap">payment_link</td>
+                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Creation mode. Use <code className="text-primary font-bold">payment_link</code> for hosted checkout or <code className="text-primary font-bold">qris</code> for raw string.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600">amount</td>
-                       <td className="px-6 py-4 text-muted-foreground">Number</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed">Transaction amount in IDR.</td>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">amount</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
+                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
+                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Total transaction amount in Indonesian Rupiah (IDR). Min: 100.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600">payer_email</td>
-                       <td className="px-6 py-4 text-muted-foreground">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground leading-relaxed">Customer email address.</td>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">payer_email</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
+                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
+                       <td className="px-6 py-4 text-muted-foreground leading-relaxed min-w-[200px]">Customer email address for invoice delivery and identification.</td>
                     </tr>
                  </tbody>
               </table>
@@ -246,7 +247,7 @@ echo $response;
             Poll the current state of a transaction using the <code className="font-bold text-foreground">external_id</code>.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px] h-5">POST</Badge>
+            <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
             <span className="text-primary">/payments/status</span>
           </div>
         </div>
