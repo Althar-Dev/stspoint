@@ -1,8 +1,8 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, Suspense } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { 
   BookOpen, 
   Terminal, 
@@ -13,95 +13,114 @@ import {
   ChevronRight,
   Menu,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Smartphone,
+  Globe,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const DOCS_NAV = [
   {
-    title: "Getting Started",
+    title: "Core",
     items: [
-      { title: "Introduction", icon: BookOpen, href: "/docs#intro" },
-      { title: "Authentication", icon: ShieldCheck, href: "/docs#auth" },
+      { id: "general", title: "General Info", icon: BookOpen, href: "/docs?v=general" },
+      { id: "auth", title: "Authentication", icon: ShieldCheck, href: "/docs?v=general#auth" },
     ],
   },
   {
-    title: "STSPay Gateway",
+    title: "Payments",
     items: [
-      { title: "Create Payment", icon: Zap, href: "/docs#pay-create" },
-      { title: "Check Status", icon: Terminal, href: "/docs#pay-status" },
+      { id: "stspay", title: "STSPay Gateway", icon: Zap, href: "/docs?v=stspay" },
+      { id: "gopay", title: "GoMerchant API", icon: Globe, href: "/docs?v=gopay" },
     ],
   },
   {
-    title: "Orderkuota H2H",
+    title: "Services",
     items: [
-      { title: "Create Transaction", icon: Code2, href: "/docs#orkut-create" },
-      { title: "Check Mutation", icon: Webhook, href: "/docs#orkut-status" },
+      { id: "ppob", title: "PPOB H2H Engine", icon: Smartphone, href: "/docs?v=ppob" },
+      { id: "orderkuota", title: "Orderkuota Bridge", icon: Code2, href: "/docs?v=orderkuota" },
     ],
   },
   {
-    title: "Intelligent AI",
+    title: "Integration",
     items: [
-      { title: "Chat API", icon: Zap, href: "/docs#ai-chat" },
-    ],
-  },
-  {
-    title: "Resources",
-    items: [
-      { title: "Webhooks", icon: Webhook, href: "/docs#webhooks" },
-      { title: "Error Codes", icon: X, href: "/docs#errors" },
+      { id: "webhooks", title: "Webhooks", icon: Webhook, href: "/docs?v=general#webhooks" },
+      { id: "errors", title: "Error Codes", icon: X, href: "/docs?v=general#errors" },
     ],
   },
 ];
 
-export default function DocsLayout({ children }: { children: ReactNode }) {
+function SidebarContent({ activeType, onItemClick }: { activeType: string, onItemClick?: () => void }) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="h-16 flex items-center px-6 border-b border-border">
+        <Link href="/console" className="flex items-center gap-2 group">
+          <Logo className="w-8 h-8 transition-transform group-hover:scale-105" />
+          <span className="font-headline font-bold text-lg tracking-tighter">Docs</span>
+        </Link>
+      </div>
+      <ScrollArea className="flex-1 px-4 py-6">
+        <div className="space-y-8">
+          {DOCS_NAV.map((section) => (
+            <div key={section.title} className="space-y-2">
+              <h4 className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
+                {section.title}
+              </h4>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const isActive = activeType === item.id;
+                  return (
+                    <Link 
+                      key={item.id} 
+                      href={item.href}
+                      onClick={onItemClick}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all group",
+                        isActive 
+                          ? "bg-primary/5 text-primary" 
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className={cn(
+                        "w-4 h-4 transition-colors",
+                        isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-primary"
+                      )} />
+                      {item.title}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+      <div className="p-4 border-t border-border">
+        <Button asChild variant="ghost" className="w-full justify-start gap-2 text-xs font-bold rounded-xl">
+          <Link href="/console">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Console
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function DocsLayoutInner({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeType = searchParams.get("v") || "general";
 
   return (
     <div className="flex min-h-screen bg-background selection:bg-primary/10 selection:text-primary">
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-card/50 backdrop-blur-xl z-40">
-        <div className="h-16 flex items-center px-6 border-b border-border">
-          <Link href="/console" className="flex items-center gap-2 group">
-            <Logo className="w-8 h-8 transition-transform group-hover:scale-105" />
-            <span className="font-headline font-bold text-lg tracking-tighter">Docs</span>
-          </Link>
-        </div>
-        <ScrollArea className="flex-1 px-4 py-6">
-          <div className="space-y-8">
-            {DOCS_NAV.map((section) => (
-              <div key={section.title} className="space-y-2">
-                <h4 className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
-                  {section.title}
-                </h4>
-                <div className="space-y-1">
-                  {section.items.map((item) => (
-                    <Link 
-                      key={item.title} 
-                      href={item.href}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all group"
-                    >
-                      <item.icon className="w-4 h-4 text-muted-foreground/60 group-hover:text-primary transition-colors" />
-                      {item.title}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-        <div className="p-4 border-t border-border">
-          <Button asChild variant="ghost" className="w-full justify-start gap-2 text-xs font-bold rounded-xl">
-            <Link href="/console">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Console
-            </Link>
-          </Button>
-        </div>
+        <SidebarContent activeType={activeType} />
       </aside>
 
       {/* Main Content Area */}
@@ -118,7 +137,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
           <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
             <span>Documentation</span>
             <ChevronRight className="w-3 h-3 opacity-30" />
-            <span className="text-foreground">API Reference</span>
+            <span className="text-foreground capitalize">{activeType === 'general' ? 'Core Reference' : `${activeType} API`}</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -149,42 +168,18 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-50 lg:hidden">
            <div className="absolute inset-0 bg-black/80" onClick={() => setIsMobileMenuOpen(false)}></div>
            <aside className="absolute inset-y-0 left-0 w-72 bg-background border-r border-border animate-in slide-in-from-left duration-300">
-              <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <Logo className="w-8 h-8" />
-                  <span className="font-headline font-bold">Docs</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-              <ScrollArea className="h-[calc(100vh-64px)] px-4 py-6">
-                <div className="space-y-8">
-                  {DOCS_NAV.map((section) => (
-                    <div key={section.title} className="space-y-2">
-                      <h4 className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">
-                        {section.title}
-                      </h4>
-                      <div className="space-y-1">
-                        {section.items.map((item) => (
-                          <Link 
-                            key={item.title} 
-                            href={item.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground"
-                          >
-                            <item.icon className="w-4 h-4" />
-                            {item.title}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+              <SidebarContent activeType={activeType} onItemClick={() => setIsMobileMenuOpen(false)} />
            </aside>
         </div>
       )}
     </div>
+  );
+}
+
+export default function DocsLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <DocsLayoutInner>{children}</DocsLayoutInner>
+    </Suspense>
   );
 }

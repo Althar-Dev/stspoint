@@ -1,10 +1,9 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSearchParams } from "next/navigation";
 import { 
   Copy, 
   Terminal, 
@@ -19,13 +18,16 @@ import {
   Braces,
   ArrowRight,
   Server,
-  RefreshCcw
+  RefreshCcw,
+  BookOpen
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
 
-export default function DocsPage() {
+function DocsContent() {
   const [copiedType, setCopiedType] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const activeType = searchParams.get("v") || "general";
 
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
@@ -65,36 +67,26 @@ export default function DocsPage() {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
-      <section className="space-y-6">
-        <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight">
-          API <span className="text-primary/40">Reference.</span>
-        </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-          Dokumentasi teknis untuk mengintegrasikan layanan STSPoint ke dalam sistem Anda.
-        </p>
-      </section>
+      {/* --- GENERAL DOCS --- */}
+      {activeType === 'general' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+          <section id="intro" className="space-y-6">
+            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">
+              API <span className="text-primary/40">Reference.</span>
+            </h1>
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+              Selamat datang di dokumentasi teknis STSPoint. Integrasikan berbagai layanan infrastruktur digital kami ke dalam aplikasi Anda dengan mudah.
+            </p>
+          </section>
 
-      <Tabs defaultValue="general" className="w-full">
-        <div className="sticky top-20 bg-background/80 backdrop-blur-md z-20 py-4 border-b border-border -mx-6 px-6 lg:-mx-12 lg:px-12">
-          <TabsList className="bg-muted p-1 rounded-xl h-auto flex flex-wrap justify-start gap-1 overflow-x-auto no-scrollbar">
-            <TabsTrigger value="general" className="rounded-lg px-4 py-2 font-bold text-[10px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm">General</TabsTrigger>
-            <TabsTrigger value="stspay" className="rounded-lg px-4 py-2 font-bold text-[10px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm">STSPay</TabsTrigger>
-            <TabsTrigger value="ppob" className="rounded-lg px-4 py-2 font-bold text-[10px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm">PPOB H2H</TabsTrigger>
-            <TabsTrigger value="orderkuota" className="rounded-lg px-4 py-2 font-bold text-[10px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm">Orderkuota</TabsTrigger>
-            <TabsTrigger value="gopay" className="rounded-lg px-4 py-2 font-bold text-[10px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:shadow-sm">GoMerchant</TabsTrigger>
-          </TabsList>
-        </div>
-
-        {/* --- GENERAL DOCS --- */}
-        <TabsContent value="general" className="pt-10 space-y-16 animate-in slide-in-from-bottom-2">
-          <div className="space-y-8">
+          <section id="auth" className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <ShieldCheck className="w-6 h-6 text-primary" />
                 Autentikasi
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Setiap permintaan API harus menyertakan <code className="text-primary font-bold">secret_key</code> di dalam body JSON.
+                Setiap permintaan API harus menyertakan <code className="text-primary font-bold">secret_key</code> di dalam body JSON untuk memvalidasi identitas merchant Anda.
               </p>
             </div>
             <CodeBlock 
@@ -105,16 +97,16 @@ export default function DocsPage() {
   "merchant_id": "STS-XXXXXXXX"
 }`}
             />
-          </div>
+          </section>
 
-          <div className="space-y-8">
+          <section id="webhooks" className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <Webhook className="w-6 h-6 text-primary" />
                 Webhooks
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Terima notifikasi status transaksi secara real-time melalui Webhook POST.
+                Terima notifikasi status transaksi secara real-time melalui Webhook POST. Pastikan server Anda siap menerima payload JSON.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
@@ -122,26 +114,28 @@ export default function DocsPage() {
               <div className="space-y-1">
                 <p className="text-sm font-bold text-amber-900">Keamanan Webhook</p>
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  Validasi payload menggunakan signature pada header <code className="font-bold">X-STS-Signature</code> menggunakan HMAC-SHA256.
+                  Validasi payload menggunakan signature pada header <code className="font-bold">X-STS-Signature</code> menggunakan HMAC-SHA256 untuk memastikan data berasal dari STSPoint.
                 </p>
               </div>
             </div>
-          </div>
-        </TabsContent>
+          </section>
+        </div>
+      )}
 
-        {/* --- STSPAY DOCS --- */}
-        <TabsContent value="stspay" className="pt-10 space-y-16 animate-in slide-in-from-bottom-2">
-          <div className="space-y-8">
+      {/* --- STSPAY DOCS --- */}
+      {activeType === 'stspay' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+          <section className="space-y-8">
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold flex items-center gap-3">
-                <Zap className="w-6 h-6 text-[#00AED6]" />
-                Create Payment Link
+              <h2 className="text-3xl font-bold flex items-center gap-3">
+                <Zap className="w-8 h-8 text-[#00AED6]" />
+                STSPay Gateway
               </h2>
-              <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
-              <code className="text-sm font-bold text-primary">/api/payments/create</code>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Hasilkan link pembayaran otomatis dengan UI checkout modern STSPay.
-              </p>
+              <p className="text-muted-foreground text-sm">Integrasi link pembayaran otomatis dengan UI checkout modern.</p>
+              <div className="flex items-center gap-4 mt-4">
+                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
+                <code className="text-sm font-bold text-primary">/api/payments/create</code>
+              </div>
             </div>
             <CodeBlock 
               title="Request Example"
@@ -154,22 +148,26 @@ export default function DocsPage() {
   "description": "Top Up Game #123"
 }`}
             />
-          </div>
-        </TabsContent>
+          </section>
+        </div>
+      )}
 
-        {/* --- PPOB H2H DOCS --- */}
-        <TabsContent value="ppob" className="pt-10 space-y-16 animate-in slide-in-from-bottom-2">
-          <div className="space-y-8">
+      {/* --- PPOB H2H DOCS --- */}
+      {activeType === 'ppob' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+          <section className="space-y-8">
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold flex items-center gap-3">
-                <Smartphone className="w-6 h-6 text-blue-500" />
-                PPOB: Order Transaction
+              <h2 className="text-3xl font-bold flex items-center gap-3">
+                <Smartphone className="w-8 h-8 text-blue-500" />
+                PPOB H2H Engine
               </h2>
-              <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
-              <code className="text-sm font-bold text-primary">/api/ppob/order</code>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Lakukan pengisian Pulsa, Paket Data, atau Token Listrik melalui bridge H2H.
+                Lakukan pengisian Pulsa, Paket Data, atau Token Listrik secara otomatis melalui satu koneksi API.
               </p>
+              <div className="flex items-center gap-4">
+                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
+                <code className="text-sm font-bold text-primary">/api/ppob/order</code>
+              </div>
             </div>
             <CodeBlock 
               title="Order Body"
@@ -181,33 +179,39 @@ export default function DocsPage() {
   "ref_id": "ORDER-UNIQUE-ID"
 }`}
             />
-          </div>
+          </section>
 
-          <div className="space-y-8">
+          <section className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <Server className="w-6 h-6 text-blue-500" />
-                PPOB: Check Status
+                Check Order Status
               </h2>
-              <Badge className="bg-blue-500 text-white border-none uppercase font-bold">GET</Badge>
-              <code className="text-sm font-bold text-primary">/api/ppob/status?secret_key=...&ref_id=...</code>
+              <div className="flex items-center gap-4">
+                <Badge className="bg-blue-500 text-white border-none uppercase font-bold">GET</Badge>
+                <code className="text-sm font-bold text-primary">/api/ppob/status?secret_key=...&ref_id=...</code>
+              </div>
             </div>
-          </div>
-        </TabsContent>
+          </section>
+        </div>
+      )}
 
-        {/* --- ORDERKUOTA DOCS --- */}
-        <TabsContent value="orderkuota" className="pt-10 space-y-16 animate-in slide-in-from-bottom-2">
-          <div className="space-y-8">
+      {/* --- ORDERKUOTA DOCS --- */}
+      {activeType === 'orderkuota' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+          <section className="space-y-8">
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold flex items-center gap-3">
-                <Code2 className="w-6 h-6 text-primary" />
-                Orkut: Dynamic QRIS Bridge
+              <h2 className="text-3xl font-bold flex items-center gap-3">
+                <Code2 className="w-8 h-8 text-primary" />
+                Orderkuota Bridge
               </h2>
-              <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
-              <code className="text-sm font-bold text-primary">/api/orkut/create</code>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Gunakan saldo Orderkuota Anda untuk menghasilkan QRIS dinamis di website Anda sendiri.
               </p>
+              <div className="flex items-center gap-4">
+                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
+                <code className="text-sm font-bold text-primary">/api/orkut/create</code>
+              </div>
             </div>
             <CodeBlock 
               title="Request Body"
@@ -218,36 +222,42 @@ export default function DocsPage() {
   "description": "Pembayaran Invoice #99"
 }`}
             />
-          </div>
+          </section>
           
-          <div className="space-y-8">
+          <section className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-bold flex items-center gap-3">
                 <RefreshCcw className="w-6 h-6 text-primary" />
-                Orkut: Mutation Sync
+                Mutation Sync
               </h2>
-              <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
-              <code className="text-sm font-bold text-primary">/api/orkut/status</code>
+              <div className="flex items-center gap-4">
+                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
+                <code className="text-sm font-bold text-primary">/api/orkut/status</code>
+              </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Verifikasi pembayaran otomatis dengan mengecek mutasi masuk (IN) di akun Orderkuota.
               </p>
             </div>
-          </div>
-        </TabsContent>
+          </section>
+        </div>
+      )}
 
-        {/* --- GOMERCHANT DOCS --- */}
-        <TabsContent value="gopay" className="pt-10 space-y-16 animate-in slide-in-from-bottom-2">
-          <div className="space-y-8">
+      {/* --- GOMERCHANT DOCS --- */}
+      {activeType === 'gopay' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+          <section className="space-y-8">
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold flex items-center gap-3">
-                <Globe className="w-6 h-6 text-[#00AED6]" />
-                GoMerchant: GoPay Bridge
+              <h2 className="text-3xl font-bold flex items-center gap-3">
+                <Globe className="w-8 h-8 text-[#00AED6]" />
+                GoMerchant API
               </h2>
-              <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
-              <code className="text-sm font-bold text-primary">/api/gopay/create</code>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Bridge API untuk menerima pembayaran GoPay otomatis menggunakan akun GoBiz Anda.
               </p>
+              <div className="flex items-center gap-4">
+                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
+                <code className="text-sm font-bold text-primary">/api/gopay/create</code>
+              </div>
             </div>
             <CodeBlock 
               title="Request Body"
@@ -258,13 +268,34 @@ export default function DocsPage() {
   "description": "Payment for Service"
 }`}
             />
-          </div>
-        </TabsContent>
-      </Tabs>
+          </section>
+
+          <section className="space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                <RefreshCcw className="w-6 h-6 text-[#00AED6]" />
+                Mutation Reconciliation
+              </h2>
+              <div className="flex items-center gap-4">
+                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold">POST</Badge>
+                <code className="text-sm font-bold text-primary">/api/gopay/status</code>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       <div className="pt-20 text-center border-t border-border">
-         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Documentation Engine v2.0.0-stable</p>
+         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.5em] opacity-30">Documentation Engine v2.1.0-stable</p>
       </div>
     </div>
+  );
+}
+
+export default function DocsPage() {
+  return (
+    <Suspense fallback={<div className="p-20 text-center italic text-muted-foreground">Loading documentation...</div>}>
+      <DocsContent />
+    </Suspense>
   );
 }
