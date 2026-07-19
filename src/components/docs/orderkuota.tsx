@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -244,7 +243,7 @@ echo $response;
             <div className="space-y-1">
                <p className="text-sm font-bold text-orange-900 uppercase tracking-tight">Rate Limiting & Quota</p>
                <p className="text-xs text-orange-800 leading-relaxed">
-                  Status checks (POLLING) via the API consume your transaction quota. We highly recommend using **Webhooks** for better quota efficiency and near-instant status updates.
+                  Status checks (POLLING) via the API consume your transaction quota. Please ensure you implement an efficient polling strategy to maintain your allocated API limits.
                </p>
             </div>
          </div>
