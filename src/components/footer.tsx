@@ -22,7 +22,7 @@ export function Footer() {
               <span className="font-headline font-bold text-2xl tracking-tighter">Point</span>
             </div>
             <p className="text-muted-foreground text-sm max-w-sm">
-              Integrated digital gateway infrastructure platform for modern business. We provide API solutions, payments, and cloud services in one place.
+              Integrated digital gateway infrastructure platform by <strong>StarVale Technology Solution</strong>. Providing enterprise-grade API solutions and payments. Developed by <strong>AltharDev</strong>.
             </p>
           </div>
           <div>
@@ -36,14 +36,14 @@ export function Footer() {
           <div>
             <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link href="/about" className="hover:text-primary transition-colors">About StarVale</Link></li>
               <li><Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-[10px] md:text-xs">© 2026 STSPoint. Infrastructure as a Service.</p>
+          <p className="text-muted-foreground text-[10px] md:text-xs">© 2026 <strong>StarVale Technology Solution</strong>. Founded by <strong>Alhadi Adriano</strong>.</p>
           <div className="flex gap-4">
             {socials.map((social) => (
               <a 

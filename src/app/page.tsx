@@ -17,12 +17,17 @@ export default function Home() {
     "name": "STSPoint",
     "operatingSystem": "Web",
     "applicationCategory": "BusinessApplication",
+    "author": {
+      "@type": "Person",
+      "name": "Alhadi Adriano",
+      "alternateName": "AltharDev"
+    },
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "IDR"
     },
-    "description": "Integrated digital infrastructure for modern business. Support API payments, AI, and digital goods distribution.",
+    "description": "Integrated digital infrastructure for modern business by StarVale Technology Solution. Support API payments, AI, and digital goods distribution.",
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.9",
@@ -33,12 +38,18 @@ export default function Home() {
   const organizationData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "STSPoint Infrastructure",
+    "name": "StarVale Technology Solution",
+    "alternateName": "STSPoint",
     "url": "https://stspoint.id",
     "logo": "https://stspoint.id/assets/img/icon.png",
+    "founder": {
+      "@type": "Person",
+      "name": "Alhadi Adriano"
+    },
     "sameAs": [
       "https://instagram.com/starvale.id",
-      "https://x.com/StarValeID"
+      "https://x.com/StarValeID",
+      "https://www.linkedin.com/in/starvaleid"
     ]
   };
 

@@ -5,14 +5,31 @@ import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: {
-    default: 'STSPoint | Professional Digital Infrastructure & Payment Bridge',
-    template: '%s | STSPoint'
+    default: 'STSPoint | StarVale Digital Infrastructure & Payment Bridge',
+    template: '%s | STSPoint by StarVale'
   },
-  description: 'Integrated digital gateway platform for modern businesses. Providing high-speed APIs for PPOB, OTP, and STSPay payments with 99.9% uptime and low-latency infrastructure.',
-  keywords: ['digital infrastructure', 'payment gateway indonesia', 'api bridge', 'ppob api', 'otp center', 'stspay', 'stspoint', 'payment orchestration', 'h2h ppob'],
-  authors: [{ name: 'STSPoint Team' }],
-  creator: 'STSPoint',
-  publisher: 'STSPoint',
+  description: 'Integrated digital gateway platform for modern businesses by StarVale Technology Solution. Providing high-speed APIs for PPOB, OTP, and STSPay payments with 99.9% uptime and low-latency infrastructure. Developed by Alhadi Adriano (AltharDev).',
+  keywords: [
+    'digital infrastructure', 
+    'payment gateway indonesia', 
+    'api bridge', 
+    'ppob api', 
+    'otp center', 
+    'stspay', 
+    'stspoint', 
+    'payment orchestration', 
+    'h2h ppob',
+    'StarVale Technology Solution',
+    'Alhadi Adriano',
+    'AltharDev',
+    'AltharDev Infrastructure'
+  ],
+  authors: [
+    { name: 'Alhadi Adriano (AltharDev)', url: 'https://github.com/althardev' },
+    { name: 'StarVale Technology Solution' }
+  ],
+  creator: 'Alhadi Adriano (AltharDev)',
+  publisher: 'StarVale Technology Solution',
   formatDetection: {
     email: false,
     address: false,
@@ -23,8 +40,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'STSPoint | Professional Digital Infrastructure & Payment Bridge',
-    description: 'Scale your business with our robust payment and product distribution infrastructure.',
+    title: 'STSPoint | StarVale Digital Infrastructure & Payment Bridge',
+    description: 'Scale your business with robust payment and product distribution infrastructure by StarVale Technology Solution.',
     url: 'https://stspoint.id',
     siteName: 'STSPoint',
     images: [
@@ -32,7 +49,7 @@ export const metadata: Metadata = {
         url: '/assets/img/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'STSPoint Infrastructure Dashboard',
+        alt: 'STSPoint Infrastructure Dashboard by StarVale',
       },
     ],
     locale: 'id_ID',
@@ -40,8 +57,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'STSPoint | Digital Infrastructure',
-    description: 'High-speed APIs for payments and digital goods.',
+    title: 'STSPoint | Digital Infrastructure by AltharDev',
+    description: 'High-speed APIs for payments and digital goods by StarVale Technology Solution.',
     images: ['/assets/img/twitter-image.png'],
   },
   robots: {
@@ -83,11 +100,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        {/* GEO Meta Tags */}
         <meta name="geo.region" content="ID-JK" />
         <meta name="geo.placename" content="Jakarta" />
         <meta name="geo.position" content="-6.2088;106.8456" />
         <meta name="ICBM" content="-6.2088, 106.8456" />
+        <meta name="author" content="Alhadi Adriano (AltharDev)" />
+        <meta name="owner" content="StarVale Technology Solution" />
       </head>
       <body className="font-body antialiased selection:bg-primary/10 selection:text-primary min-h-screen">
         <FirebaseClientProvider>
