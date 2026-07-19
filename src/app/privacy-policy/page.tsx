@@ -31,22 +31,22 @@ export default function PrivacyPolicyPage() {
     {
       title: "2. Information We Collect",
       icon: Database,
-      content: "To provide our infrastructure services, we collect three types of information:\n\n• **Account Information:** Name, business email, and identity verification data provided during registration.\n• **Technical Data:** IP addresses, User-Agent strings, API request headers, and usage timestamps required for security monitoring and rate limiting.\n• **Transaction Metadata:** Details of transactions processed through our bridge (e.g., amount, status, timestamps, and destination identifiers). We do not store raw payment credentials such as credit card numbers or bank PINs."
+      content: "To provide our infrastructure services, we collect three types of information:\n\n• Account Information: Name, business email, and identity verification data provided during registration.\n• Technical Data: IP addresses, User-Agent strings, API request headers, and usage timestamps required for security monitoring and rate limiting.\n• Transaction Metadata: Details of transactions processed through our bridge (e.g., amount, status, timestamps, and destination identifiers). We do not store raw payment credentials such as credit card numbers or bank PINs."
     },
     {
       title: "3. How We Use Your Data",
       icon: Zap,
-      content: "Your data is utilized strictly for the following purposes:\n\n• **Service Delivery:** Fulfilling PPOB, OTP, and Payment Gateway requests via upstream bridges.\n• **Reconciliation:** Ensuring transaction statuses are correctly synchronized between our system and yours.\n• **Security:** Detecting fraudulent activity, unauthorized API access, and system anomalies.\n• **Communication:** Sending critical system alerts, maintenance notices, and security updates related to your account."
+      content: "Your data is utilized strictly for the following purposes:\n\n• Service Delivery: Fulfilling PPOB, OTP, and Payment Gateway requests via upstream bridges.\n• Reconciliation: Ensuring transaction statuses are correctly synchronized between our system and yours.\n• Security: Detecting fraudulent activity, unauthorized API access, and system anomalies.\n• Communication: Sending critical system alerts, maintenance notices, and security updates related to your account."
     },
     {
       title: "4. Data Sharing & Bridge Architecture",
       icon: Server,
-      content: "As a bridge service, your data is inherently shared with Third-Party Providers to execute your requests. For example:\n\n• Payment data is shared with **Xendit** or **Midtrans** for processing.\n• Phone numbers are shared with **Orderkuota** for OTP delivery.\n• Product SKUs are sent to **DigiFlazz** for fulfillment.\n\nEach upstream provider has its own privacy policy. STSPoint is not responsible for the data handling practices of these independent entities."
+      content: "As a bridge service, your data is inherently shared with Third-Party Providers to execute your requests. For example:\n\n• Payment data is shared with Xendit or Midtrans for processing.\n• Phone numbers are shared with Orderkuota for OTP delivery.\n• Product SKUs are sent to DigiFlazz for fulfillment.\n\nEach upstream provider has its own privacy policy. STSPoint is not responsible for the data handling practices of these independent entities."
     },
     {
       title: "5. Security of Credentials",
       icon: Lock,
-      content: "We implement industry-standard encryption (TLS 1.3) for all data in transit. Your **Secret Keys** are your primary authentication mechanism; we hash these where possible or encrypt them at rest. \n\n**STRICT POLICY:** STSPoint employees will never ask for your passwords, Secret Keys, or 'unnatural' sensitive data such as 12/24-word recovery phrases. Any such request should be treated as fraudulent."
+      content: "We implement industry-standard encryption (TLS 1.3) for all data in transit. Your Secret Keys are your primary authentication mechanism; we hash these where possible or encrypt them at rest. \n\nSTRICT POLICY: STSPoint employees will never ask for your passwords, Secret Keys, or 'unnatural' sensitive data such as 12/24-word recovery phrases. Any such request should be treated as fraudulent."
     },
     {
       title: "6. Data Retention",
@@ -67,7 +67,6 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/10 selection:text-primary flex flex-col">
-      {/* Navigation */}
       <div className="fixed top-0 left-0 right-0 z-50 p-6 flex items-center max-w-7xl mx-auto w-full">
         <Button 
           variant="ghost" 
@@ -81,7 +80,6 @@ export default function PrivacyPolicyPage() {
       </div>
 
       <main className="max-w-4xl mx-auto px-6 pt-32 pb-20 flex-1 space-y-16 w-full">
-        {/* Header */}
         <section className="space-y-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
             Privacy & Trust
@@ -95,7 +93,6 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
-        {/* Intro Note */}
         <Card className="border-border bg-muted/30 shadow-none rounded-[2rem] overflow-hidden">
           <CardContent className="p-8 md:p-12 space-y-4">
             <h3 className="font-bold text-lg">Your Privacy Matters</h3>
@@ -105,7 +102,6 @@ export default function PrivacyPolicyPage() {
           </CardContent>
         </Card>
 
-        {/* Content Sections */}
         <div className="space-y-16">
           {sections.map((section, i) => (
             <div key={i} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
@@ -124,7 +120,6 @@ export default function PrivacyPolicyPage() {
           ))}
         </div>
 
-        {/* Contact Note */}
         <div className="pt-12 border-t border-border flex flex-col items-center text-center space-y-6">
            <div className="w-14 h-14 rounded-full bg-primary/5 flex items-center justify-center text-primary">
               <Mail className="w-6 h-6" />

@@ -59,7 +59,6 @@ export default function TermsOfServicePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/10 selection:text-primary flex flex-col">
-      {/* Navigation */}
       <div className="fixed top-0 left-0 right-0 z-50 p-6 flex items-center max-w-7xl mx-auto w-full">
         <Button 
           variant="ghost" 
@@ -73,7 +72,6 @@ export default function TermsOfServicePage() {
       </div>
 
       <main className="max-w-4xl mx-auto px-6 pt-32 pb-20 flex-1 space-y-16 w-full">
-        {/* Header */}
         <section className="space-y-4 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
             Legal & Security Framework
@@ -87,18 +85,16 @@ export default function TermsOfServicePage() {
           </p>
         </section>
 
-        {/* Security Alert Banner */}
         <div className="p-6 rounded-[1.5rem] bg-amber-50 border border-amber-200 flex items-start gap-4 shadow-sm animate-in fade-in duration-700">
            <EyeOff className="w-6 h-6 text-amber-600 shrink-0 mt-1" />
            <div className="space-y-1">
               <h4 className="font-bold text-amber-900 text-sm">Security Alert: Data Privacy</h4>
               <p className="text-xs text-amber-800 leading-relaxed">
-                STSPoint will **never** ask you for your recovery phrases (seed phrases) or bank passwords. If anyone claiming to be from STSPoint asks for these details, they are attempting to defraud you. Report such incidents immediately.
+                STSPoint will never ask you for your recovery phrases (seed phrases) or bank passwords. If anyone claiming to be from STSPoint asks for these details, they are attempting to defraud you. Report such incidents immediately.
               </p>
            </div>
         </div>
 
-        {/* Content Sections */}
         <div className="space-y-16">
           {sections.map((section, i) => (
             <div key={i} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
