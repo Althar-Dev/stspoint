@@ -14,19 +14,19 @@ export function DocsStsPay() {
           <Zap className="w-3 h-3" />
           Unified Gateway
         </div>
-        <h1 className="text-4xl font-headline font-bold tracking-tight text-foreground">STSPay</h1>
-        <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
+        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">STSPay</h1>
+        <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
           STSPay is our core payment orchestration layer. It supports two main creation modes: hosting a checkout page for your customers or retrieving a raw QRIS payload for custom frontend implementations.
         </p>
       </section>
 
       <section id="create-payment" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold flex items-center gap-3">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
             <Plus className="w-6 h-6 text-primary" />
             Create Payment
           </h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
+          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
             Initialize a transaction. Use the <code className="font-bold text-foreground">type</code> parameter to switch between a hosted link or a direct QRIS string.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
@@ -240,11 +240,11 @@ echo $response;
 
       <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold flex items-center gap-3 text-foreground">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
             <RefreshCcw className="w-6 h-6 text-primary" />
             Status Verification
           </h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
+          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
             Poll the current state of a transaction using the <code className="font-bold text-foreground">external_id</code>.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
