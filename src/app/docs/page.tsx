@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSearchParams } from "next/navigation";
@@ -25,13 +25,13 @@ import {
   X,
   Activity,
   Fingerprint,
-  RefreshCcw,
-  ExternalLink,
   Plus,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCcw
 } from "lucide-react";
 import React, { useState, Suspense } from "react";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function DocsContent() {
   const [copiedType, setCopiedType] = useState<string | null>(null);
@@ -57,7 +57,26 @@ function DocsContent() {
       if (type.includes('curl') || type.includes('shell')) {
         return str
           .replace(/^(curl)/g, '<span class="text-emerald-400 font-bold">$1</span>')
-          .replace(/(-X POST|-X GET|-H |-d)/g, '<span class="text-blue-400">$1</span>');
+          .replace(/(-X POST|-X GET|-H |-d)/g, '<span class="text-blue-400">$1</span>')
+          .replace(/(https?:\/\/[^\s]+)/g, '<span class="text-amber-400 underline">$1</span>');
+      }
+      if (type.includes('js') || type.includes('javascript') || type.includes('node')) {
+        return str
+          .replace(/(const|await|async|let|var|import|from|require)/g, '<span class="text-purple-400 font-bold">$1</span>')
+          .replace(/(fetch|console\.log|JSON\.stringify)/g, '<span class="text-blue-400">$1</span>')
+          .replace(/'([^']+)'/g, '<span class="text-emerald-400">\'$1\'</span>');
+      }
+      if (type.includes('python')) {
+        return str
+          .replace(/(import|from|as|print)/g, '<span class="text-purple-400 font-bold">$1</span>')
+          .replace(/(requests\.post|requests\.get)/g, '<span class="text-blue-400">$1</span>')
+          .replace(/"([^"]+)"/g, '<span class="text-emerald-400">"$1"</span>');
+      }
+      if (type.includes('php')) {
+        return str
+          .replace(/(<\?php|\?>|echo|curl_init|curl_setopt|curl_exec|curl_close|json_encode)/g, '<span class="text-purple-400 font-bold">$1</span>')
+          .replace(/"([^"]+)"/g, '<span class="text-emerald-400">"$1"</span>')
+          .replace(/(CURLOPT_[A-Z_]+)/g, '<span class="text-blue-400">$1</span>');
       }
       return str;
     };
@@ -195,7 +214,7 @@ function DocsContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
-                  <Check className="w-3 h-3" /> Success (HTTP 200)
+                  <CheckCircle2 className="w-3 h-3" /> Success (HTTP 200)
                 </p>
                 <CodeBlock 
                   title="Success Wrapper"
@@ -298,9 +317,119 @@ function DocsContent() {
                            <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic">Required</td>
                            <td className="px-6 py-4 text-muted-foreground leading-relaxed">Transaction amount in IDR.</td>
                         </tr>
+                        <tr>
+                           <td className="px-6 py-4 font-mono font-bold text-amber-600">payer_email</td>
+                           <td className="px-6 py-4 text-muted-foreground">String</td>
+                           <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic">Required</td>
+                           <td className="px-6 py-4 text-muted-foreground leading-relaxed">Customer email address.</td>
+                        </tr>
                      </tbody>
                   </table>
                </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                 <Code2 className="w-3.5 h-3.5" />
+                 Implementation Examples
+              </h4>
+              <Tabs defaultValue="curl" className="w-full">
+                <TabsList className="bg-muted p-1 rounded-xl h-11">
+                  <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
+                  <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
+                  <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
+                  <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="curl">
+                  <CodeBlock 
+                    title="Shell / cURL"
+                    type="curl"
+                    code={`curl -X POST https://api.stspoint.id/api/payments/create \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "merchant_id": "STS-XXXXXXXX",
+    "secret_key": "STS-Key-XXXXXXXX",
+    "type": "payment_link",
+    "amount": 50000,
+    "payer_email": "customer@email.com",
+    "description": "Digital Product Purchase"
+  }'`}
+                  />
+                </TabsContent>
+
+                <TabsContent value="node">
+                  <CodeBlock 
+                    title="Node.js (Fetch API)"
+                    type="node"
+                    code={`const response = await fetch('https://api.stspoint.id/api/payments/create', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    merchant_id: 'STS-XXXXXXXX',
+    secret_key: 'STS-Key-XXXXXXXX',
+    type: 'payment_link',
+    amount: 50000,
+    payer_email: 'customer@email.com',
+    description: 'Digital Product Purchase'
+  })
+});
+
+const result = await response.json();
+console.log(result);`}
+                  />
+                </TabsContent>
+
+                <TabsContent value="python">
+                  <CodeBlock 
+                    title="Python (Requests)"
+                    type="python"
+                    code={`import requests
+
+url = "https://api.stspoint.id/api/payments/create"
+payload = {
+    "merchant_id": "STS-XXXXXXXX",
+    "secret_key": "STS-Key-XXXXXXXX",
+    "type": "payment_link",
+    "amount": 50000,
+    "payer_email": "customer@email.com",
+    "description": "Digital Product Purchase"
+}
+
+response = requests.post(url, json=payload)
+print(response.json())`}
+                  />
+                </TabsContent>
+
+                <TabsContent value="php">
+                  <CodeBlock 
+                    title="PHP (cURL)"
+                    type="php"
+                    code={`<?php
+$url = "https://api.stspoint.id/api/payments/create";
+$payload = [
+    "merchant_id" => "STS-XXXXXXXX",
+    "secret_key" => "STS-Key-XXXXXXXX",
+    "type" => "payment_link",
+    "amount" => 50000,
+    "payer_email" => "customer@email.com",
+    "description" => "Digital Product Purchase"
+];
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+?>`}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -313,7 +442,7 @@ function DocsContent() {
   "success": true,
   "data": {
     "external_id": "PAY-12345",
-    "checkout_url": "https://stspoint.id/checkout/PAY-12345",
+    "checkout_url": "https://api.stspoint.id/checkout/PAY-12345",
     "status": "PENDING",
     "amount": 50000
   }
