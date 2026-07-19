@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -12,7 +13,8 @@ import {
   Info,
   Terminal,
   Layers,
-  CheckCircle2
+  CheckCircle2,
+  ArrowRight
 } from "lucide-react";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +31,7 @@ export function DocsOrderkuota() {
         </div>
         <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">Orderkuota API</h1>
         <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
-          Integrasi Orderkuota memungkinkan Anda untuk menghasilkan kode QRIS dinamis dengan nominal unik secara instan. Sistem ini terhubung langsung ke saldo Orderkuota Anda untuk kemudahan rekonsiliasi otomatis.
+          Orderkuota integration allows you to generate dynamic QRIS codes with unique amounts instantly. This system connects directly to your Orderkuota balance for seamless automated reconciliation.
         </p>
       </section>
 
@@ -41,7 +43,7 @@ export function DocsOrderkuota() {
             Create Dynamic QRIS
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Hasilkan payload QRIS dinamis berdasarkan nominal yang ditentukan. Sistem akan secara otomatis menambahkan kode unik (random digit) jika dikonfigurasi di dashboard.
+            Generate a dynamic QRIS payload based on a specified amount. The system will automatically append a unique code (random digits) if configured in your dashboard.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
@@ -69,19 +71,19 @@ export function DocsOrderkuota() {
                        <td className="px-6 py-4 font-mono font-bold text-orange-600 whitespace-nowrap">secret_key</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-rose-500 font-bold whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Kunci rahasia API Anda.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your API secret key.</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-orange-600 whitespace-nowrap">amount</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
                        <td className="px-6 py-4 text-rose-500 font-bold whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nominal transaksi dasar (Tanpa kode unik).</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Base transaction amount (without unique code).</td>
                     </tr>
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-orange-600 whitespace-nowrap">external_id</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">ID referensi dari sistem Anda.</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Reference ID from your system.</td>
                     </tr>
                  </tbody>
               </table>
@@ -112,7 +114,7 @@ export function DocsOrderkuota() {
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
     "amount": 50000,
-    "description": "Deposit Saldo #101"
+    "description": "Balance Deposit #101"
   }'`}
                 />
               </TabsContent>
@@ -127,7 +129,7 @@ export function DocsOrderkuota() {
   body: JSON.stringify({
     secret_key: 'STS-Key-XXXXXXXX',
     amount: 50000,
-    description: 'Deposit Saldo #101'
+    description: 'Balance Deposit #101'
   })
 });
 
@@ -146,7 +148,7 @@ url = "https://api.stspoint.id/orkut/create"
 payload = {
     "secret_key": "STS-Key-XXXXXXXX",
     "amount": 50000,
-    "description": "Deposit Saldo #101"
+    "description": "Balance Deposit #101"
 }
 
 response = requests.post(url, json=payload)
@@ -163,7 +165,7 @@ $url = "https://api.stspoint.id/orkut/create";
 $payload = [
     "secret_key" => "STS-Key-XXXXXXXX",
     "amount" => 50000,
-    "description" => "Deposit Saldo #101"
+    "description" => "Balance Deposit #101"
 ];
 
 $ch = curl_init($url);
@@ -212,7 +214,7 @@ echo $response;
             Check Transaction Status
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Verifikasi status pembayaran secara manual. API akan melakukan rekonsiliasi mutasi secara live ke server Orderkuota.
+            Verify payment status manually. The API will perform a live reconciliation against the Orderkuota mutation logs.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
@@ -242,7 +244,7 @@ echo $response;
             <div className="space-y-1">
                <p className="text-sm font-bold text-orange-900 uppercase tracking-tight">Rate Limiting & Quota</p>
                <p className="text-xs text-orange-800 leading-relaxed">
-                  Pengecekan status (POLLING) menggunakan API memotong kuota transaksi Anda. Gunakan **Webhook** untuk efisiensi kuota dan pembaruan status yang lebih instan.
+                  Status checks (POLLING) via the API consume your transaction quota. We highly recommend using **Webhooks** for better quota efficiency and near-instant status updates.
                </p>
             </div>
          </div>

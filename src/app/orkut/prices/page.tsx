@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -28,8 +29,8 @@ export default function OrkutPricesComingSoonPage() {
         </div>
         
         <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto text-sm md:text-base">
-          Kami sedang mensinkronkan ribuan produk PPOB dan Game dari infrastruktur Orderkuota. 
-          Fitur ini akan segera memungkinkan Anda memantau harga modal H2H secara real-time untuk optimalisasi profit bisnis Anda.
+          We are currently synchronizing thousands of PPOB and Game products from the Orderkuota infrastructure. 
+          This feature will soon allow you to monitor H2H base prices in real-time for business profit optimization.
         </p>
       </div>
 
@@ -40,10 +41,10 @@ export default function OrkutPricesComingSoonPage() {
             <Construction className="w-4 h-4 text-primary" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-xs font-bold uppercase tracking-wider">Status Integrasi</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider">Integration Status</h4>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Engine sinkronisasi sedang dalam tahap audit keamanan dan optimalisasi latensi. 
-              Estimasi rilis: Q4 2024.
+              The synchronization engine is currently undergoing security audits and latency optimization. 
+              Estimated release: Q4 2024.
             </p>
           </div>
         </CardContent>
