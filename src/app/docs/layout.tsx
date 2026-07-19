@@ -4,20 +4,16 @@ import { ReactNode, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { 
-  BookOpen, 
-  Terminal, 
-  ShieldCheck, 
-  Zap, 
-  Webhook, 
-  Code2, 
   ChevronRight,
   Menu,
-  X,
   ArrowLeft,
   Smartphone,
   Globe,
-  Settings,
-  Rocket
+  Zap,
+  Webhook,
+  Code2,
+  Rocket,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +32,6 @@ const DOCS_NAV = [
     title: "Payments",
     items: [
       { id: "stspay", title: "STSPay Gateway", icon: Zap, href: "/docs?v=stspay" },
-      { id: "gopay", title: "GoMerchant API", icon: Globe, href: "/docs?v=gopay" },
     ],
   },
   {
@@ -44,6 +39,7 @@ const DOCS_NAV = [
     items: [
       { id: "ppob", title: "PPOB H2H Engine", icon: Smartphone, href: "/docs?v=ppob" },
       { id: "orderkuota", title: "Orderkuota Bridge", icon: Code2, href: "/docs?v=orderkuota" },
+      { id: "gopay", title: "GoMerchant API", icon: Globe, href: "/docs?v=gopay" },
     ],
   },
   {
