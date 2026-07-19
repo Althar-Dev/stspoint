@@ -58,6 +58,7 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { requestOrderkuotaOtp, getOrderkuotaToken } from "@/lib/orderkuota/connect";
 import { getOrderkuotaMutation, type OrderkuotaMutationItem } from "@/lib/orderkuota/mutation";
+import { getOrderkuotaProfile } from "@/lib/orderkuota/profile";
 
 export default function OrkutPage() {
   const { user, loading: authLoading } = useUser();
@@ -67,8 +68,9 @@ export default function OrkutPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Service Health
+  // Service Health & Balance Loading
   const [serviceStatus, setServiceStatus] = useState<"Operational" | "Unstable" | "Maintenance">("Operational");
+  const [isSyncingBalance, setIsSyncingBalance] = useState(false);
 
   // Mutations state
   const [mutations, setMutations] = useState<OrderkuotaMutationItem[]>([]);
@@ -99,6 +101,32 @@ export default function OrkutPage() {
     }
   }, [orderkuota]);
 
+  // Fetch real-time balance from API and update Firestore
+  const fetchLiveBalance = useCallback(async () => {
+    if (isConnected && orderkuota?.username && orderkuota?.token && orderkuotaRef) {
+      setIsSyncingBalance(true);
+      try {
+        const res = await getOrderkuotaProfile({
+          username: orderkuota.username,
+          token: orderkuota.token
+        });
+        
+        if (res.status && res.result?.success) {
+          const apiBalance = res.result.account.results.balance;
+          // Update Firestore if local balance differs or just to stay fresh
+          await updateDoc(orderkuotaRef, {
+            balance: apiBalance,
+            updatedAt: serverTimestamp()
+          });
+        }
+      } catch (error) {
+        console.error("Failed to sync real-time balance:", error);
+      } finally {
+        setIsSyncingBalance(false);
+      }
+    }
+  }, [isConnected, orderkuota?.username, orderkuota?.token, orderkuotaRef]);
+
   // Fetch real-time mutations from API
   const fetchLiveMutations = useCallback(async () => {
     if (isConnected && orderkuota?.username && orderkuota?.token) {
@@ -127,12 +155,15 @@ export default function OrkutPage() {
   }, [isConnected, orderkuota?.username, orderkuota?.token]);
 
   useEffect(() => {
-    fetchLiveMutations();
-  }, [fetchLiveMutations, refreshKey]);
+    if (isConnected) {
+      fetchLiveBalance();
+      fetchLiveMutations();
+    }
+  }, [isConnected, fetchLiveBalance, fetchLiveMutations, refreshKey]);
 
   const handleManualRefresh = () => {
     setRefreshKey(prev => prev + 1);
-    toast({ title: "Syncing...", description: "Updating mutation logs from Orderkuota." });
+    toast({ title: "Syncing...", description: "Memperbarui saldo dan log mutasi dari Orderkuota." });
   };
 
   const handleRequestOtp = async () => {
@@ -360,9 +391,13 @@ export default function OrkutPage() {
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available Balance (Orderkuota)</p>
                     <div className="flex items-baseline gap-2">
-                      <h2 className="text-4xl font-headline font-bold tracking-tighter">
-                        Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
-                      </h2>
+                      {isSyncingBalance ? (
+                         <Skeleton className="h-10 w-48 mt-1" />
+                      ) : (
+                        <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                          Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
+                        </h2>
+                      )}
                       <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
                     </div>
                   </div>
@@ -372,8 +407,13 @@ export default function OrkutPage() {
                 </div>
                 
                 <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-primary/10 transition-all active:scale-95">
-                    Withdraw
+                  <Button 
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-primary/10 transition-all active:scale-95"
+                    onClick={handleManualRefresh}
+                    disabled={isSyncingBalance || mutationsLoading}
+                  >
+                    {isSyncingBalance ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Refresh Balance
                   </Button>
                   <Button 
                     asChild
