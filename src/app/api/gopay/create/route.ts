@@ -16,7 +16,7 @@ import {
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
 
 /**
- * API: Create GoPay QRIS Transaction
+ * API: Create GoPay QRIS Transaction with RPM Rate Limiting
  * Method: POST
  * URL: /api/gopay/create
  */
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Check Quota & Fetch Settings
+    // 3. Check Quota & RPM Settings
     const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
     const gomerchantSnap = await getDoc(gomerchantRef);
 
@@ -70,11 +70,28 @@ export async function POST(request: Request) {
     }
 
     const gomerchantData = gomerchantSnap.data();
+    const plan = (gomerchantData.plan || "starter").toLowerCase();
     
-    // Quota Logic
-    const currentQuota = gomerchantData.quota || 0;
-    const plan = gomerchantData.plan || "";
+    // --- RPM RATE LIMITING LOGIC ---
+    const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 10;
+    const now = Date.now();
+    const lastReset = gomerchantData.rpmLastReset?.toMillis() || 0;
+    const requestsThisMinute = gomerchantData.rpmRequestsCount || 0;
 
+    let updatedRpmCount = requestsThisMinute + 1;
+    let shouldResetRpm = (now - lastReset) > 60000;
+
+    if (shouldResetRpm) {
+      updatedRpmCount = 1;
+    } else if (requestsThisMinute >= rpmLimit) {
+      return NextResponse.json({ 
+        success: false, 
+        message: `Rate limit exceeded: ${rpmLimit} RPM for ${plan} plan. Please slow down.` 
+      }, { status: 429 });
+    }
+
+    // --- TOTAL QUOTA LOGIC ---
+    const currentQuota = gomerchantData.quota || 0;
     if (currentQuota <= 0 && plan !== 'enterprise') {
       return NextResponse.json({ 
         success: false, 
@@ -95,9 +112,9 @@ export async function POST(request: Request) {
     // 4. Generate Unique Nominal (Random Code)
     let randomSuffix = 0;
     if (digitSetting === 2) {
-      randomSuffix = Math.floor(Math.random() * 90) + 10; // 10 - 99
+      randomSuffix = Math.floor(Math.random() * 90) + 10;
     } else {
-      randomSuffix = Math.floor(Math.random() * 900) + 100; // 100 - 999
+      randomSuffix = Math.floor(Math.random() * 900) + 100;
     }
 
     const finalAmount = baseAmount + randomSuffix;
@@ -114,7 +131,7 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // 6. Record Transaction & Deduct Quota
+    // 6. Record Transaction & Deduct Quota + Update RPM
     const transactionRef = doc(firestore, 'users', userId, 'services', 'gomerchant', 'transactions', trxId);
     const transactionData = {
       id: trxId,
@@ -136,16 +153,16 @@ export async function POST(request: Request) {
       updatedAt: serverTimestamp(),
     };
 
-    // Atomic update for database and quota
     await Promise.all([
       setDoc(transactionRef, transactionData),
       updateDoc(gomerchantRef, {
-        quota: increment(-1),
+        quota: plan === 'enterprise' ? currentQuota : increment(-1),
+        rpmRequestsCount: updatedRpmCount,
+        rpmLastReset: shouldResetRpm ? serverTimestamp() : gomerchantData.rpmLastReset || serverTimestamp(),
         updatedAt: serverTimestamp()
       })
     ]);
 
-    // 7. Return Result
     return NextResponse.json({
       success: true,
       data: {
@@ -155,16 +172,13 @@ export async function POST(request: Request) {
         base_amount: baseAmount,
         random_code: randomSuffix,
         status: 'PENDING',
-        remaining_quota: currentQuota - 1,
+        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1,
         checkout_url: `${request.headers.get('x-forwarded-proto') || 'http'}://${request.headers.get('host')}/checkout/${trxId}`
       }
     });
 
   } catch (error: any) {
     console.error('API GoPay Create Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error.' 
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Internal Server Error.' }, { status: 500 });
   }
 }

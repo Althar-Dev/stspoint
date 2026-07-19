@@ -15,7 +15,7 @@ import {
 import { getGoMerchantMutations } from '@/lib/gomerchant/mutation';
 
 /**
- * API: Check GoPay Transaction Status (with Live Reconciliation)
+ * API: Check GoPay Transaction Status with RPM Rate Limiting
  * Method: POST
  * URL: /api/gopay/status
  */
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Fetch Service Config & Check Quota
+    // 3. Fetch Service Config & Check Quota + RPM
     const gomerchantRef = doc(firestore, 'users', userId, 'services', 'gomerchant');
     const gomerchantSnap = await getDoc(gomerchantRef);
 
@@ -61,13 +61,32 @@ export async function POST(request: Request) {
     }
 
     const gomerchantData = gomerchantSnap.data();
-    const currentQuota = gomerchantData.quota || 0;
-    const plan = gomerchantData.plan || "";
+    const plan = (gomerchantData.plan || "starter").toLowerCase();
 
+    // --- RPM RATE LIMITING LOGIC ---
+    const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 10;
+    const now = Date.now();
+    const lastReset = gomerchantData.rpmLastReset?.toMillis() || 0;
+    const requestsThisMinute = gomerchantData.rpmRequestsCount || 0;
+
+    let updatedRpmCount = requestsThisMinute + 1;
+    let shouldResetRpm = (now - lastReset) > 60000;
+
+    if (shouldResetRpm) {
+      updatedRpmCount = 1;
+    } else if (requestsThisMinute >= rpmLimit) {
+      return NextResponse.json({ 
+        success: false, 
+        message: `Rate limit exceeded: ${rpmLimit} RPM for ${plan} plan.` 
+      }, { status: 429 });
+    }
+
+    // --- QUOTA CHECK ---
+    const currentQuota = gomerchantData.quota || 0;
     if (currentQuota <= 0 && plan !== 'enterprise') {
       return NextResponse.json({ 
         success: false, 
-        message: 'API Quota Exceeded. Please upgrade your plan.' 
+        message: 'API Quota Exceeded.' 
       }, { status: 429 });
     }
 
@@ -84,9 +103,11 @@ export async function POST(request: Request) {
 
     const transactionData = transactionSnap.data();
 
-    // Consume Quota for status check request
+    // Consume Quota and update RPM state
     await updateDoc(gomerchantRef, {
-      quota: increment(-1),
+      quota: plan === 'enterprise' ? currentQuota : increment(-1),
+      rpmRequestsCount: updatedRpmCount,
+      rpmLastReset: shouldResetRpm ? serverTimestamp() : gomerchantData.rpmLastReset || serverTimestamp(),
       updatedAt: serverTimestamp()
     });
 
@@ -100,14 +121,13 @@ export async function POST(request: Request) {
           status: 'PAID',
           amount: transactionData.amount,
           paid_at: transactionData.updatedAt?.toDate ? transactionData.updatedAt.toDate() : transactionData.updatedAt,
-          remaining_quota: currentQuota - 1
+          remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
         }
       });
     }
 
     // 6. Rekonsiliasi Live jika status masih PENDING
     if (transactionData.status === 'PENDING' && gomerchantData.token) {
-      // Panggil bridge untuk mengambil mutasi terbaru dari GoBiz
       const mutationRes = await getGoMerchantMutations({
         access_token: gomerchantData.token,
         refresh_token: gomerchantData.refreshToken || "",
@@ -117,15 +137,12 @@ export async function POST(request: Request) {
 
       if (mutationRes.status === 'success' && mutationRes.data) {
         const mutations = mutationRes.data.mutations || [];
-        
-        // REKONSILIASI: Cari mutasi yang cocok dengan nominal unik
         const match = mutations.find(m => 
           m.status.toLowerCase() === 'paid' && 
           Math.abs(m.amount - transactionData.amount) < 1
         );
 
         if (match) {
-          // Update Firestore ke PAID
           await updateDoc(transactionRef, {
             status: 'PAID',
             updatedAt: serverTimestamp(),
@@ -133,7 +150,6 @@ export async function POST(request: Request) {
             gm_trx_id: match.trx_id
           });
 
-          // Update Token jika terjadi rotasi otomatis
           if (mutationRes.data.token_refreshed) {
             await updateDoc(gomerchantRef, {
               token: mutationRes.data.new_access_token,
@@ -149,8 +165,8 @@ export async function POST(request: Request) {
               status: 'PAID',
               amount: transactionData.amount,
               paid_at: match.created_at,
-              message: 'Payment detected and matched via live mutation.',
-              remaining_quota: currentQuota - 1
+              message: 'Payment detected via live mutation.',
+              remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
             }
           });
         }
@@ -165,15 +181,12 @@ export async function POST(request: Request) {
         status: transactionData.status,
         amount: transactionData.amount,
         created_at: transactionData.createdAt?.toDate ? transactionData.createdAt.toDate() : transactionData.createdAt,
-        remaining_quota: currentQuota - 1
+        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
       }
     });
 
   } catch (error: any) {
     console.error('API GoPay Status Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error during status verification.' 
-    }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Internal Server Error.' }, { status: 500 });
   }
 }
