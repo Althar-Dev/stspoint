@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Globe, Badge } from "lucide-react";
+import { Globe } from "lucide-react";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { CodeBlock } from "./shared/code-block";
 
@@ -19,7 +19,7 @@ export function DocsGoMerchant() {
             Seamlessly integrate GoPay payments using our GoBiz merchant automation bridge.
           </p>
           <div className="flex items-center gap-4">
-            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
             <code className="text-sm font-bold text-primary">/gopay/create</code>
           </div>
         </div>
