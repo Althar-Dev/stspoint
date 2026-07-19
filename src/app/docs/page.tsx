@@ -87,7 +87,7 @@ function DocsContent() {
               Get <span className="text-primary/40">Started.</span>
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
-              The STSPoint Infrastructure API provides a unified interface to programmatically manage global payments, digital product fulfillment (PPOB), and automation bridges. This documentation covers authentication, standardized responses, and real-time event integration.
+              The STSPoint Infrastructure API provides a unified interface to programmatically manage global payments, digital product fulfillment (PPOB), and automation bridges. This documentation covers authentication, standardized responses, and core integration logic.
             </p>
           </section>
 
@@ -126,7 +126,7 @@ function DocsContent() {
                      </div>
                      <div className="space-y-1">
                         <h4 className="font-bold text-sm">Secret Key</h4>
-                        <p className="text-xs text-muted-foreground leading-relaxed">Your high-security signature used to authorize server-to-server requests. Never expose this key in client-side code or public repositories.</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Your high-security signature used to authorize server-to-server requests. Never expose this key in client-side code.</p>
                      </div>
                   </CardContent>
                </Card>
@@ -137,7 +137,7 @@ function DocsContent() {
                      </div>
                      <div className="space-y-1">
                         <h4 className="font-bold text-sm">Merchant ID</h4>
-                        <p className="text-xs text-muted-foreground leading-relaxed">The unique identifier for your business account. Used for context isolation and ledger tracking in multi-tenant requests.</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">The unique identifier for your business account. Used for context isolation and ledger tracking.</p>
                      </div>
                   </CardContent>
                </Card>
@@ -156,43 +156,6 @@ function DocsContent() {
   "merchant_id": "STS-XXXXXXXX"
 }`}
               />
-            </div>
-          </section>
-
-          <section id="webhooks" className="space-y-8 scroll-mt-24 pt-4 border-t border-border">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold flex items-center gap-3">
-                  <Webhook className="w-6 h-6 text-primary" />
-                  Webhooks (Callbacks)
-                </h2>
-                <div className="flex gap-2">
-                   <Badge variant="outline" className="text-[10px] uppercase font-bold h-5 px-1.5 border-blue-200 text-blue-600 bg-blue-50">STSPay</Badge>
-                   <Badge variant="outline" className="text-[10px] uppercase font-bold h-5 px-1.5 border-blue-200 text-blue-600 bg-blue-50">PPOB</Badge>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Webhooks allow your server to receive real-time POST notifications when specific events occur. Currently, Webhooks are exclusively supported for <span className="font-bold text-foreground">STSPay</span> (payment status updates) and <span className="font-bold text-foreground">PPOB</span> (order status completion).
-              </p>
-            </div>
-
-            <div className="space-y-6">
-               <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
-                <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-2">
-                  <p className="text-sm font-bold text-amber-900">Payload Security & Verification</p>
-                  <p className="text-xs text-amber-800/80 leading-relaxed">
-                    To prevent tampering, every webhook includes an <code className="font-bold">X-STS-Signature</code> header. This is an <span className="font-bold">HMAC-SHA256</span> hash of the raw request body. You must verify this signature using your <span className="font-bold">Webhook Secret</span> (or fallback Secret Key) as the signing key before processing the data.
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Signature Header Example:</p>
-                <div className="p-4 rounded-xl bg-muted border border-border font-mono text-[11px] text-primary shadow-inner">
-                  X-STS-Signature: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd6...
-                </div>
-              </div>
             </div>
           </section>
 
@@ -235,6 +198,52 @@ function DocsContent() {
         </div>
       )}
 
+      {/* --- WEBHOOKS --- */}
+      {activeType === 'webhooks' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+           <section className="space-y-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
+                <Webhook className="w-3 h-3" />
+                Real-time Notifications
+              </div>
+              <h2 className="text-3xl font-bold">Webhooks</h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Webhooks allow your server to receive real-time POST notifications when specific events occur. This eliminates the need for constant polling.
+              </p>
+              <div className="flex gap-2">
+                 <Badge variant="outline" className="text-[10px] uppercase font-bold h-5 px-1.5 border-blue-200 text-blue-600 bg-blue-50">STSPay</Badge>
+                 <Badge variant="outline" className="text-[10px] uppercase font-bold h-5 px-1.5 border-blue-200 text-blue-600 bg-blue-50">PPOB</Badge>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
+              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-amber-900">Security & Signature Verification</p>
+                <p className="text-xs text-amber-800/80 leading-relaxed">
+                  Every webhook includes an <code className="font-bold">X-STS-Signature</code> header. This is an <span className="font-bold">HMAC-SHA256</span> hash of the raw request body. Use your <span className="font-bold">Webhook Secret</span> to verify it.
+                </p>
+              </div>
+            </div>
+
+            <CodeBlock 
+              title="Webhook Payload Example"
+              type="webhook-ex"
+              code={`{
+  "event": "payment.success",
+  "data": {
+    "external_id": "PAY-12345",
+    "status": "PAID",
+    "amount": 50000,
+    "timestamp": "2024-10-24T08:42:11Z"
+  }
+}`}
+            />
+          </section>
+        </div>
+      )}
+
       {/* --- STSPAY --- */}
       {activeType === 'stspay' && (
         <div className="space-y-16 animate-in slide-in-from-bottom-2">
@@ -246,7 +255,7 @@ function DocsContent() {
               </div>
               <h2 className="text-3xl font-bold">STSPay</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Automated payment links with a modern checkout UI supporting QRIS, VA, and E-Wallets. Perfect for manual billing or custom store integrations.
+                Automated payment links with a modern checkout UI supporting QRIS, VA, and E-Wallets.
               </p>
               <div className="flex items-center gap-4 mt-6">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -254,30 +263,16 @@ function DocsContent() {
               </div>
             </div>
             <CodeBlock 
-              title="Payment Link Request"
+              title="Create Payment Request"
               type="pay-create-req"
               code={`{
   "merchant_id": "STS-XXXX",
   "secret_key": "STS-XXXX",
   "amount": 50000,
   "payer_email": "customer@email.com",
-  "description": "Top Up Game #123"
+  "description": "Product Purchase"
 }`}
             />
-          </section>
-
-          <section className="space-y-8 pt-4 border-t border-border">
-             <div className="space-y-4">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-[#00AED6]" />
-                  Status Polling
-                </h3>
-                <p className="text-sm text-muted-foreground">Check the status of any STSPay transaction if you prefer polling over webhooks.</p>
-                <div className="flex items-center gap-4">
-                  <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                  <code className="text-sm font-bold text-primary">/api/payments/status</code>
-                </div>
-             </div>
           </section>
         </div>
       )}
@@ -293,7 +288,7 @@ function DocsContent() {
               </div>
               <h2 className="text-3xl font-bold">PPOB</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Connect your system to thousands of digital products including Airtime (Pulsa), Data Packages, and Electricity Tokens.
+                Purchase digital products like Airtime, Data, and Tokens.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -301,28 +296,15 @@ function DocsContent() {
               </div>
             </div>
             <CodeBlock 
-              title="Order Transaction Body"
+              title="PPOB Order Body"
               type="ppob-create-req"
               code={`{
   "secret_key": "STS-Key-XXXX",
   "sku": "TSEL10",
   "target": "081234567890",
-  "ref_id": "ORDER-UNIQUE-ID"
+  "ref_id": "ORDER-ID-001"
 }`}
             />
-          </section>
-
-          <section className="space-y-8 pt-4 border-t border-border">
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <RefreshCcw className="w-5 h-5 text-blue-500" />
-                Order Verification
-              </h3>
-              <div className="flex items-center gap-4">
-                <Badge className="bg-blue-500 text-white border-none uppercase font-bold text-[10px]">GET</Badge>
-                <code className="text-sm font-bold text-primary">/api/ppob/status?secret_key=...&ref_id=...</code>
-              </div>
-            </div>
           </section>
         </div>
       )}
@@ -334,11 +316,11 @@ function DocsContent() {
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
                 <Code2 className="w-3 h-3" />
-                Balance Bridge
+                Account Bridge
               </div>
               <h2 className="text-3xl font-bold">Orderkuota</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Bridge your Orderkuota balance to generate dynamic QRIS payloads with automated mutation matching.
+                Automated QRIS and mutation checking for Orderkuota users.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -351,25 +333,9 @@ function DocsContent() {
               code={`{
   "secret_key": "STS-Key-XXXX",
   "amount": 25000,
-  "description": "Payment for Invoice #99"
+  "description": "Invoice #123"
 }`}
             />
-          </section>
-          
-          <section className="space-y-8 pt-4 border-t border-border">
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-3">
-                <RefreshCcw className="w-5 h-5 text-primary" />
-                Mutation Reconciliation
-              </h3>
-              <div className="flex items-center gap-4">
-                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/orkut/status</code>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Matches the transaction amount against your Orderkuota "IN" mutation logs to automatically confirm payments.
-              </p>
-            </div>
           </section>
         </div>
       )}
@@ -385,7 +351,7 @@ function DocsContent() {
               </div>
               <h2 className="text-3xl font-bold">GoMerchant</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
-                Enable automated GoPay payments by bridging your GoBiz account with unique nominal verification.
+                Bridge GoPay payments with unique nominal verification.
               </p>
               <div className="flex items-center gap-4">
                 <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
@@ -393,26 +359,59 @@ function DocsContent() {
               </div>
             </div>
             <CodeBlock 
-              title="GoPay Bridge Request"
+              title="GoPay Request"
               type="gopay-create-req"
               code={`{
   "secret_key": "STS-Key-XXXX",
   "amount": 10500,
-  "description": "Store Order #442"
+  "description": "Order #442"
 }`}
             />
           </section>
+        </div>
+      )}
 
-          <section className="space-y-8 pt-4 border-t border-border">
+      {/* --- ERRORS --- */}
+      {activeType === 'errors' && (
+        <div className="space-y-16 animate-in slide-in-from-bottom-2">
+          <section className="space-y-8">
             <div className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[#00AED6]" />
-                Live Recon
-              </h3>
-              <div className="flex items-center gap-4">
-                <Badge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</Badge>
-                <code className="text-sm font-bold text-primary">/api/gopay/status</code>
-              </div>
+              <h2 className="text-3xl font-bold flex items-center gap-3">
+                <X className="w-8 h-8 text-rose-500" />
+                Error Reference
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                List of common error codes returned by the STSPoint API.
+              </p>
+            </div>
+            
+            <div className="rounded-2xl border border-border overflow-hidden bg-card">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50 border-b border-border">
+                  <tr>
+                    <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">HTTP Code</th>
+                    <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">Message</th>
+                    <th className="px-6 py-4 font-bold uppercase text-[10px] tracking-widest">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr>
+                    <td className="px-6 py-4 font-mono font-bold text-amber-600">401</td>
+                    <td className="px-6 py-4 font-medium">Invalid secret_key</td>
+                    <td className="px-6 py-4 text-muted-foreground">The authentication key is missing or incorrect.</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 font-mono font-bold text-amber-600">403</td>
+                    <td className="px-6 py-4 font-medium">Service not initialized</td>
+                    <td className="px-6 py-4 text-muted-foreground">The requested service is not configured for your account.</td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 font-mono font-bold text-amber-600">429</td>
+                    <td className="px-6 py-4 font-medium">Rate limit exceeded</td>
+                    <td className="px-6 py-4 text-muted-foreground">Too many requests in a short period. Slow down.</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
         </div>

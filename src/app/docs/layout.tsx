@@ -31,7 +31,7 @@ const DOCS_NAV = [
   {
     title: "Payments",
     items: [
-      { id: "stspay", title: "STSPay Gateway", icon: Zap, href: "/docs?v=stspay" },
+      { id: "stspay", title: "STSPay", icon: Zap, href: "/docs?v=stspay" },
     ],
   },
   {
@@ -45,8 +45,8 @@ const DOCS_NAV = [
   {
     title: "Integration",
     items: [
-      { id: "webhooks", title: "Webhooks", icon: Webhook, href: "/docs?v=general#webhooks" },
-      { id: "errors", title: "Error Codes", icon: X, href: "/docs?v=general#errors" },
+      { id: "webhooks", title: "Webhooks", icon: Webhook, href: "/docs?v=webhooks" },
+      { id: "errors", title: "Error Codes", icon: X, href: "/docs?v=errors" },
     ],
   },
 ];
@@ -133,7 +133,9 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           <div className="hidden lg:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
             <span>Documentation</span>
             <ChevronRight className="w-3 h-3 opacity-30" />
-            <span className="text-foreground capitalize">{activeType === 'general' ? 'Get Started' : `${activeType}`}</span>
+            <span className="text-foreground capitalize">
+              {activeType === 'general' ? 'Get Started' : activeType}
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
