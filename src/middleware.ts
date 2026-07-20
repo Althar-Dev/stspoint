@@ -3,8 +3,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * STSPoint Unified Subdomain Middleware
- * Menangani pembersihan URL dan pemetaan folder internal ke subdomain secara transparan.
- * Proteksi: Logika ini dinonaktifkan di lingkungan Localhost dan Workspace.
+ * Menangani pembersihan URL, proteksi rute autentikasi, dan pemetaan subdomain.
  */
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
@@ -34,7 +33,7 @@ export function middleware(request: NextRequest) {
     'api': { internal: '/api', subdomain: 'api' },
   };
 
-  // 3. Rute Publik & File Sistem Global (Jangan di-rewrite atau di-redirect)
+  // 3. Rute Publik & File Sistem Global
   const PUBLIC_PATHS = [
     '/signin',
     '/signup',
@@ -55,18 +54,28 @@ export function middleware(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`));
   const isApiRoute = pathname.startsWith('/api/');
 
-  // 4. Logika Jika Request Datang ke Subdomain (misal: console.stspoint.id)
+  // 4. Logika Jika Request Datang ke Subdomain
   const currentSubKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
   if (currentSubKey) {
     const config = mappings[currentSubKey];
+    const sub = config.subdomain;
+
+    // PROTEKSI AUTENTIKASI: /signin & /signup HANYA untuk console dan partner
+    if (pathname === '/signin' || pathname === '/signup') {
+      if (sub !== 'console' && sub !== 'partner') {
+        return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}`, request.url));
+      }
+      // Izinkan akses di console. dan partner. tanpa rewrite (menggunakan root pages)
+      return NextResponse.next();
+    }
 
     // Jika ini adalah rute publik global atau file sistem, biarkan apa adanya
     if (isPublicPath) {
       return NextResponse.next();
     }
 
-    // PENTING: Jangan redirect panggilan API antar subdomain untuk menghindari CORS error
+    // Jangan redirect panggilan API antar subdomain untuk menghindari CORS error
     if (isApiRoute) {
       return NextResponse.next();
     }
@@ -75,15 +84,6 @@ export function middleware(request: NextRequest) {
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
-    }
-
-    // CEK CROSS-SUBDOMAIN: Jika user di subdomain A mengakses path milik subdomain B (BUKAN API)
-    for (const key in mappings) {
-      if (key !== currentSubKey && (pathname === mappings[key].internal || pathname.startsWith(`${mappings[key].internal}/`))) {
-        const targetConfig = mappings[key];
-        const cleanPath = pathname.replace(targetConfig.internal, '') || '/';
-        return NextResponse.redirect(new URL(`https://${targetConfig.subdomain}.${rootDomain}${cleanPath}`, request.url));
-      }
     }
 
     // Rewrite secara transparan untuk folder internal yang tepat
