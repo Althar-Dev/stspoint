@@ -86,15 +86,24 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: gomerchant } = useDoc(gomerchantRef);
 
+  // Simple query to avoid index requirements during prototyping
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, "transactions"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      where("userId", "==", user.uid)
     );
   }, [db, user?.uid]);
-  const { data: transactions, loading: txLoading } = useCollection(transactionsQuery);
+  const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
+
+  // Client-side sorting for robustness
+  const transactions = useMemo(() => {
+    return [...rawTransactions].sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [rawTransactions]);
 
   const handleGenerateTopUpQris = async () => {
     const baseAmount = parseInt(topUpAmount);
@@ -125,7 +134,7 @@ export default function OverviewPage() {
       if (res.success && res.dataUri) {
         setFinalAmount(uniqueAmount);
         setQrisData(res.dataUri);
-        toast({ title: "QRIS Berhasil Dibuat", description: `Silakan bayar Rp ${uniqueAmount.toLocaleString('id-ID')} (termasuk kode unik ${randomSuffix}).` });
+        toast({ title: "QRIS Berhasil Dibuat", description: `Silakan bayar Rp ${uniqueAmount.toLocaleString('id-ID')}.` });
       } else {
         throw new Error(res.message);
       }
@@ -198,7 +207,7 @@ export default function OverviewPage() {
         else if (tx.status === "Pending") counts.pending++;
         else if (tx.status === "Failed") counts.failed++;
 
-        const txDate = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt);
+        const txDate = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt || 0);
         const hour = txDate.getHours();
         let bucketIdx = Math.floor(hour / 4);
         if (bucketIdx > 5) bucketIdx = 5;
@@ -341,7 +350,7 @@ export default function OverviewPage() {
                                       className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
                                     />
                                   </div>
-                                  <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan kode unik untuk mempercepat verifikasi otomatis.</p>
+                                  <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan kode unik secara otomatis.</p>
                                 </div>
                                 <Button 
                                   onClick={handleGenerateTopUpQris}
@@ -362,7 +371,7 @@ export default function OverviewPage() {
                                    <h3 className="text-2xl font-headline font-bold text-primary">Rp {finalAmount?.toLocaleString('id-ID')}</h3>
                                    <div className="flex items-center justify-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-100 mt-2">
                                       <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                                      <p className="text-[9px] font-bold text-amber-800 uppercase">PENTING: Jangan bulatkan nominal transfer!</p>
+                                      <p className="text-[9px] font-bold text-amber-800 uppercase">Jangan bulatkan nominal!</p>
                                    </div>
                                 </div>
                                 <div className="flex flex-col gap-2 w-full">
@@ -381,9 +390,6 @@ export default function OverviewPage() {
                                       <Button onClick={() => {setQrisData(null); setFinalAmount(null);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
                                    </div>
                                 </div>
-                                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                                  *Sistem memverifikasi mutasi bank secara otomatis. Pastikan nominal transfer sama persis hingga digit terakhir.
-                                </p>
                              </div>
                            )}
                         </div>
@@ -531,10 +537,10 @@ export default function OverviewPage() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}><td colSpan={6} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
-              ) : transactions?.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium">seharusnya tampil di sini</td></tr>
+              ) : transactions.length === 0 ? (
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium italic">seharusnya tampil di sini</td></tr>
               ) : (
-                transactions?.slice(0, 8).map((row, i) => (
+                transactions.slice(0, 10).map((row, i) => (
                   <tr key={i} className="hover:bg-slate-50/30 transition-colors">
                     <td className="px-4 py-3 text-muted-foreground text-[9px] whitespace-nowrap">{formatTransactionDate(row.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
