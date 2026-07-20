@@ -518,12 +518,12 @@ export default function OverviewPage() {
           <table className="w-full min-w-full text-[10px] md:text-xs text-left"> 
             <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
               <tr>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">ID</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Game</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Time</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Service</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Ref</th>
                 <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Product</th>
                 <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Price</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Status</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest text-right whitespace-nowrap">Time</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -532,19 +532,20 @@ export default function OverviewPage() {
                   <tr key={i}><td colSpan={6} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
               ) : transactions?.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium">kenapa topup user ga di catat ke transaksi?</td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium">seharusnya tampil di sini</td></tr>
               ) : (
                 transactions?.slice(0, 8).map((row, i) => (
                   <tr key={i} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="px-4 py-3 font-mono text-[9px] text-muted-foreground whitespace-nowrap">{row.id?.substring(0, 8)}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-[9px] whitespace-nowrap">{formatTransactionDate(row.createdAt)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm">
                         {row.gameName || row.gameId}
                       </Badge>
                     </td>
+                    <td className="px-4 py-3 font-mono text-[9px] text-muted-foreground whitespace-nowrap uppercase">{row.id?.substring(0, 8)}</td>
                     <td className="px-4 py-3 font-bold whitespace-nowrap">{row.itemName}</td>
                     <td className="px-4 py-3 font-bold text-primary whitespace-nowrap">{row.price}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
                       <Badge className={`${
                         row.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
                         row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
@@ -553,7 +554,6 @@ export default function OverviewPage() {
                         {row.status}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right text-muted-foreground text-[9px] whitespace-nowrap">{formatTransactionDate(row.createdAt)}</td>
                   </tr>
                 ))
               )}
