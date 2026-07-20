@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase/core';
+import { doc, getDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
@@ -36,14 +36,30 @@ export async function POST(request: Request) {
     if (rawStatus.includes('SUKSES') || rawStatus.includes('SUCCESS')) internalStatus = 'Success';
     if (rawStatus.includes('GAGAL') || rawStatus.includes('FAILED')) internalStatus = 'Failed';
 
-    await updateDoc(txRef, {
-      status: internalStatus,
-      sn: sn || null,
-      provider_msg: message,
-      updatedAt: serverTimestamp()
-    });
+    // REFUND LOGIC: If Failed and not already refunded
+    if (internalStatus === 'Failed' && !txData.refunded && txData.priceAmount > 0) {
+      await updateDoc(doc(firestore, 'users', txData.userId), {
+        balance: increment(txData.priceAmount),
+        updatedAt: serverTimestamp()
+      });
+      
+      await updateDoc(txRef, {
+        status: internalStatus,
+        sn: sn || null,
+        provider_msg: message,
+        refunded: true,
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      await updateDoc(txRef, {
+        status: internalStatus,
+        sn: sn || null,
+        provider_msg: message,
+        updatedAt: serverTimestamp()
+      });
+    }
 
-    // Kirim Webhook ke Merchant menggunakan callbackUrl dinamis jika ada
+    // Send Webhook to Merchant
     await notifyMerchant(txData.userId, {
       event: 'ppob.status_update',
       data: {
@@ -55,7 +71,7 @@ export async function POST(request: Request) {
         message: message,
         timestamp: new Date().toISOString()
       }
-    }, txData.callbackUrl); // Meneruskan overrideUrl dari data transaksi
+    }, txData.callbackUrl);
 
     return NextResponse.json({ status: 'OK' });
 

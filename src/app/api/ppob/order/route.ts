@@ -9,14 +9,15 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
-  setDoc
+  setDoc,
+  getDoc
 } from 'firebase/firestore';
 import { getOrderkuotaPPOBPricelist, forwardOrderToOkeConnect, checkStatusOkeConnect } from '@/service/orderkuota';
 import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 
 /**
  * API: PPOB Order & Product List
- * URL: /ppob/order (via api subdomain)
+ * URL: /ppob/order
  */
 
 export async function GET(request: Request) {
@@ -61,7 +62,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { secret_key, sku, target, ref_id, qty } = body;
-
     const callbackUrl = request.headers.get('x-callback-url');
 
     if (!secret_key || !sku || !target || !ref_id) {
@@ -72,6 +72,8 @@ export async function POST(request: Request) {
     }
 
     const { firestore } = initializeFirebase();
+    
+    // 1. Authenticate & Get Latest User Data
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -80,10 +82,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid secret_key' }, { status: 401 });
     }
 
-    const userData = authSnap.docs[0].data();
+    const userDoc = authSnap.docs[0];
+    const userData = userDoc.data();
     const userId = userData.uid;
     const userBalance = userData.balance || 0;
 
+    // 2. Find Product Price
     const productsRes = await getOrderkuotaPPOBPricelist();
     const product = productsRes.data.find(p => p.buyer_sku_code === sku);
 
@@ -92,10 +96,18 @@ export async function POST(request: Request) {
     }
 
     const price = product.price; 
+    
+    // 3. Check Balance (Only for Prepaid)
     if (product.type === 'Prepaid' && userBalance < price) {
-      return NextResponse.json({ success: false, error: 'Insufficient account balance' }, { status: 403 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Insufficient account balance',
+        current_balance: userBalance,
+        required_amount: price
+      }, { status: 403 });
     }
 
+    // 4. Forward Order to H2H Bridge
     const h2hRes = await forwardOrderToOkeConnect({
       type: product.type === 'Pasca' ? 'Pasca' : 'Prepaid',
       product: sku,
@@ -108,9 +120,13 @@ export async function POST(request: Request) {
     });
 
     if (!h2hRes.success) {
-      return NextResponse.json({ success: false, message: h2hRes.message }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Upstream provider error: ' + h2hRes.message 
+      }, { status: 400 });
     }
 
+    // 5. Initial Status Check
     const statusRes = await checkStatusOkeConnect({
       product: sku,
       dest: target,
@@ -123,6 +139,7 @@ export async function POST(request: Request) {
 
     const finalStatus = statusRes.success ? statusRes.status : 'Pending';
 
+    // 6. Deduct Balance (Atomic)
     if (product.type === 'Prepaid') {
       await updateDoc(doc(firestore, 'users', userId), {
         balance: increment(-price),
@@ -130,8 +147,11 @@ export async function POST(request: Request) {
       });
     }
 
+    // 7. Log Transaction
     const txRef = doc(firestore, 'transactions', ref_id);
-    await setDoc(txRef, {
+    const userTxRef = doc(firestore, 'users', userId, 'transactions', ref_id);
+    
+    const transactionData = {
       id: ref_id,
       gameId: product.brand,
       gameName: product.category,
@@ -139,15 +159,22 @@ export async function POST(request: Request) {
       sku: sku,
       target: target,
       qty: qty || null,
-      price: price.toString(),
+      price: `Rp ${price.toLocaleString('id-ID')}`,
       priceAmount: price,
       userId: userId,
       status: finalStatus,
       callbackUrl: callbackUrl || null,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       paymentMethod: 'H2H_API',
-      provider_msg: statusRes.message || h2hRes.message
-    });
+      provider_msg: statusRes.message || h2hRes.message,
+      type: 'ppob'
+    };
+
+    await Promise.all([
+      setDoc(txRef, transactionData),
+      setDoc(userTxRef, transactionData)
+    ]);
 
     return NextResponse.json({
       success: true,
@@ -156,7 +183,9 @@ export async function POST(request: Request) {
         ref_id: ref_id,
         sku: sku,
         target: target,
-        status: finalStatus
+        status: finalStatus,
+        price: price,
+        remaining_balance: product.type === 'Prepaid' ? userBalance - price : userBalance
       }
     });
 

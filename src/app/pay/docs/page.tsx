@@ -90,7 +90,7 @@ export default function STSPayDocsPage() {
               <CardContent className="p-6 space-y-2">
                 <p>{"{"}</p>
                 <p className="pl-4">"merchant_id": "STS-XXXX",</p>
-                <p className="pl-4">"secret_key": "STS-XXXX",</p>
+                <p className="pl-4">"secret_key": "STS-Key-XXXX",</p>
                 <p className="pl-4">"amount": <span className="text-amber-400">50000</span>,</p>
                 <p className="pl-4">"payer_email": "customer@email.com",</p>
                 <p className="pl-4">"description": "Pembayaran Item Digital"</p>

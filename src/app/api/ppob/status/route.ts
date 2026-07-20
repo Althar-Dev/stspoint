@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  increment,
   serverTimestamp
 } from 'firebase/firestore';
 import { checkStatusOkeConnect } from '@/service/orderkuota';
@@ -16,7 +17,7 @@ import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
  * API: PPOB Transaction Status Check (Live H2H)
- * URL: /ppob/status?secret_key=...&ref_id=... (via api subdomain)
+ * URL: /ppob/status?secret_key=...&ref_id=...
  */
 export async function GET(request: Request) {
   try {
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
 
     const txData = txSnap.data();
 
+    // Live sync with upstream
     const statusRes = await checkStatusOkeConnect({
       product: txData.sku,
       dest: txData.target,
@@ -62,12 +64,28 @@ export async function GET(request: Request) {
 
     if (statusRes.success) {
       if (statusRes.status !== txData.status) {
-        await updateDoc(txRef, {
-          status: statusRes.status,
-          provider_msg: statusRes.message,
-          updatedAt: serverTimestamp()
-        });
+        // Logic: Handling Failed (Refund if needed)
+        if (statusRes.status === 'Failed' && !txData.refunded && txData.priceAmount > 0) {
+           await updateDoc(doc(firestore, 'users', txData.userId), {
+             balance: increment(txData.priceAmount),
+             updatedAt: serverTimestamp()
+           });
+           
+           await updateDoc(txRef, {
+             status: 'Failed',
+             provider_msg: statusRes.message,
+             refunded: true,
+             updatedAt: serverTimestamp()
+           });
+        } else {
+           await updateDoc(txRef, {
+             status: statusRes.status,
+             provider_msg: statusRes.message,
+             updatedAt: serverTimestamp()
+           });
+        }
 
+        // Notify Webhook
         await notifyMerchant(txData.userId, {
           event: 'ppob.status_update',
           data: {
