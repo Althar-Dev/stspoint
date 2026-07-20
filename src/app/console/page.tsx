@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -247,10 +246,10 @@ export default function OverviewPage() {
   const isGlobalLoading = authLoading || profileLoading || (!!user && !userProfileRef);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 md:space-y-6 animate-in fade-in duration-500">
+    <div className="w-full max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 min-w-0 overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-1">
         <div>
-          <h1 className="text-lg md:text-xl font-headline font-bold tracking-tight text-foreground">
+          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">
             Console <span className="text-primary">Overview</span>
           </h1>
           <div className="text-muted-foreground text-[10px] md:text-xs flex items-center gap-2 mt-0.5">
@@ -274,10 +273,10 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-w-0">
         <Card className="border border-border shadow-sm rounded-2xl md:rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-5 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[180px] relative z-10 h-full">
+          <CardContent className="p-6 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[180px] relative z-10 h-full">
             {isGlobalLoading ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -295,20 +294,20 @@ export default function OverviewPage() {
               <>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-primary/5 flex items-center justify-center border border-border">
+                    <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center border border-border">
                       <Wallet className="w-4 h-4 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h4 className="font-bold text-muted-foreground text-xs md:text-sm">Active Balance</h4>
-                      <p className="text-[8px] md:text-[9px] text-muted-foreground/40 uppercase tracking-widest font-bold">
+                      <p className="text-[8px] md:text-[9px] text-muted-foreground/40 uppercase tracking-widest font-bold truncate">
                         {profile?.merchantId || profile?.clientKey || "N/A"}
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[8px] md:text-[9px] px-2 py-0.5 rounded-md">Verified</Badge>
+                  <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[9px] px-2 py-0.5 rounded-md hidden sm:flex">Verified</Badge>
                 </div>
                 <div className="my-2 md:my-4">
-                  <h2 className="text-xl md:text-3xl font-headline font-bold tracking-tighter">
+                  <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tighter">
                     Rp {(profile?.balance || 0).toLocaleString('id-ID')}
                   </h2>
                 </div>
@@ -319,7 +318,7 @@ export default function OverviewPage() {
                     if(!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); }
                   }}>
                     <DialogTrigger asChild>
-                      <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-8 md:h-9 flex-1 shadow-lg shadow-primary/10 transition-all text-[9px] md:text-[10px] uppercase">
+                      <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-9 md:h-10 flex-1 shadow-lg shadow-primary/10 transition-all text-[10px] uppercase">
                         Top Up
                       </Button>
                     </DialogTrigger>
@@ -396,7 +395,7 @@ export default function OverviewPage() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button variant="outline" className="bg-transparent border border-border font-bold rounded-lg px-4 h-8 md:h-9 flex-1 text-[9px] md:text-[10px] uppercase">
+                  <Button variant="outline" className="bg-transparent border border-border font-bold rounded-lg px-4 h-9 md:h-10 flex-1 text-[10px] uppercase">
                     Withdraw
                   </Button>
                 </div>
@@ -405,23 +404,23 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl bg-card p-4 md:p-6 flex flex-col">
-          <CardHeader className="p-0 mb-4 bg-transparent">
+        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl bg-card p-6 md:p-8 flex flex-col min-w-0">
+          <CardHeader className="p-0 mb-6 bg-transparent">
             <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest text-muted-foreground">Quick Access</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 flex-1">
             {[
               { label: "API Key", icon: Key, color: "text-orange-500", bg: "bg-orange-500/10", href: "/console/developer/api-keys" },
               { label: "PPOB", icon: Smartphone, color: "text-blue-500", bg: "bg-blue-500/10", href: "/console/services/ppob" },
               { label: "SMM", icon: Users, color: "text-indigo-500", bg: "bg-indigo-500/10", href: "/console/services/smm" },
               { label: "OTP", icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10", href: "/console/services/nokos" },
             ].map((item, i) => (
-              <Link href={item.href} key={i}>
-                <Button variant="ghost" className="w-full h-auto py-2.5 md:py-3 px-1 flex flex-col gap-1.5 rounded-xl border border-border/50 hover:bg-primary/5 transition-all">
-                  <div className={`p-1.5 md:p-2 rounded-lg ${item.bg} ${item.color}`}>
-                    <item.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <Link href={item.href} key={i} className="block min-w-0">
+                <Button variant="ghost" className="w-full h-auto py-4 px-1 flex flex-col gap-2 rounded-xl border border-border/50 hover:bg-primary/5 transition-all group overflow-hidden">
+                  <div className={`p-2 rounded-lg ${item.bg} ${item.color} group-hover:scale-110 transition-transform`}>
+                    <item.icon className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
-                  <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-wider truncate w-full text-center">{item.label}</span>
+                  <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate w-full text-center">{item.label}</span>
                 </Button>
               </Link>
             ))}
@@ -429,30 +428,30 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <Card className="border-border shadow-sm rounded-xl md:rounded-2xl bg-card overflow-hidden">
-          <CardHeader className="px-4 py-3 md:px-5 md:py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 min-w-0">
+        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl bg-card overflow-hidden">
+          <CardHeader className="px-6 py-4 md:py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs md:text-sm font-bold flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-primary" />
+                <Zap className="w-4 h-4 text-primary" />
                 Quota Usage Trend
               </CardTitle>
-              <Badge variant="outline" className="text-[8px] md:text-[9px] font-bold h-5">Real-time</Badge>
+              <Badge variant="outline" className="text-[9px] font-bold h-6">Real-time</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
               {quotaUsageData.map((item, i) => (
-                <div key={i} className="px-4 h-14 md:h-16 flex items-center gap-3 md:gap-4 hover:bg-slate-50/50 transition-colors relative overflow-hidden">
-                  <div className="flex items-center gap-2 md:gap-4 z-10 py-3 shrink-0 w-24 sm:w-28 md:w-32">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 hidden sm:block" />
-                    <span className="text-[10px] md:text-xs font-bold leading-tight truncate">{item.name}</span>
+                <div key={i} className="px-6 h-16 md:h-20 flex items-center gap-4 hover:bg-slate-50/50 transition-colors relative overflow-hidden">
+                  <div className="flex items-center gap-4 z-10 py-3 shrink-0 w-32 md:w-40">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                    <span className="text-xs font-bold leading-tight truncate">{item.name}</span>
                   </div>
                   <div className="flex-1 min-w-0 h-full relative z-0">
-                    <div className="absolute inset-x-0 bottom-0 h-8 md:h-9">
+                    <div className="absolute inset-x-0 bottom-0 h-10 md:h-12">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={item.chart.map((v, idx) => ({ value: v, id: idx }))}>
-                          <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#gradient-quota)" strokeWidth={1.5} dot={false} />
+                          <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#gradient-quota)" strokeWidth={2} dot={false} />
                           <defs>
                             <linearGradient id="gradient-quota" x1="0" x1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
@@ -463,7 +462,7 @@ export default function OverviewPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 z-10 py-3 shrink-0 justify-end">
-                    <span className="text-[10px] md:text-xs font-bold font-mono text-foreground">{item.value}</span>
+                    <span className="text-xs font-bold font-mono text-foreground">{item.value}</span>
                   </div>
                 </div>
               ))}
@@ -471,30 +470,30 @@ export default function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border shadow-sm rounded-xl md:rounded-2xl bg-card overflow-hidden flex flex-col">
-          <CardHeader className="px-4 py-3 md:px-5 md:py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
+        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl bg-card overflow-hidden flex flex-col">
+          <CardHeader className="px-6 py-4 md:py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
             <CardTitle className="text-xs md:text-sm font-bold flex items-center gap-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <ShieldCheck className="w-4 h-4 text-primary" />
               Activity Status (24h)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 flex-1 flex flex-col">
-            <div className="flex items-stretch w-full h-full min-h-[120px] md:min-h-[140px]">
+            <div className="flex items-stretch w-full h-full min-h-[140px] md:min-h-[160px]">
               {[
                 { label: "Success", value: stats.success.toLocaleString(), color: "text-green-500", key: "success", stroke: "#22c55e" },
                 { label: "Pending", value: stats.pending.toLocaleString(), color: "text-orange-500", key: "pending", stroke: "#f97316" },
                 { label: "Failed", value: stats.failed.toLocaleString(), color: "text-rose-500", key: "failed", stroke: "#f43f5e" },
               ].map((stat, i) => (
                 <React.Fragment key={i}>
-                  <div className="flex-1 relative flex flex-col items-center justify-center p-2">
+                  <div className="flex-1 relative flex flex-col items-center justify-center p-4">
                     <div className="z-10 text-center">
-                      <h3 className="text-sm md:text-lg font-headline font-bold">{stat.value}</h3>
-                      <p className={`text-[7px] md:text-[8px] font-bold uppercase tracking-widest ${stat.color}`}>{stat.label}</p>
+                      <h3 className="text-lg md:text-2xl font-headline font-bold">{stat.value}</h3>
+                      <p className={`text-[8px] md:text-[10px] font-bold uppercase tracking-widest ${stat.color}`}>{stat.label}</p>
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 h-8 md:h-12 w-full opacity-30 md:opacity-100">
+                    <div className="absolute bottom-0 left-0 right-0 h-12 md:h-16 w-full opacity-40">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={activityChartData}>
-                          <RechartsArea type="monotone" dataKey={stat.key} stroke={stat.stroke} fill={stat.stroke} fillOpacity={0.1} strokeWidth={1.5} dot={false} />
+                          <RechartsArea type="monotone" dataKey={stat.key} stroke={stat.stroke} fill={stat.stroke} fillOpacity={0.1} strokeWidth={2} dot={false} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -507,65 +506,73 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      <Card className="border-border shadow-sm rounded-xl md:rounded-2xl overflow-hidden bg-card"> 
-        <CardHeader className="px-4 py-3 md:px-6 md:py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <History className="w-3.5 h-3.5 text-primary" />
-              <CardTitle className="text-xs md:text-sm font-bold">Recent Transactions</CardTitle>
+      <div className="w-full min-w-0 overflow-hidden">
+        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-card"> 
+          <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-primary" />
+                <CardTitle className="text-xs md:text-sm font-bold">Recent Transactions</CardTitle>
+              </div>
+              <Button variant="outline" asChild className="rounded-lg h-8 md:h-9 text-[10px] font-bold px-4 transition-all hover:bg-primary hover:text-primary-foreground">
+                <Link href="/console/transactions">View All</Link>
+              </Button>
             </div>
-            <Button variant="outline" asChild className="rounded-lg h-7 md:h-8 text-[8px] md:text-[10px] font-bold px-3">
-              <Link href="/console/transactions">View All</Link>
-            </Button>
+          </CardHeader>
+          <div className="w-full overflow-x-auto min-w-0"> 
+            <table className="w-full min-w-[800px] text-xs text-left border-collapse"> 
+              <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
+                <tr>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Service</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Ref</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Product</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Price</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {txLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}><td colSpan={6} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
+                  ))
+                ) : transactions.length === 0 ? (
+                  <tr><td colSpan={6} className="px-6 py-20 text-center text-muted-foreground font-medium italic">Belum ada aktivitas transaksi.</td></tr>
+                ) : (
+                  transactions.slice(0, 10).map((row, i) => (
+                    <tr key={i} className="hover:bg-slate-50/30 transition-colors group">
+                      <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{formatTransactionDate(row.createdAt)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-2 py-0.5 h-5 rounded-md uppercase">
+                          {row.gameName || row.gameId}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap uppercase tracking-tighter">{row.id?.substring(0, 12)}</td>
+                      <td className="px-6 py-4 font-bold whitespace-nowrap max-w-[200px] truncate">{row.itemName}</td>
+                      <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{row.price}</td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <Badge className={`${
+                          row.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
+                          row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
+                          'bg-rose-500/10 text-rose-600'
+                        } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
+                          {row.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        </CardHeader>
-        <div className="w-full overflow-x-auto"> 
-          <table className="w-full min-w-[700px] text-[10px] md:text-xs text-left border-collapse"> 
-            <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
-              <tr>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Time</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Service</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Ref</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Product</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Price</th>
-                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {txLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}><td colSpan={6} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td></tr>
-                ))
-              ) : transactions.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium italic">Belum ada aktivitas transaksi.</td></tr>
-              ) : (
-                transactions.slice(0, 10).map((row, i) => (
-                  <tr key={i} className="hover:bg-slate-50/30 transition-colors group">
-                    <td className="px-4 py-3 text-muted-foreground text-[9px] whitespace-nowrap">{formatTransactionDate(row.createdAt)}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm uppercase">
-                        {row.gameName || row.gameId}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-[9px] text-muted-foreground whitespace-nowrap uppercase">{row.id?.substring(0, 10)}</td>
-                    <td className="px-4 py-3 font-bold whitespace-nowrap max-w-[150px] truncate">{row.itemName}</td>
-                    <td className="px-4 py-3 font-bold text-primary whitespace-nowrap">{row.price}</td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <Badge className={`${
-                        row.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
-                        row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
-                        'bg-rose-500/10 text-rose-600'
-                      } border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm uppercase`}>
-                        {row.status}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+        </Card>
+      </div>
+
+      <div className="text-center pt-10 border-t border-border/50 max-w-2xl mx-auto">
+         <p className="text-[10px] text-muted-foreground/30 font-bold uppercase tracking-[0.5em]">
+           STS Point Gateway Console • Node ID: Cluster-01-JKT
+         </p>
+      </div>
     </div>
   );
 }

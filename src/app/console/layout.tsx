@@ -248,9 +248,9 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1">
+      <SidebarInset className="flex flex-col flex-1 min-w-0">
         <MainHeader searchPlaceholder="Search features..." showSidebarTrigger={false} />
-        <main className="flex-1 p-6 md:p-8 bg-background">
+        <main className="flex-1 p-4 md:p-8 bg-background min-w-0 overflow-hidden">
           {children}
         </main>
       </SidebarInset>
