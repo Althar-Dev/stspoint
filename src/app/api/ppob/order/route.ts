@@ -147,7 +147,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 8. Record to Global Transaction Ledger (CRITICAL: Primary source for all dashboards)
+    // 8. Record to Global Transaction Ledger
     const txData = {
       id: ref_id,
       gameId: product.brand,

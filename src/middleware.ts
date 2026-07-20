@@ -33,6 +33,9 @@ export function middleware(request: NextRequest) {
     'api': { internal: '/api', subdomain: 'api' },
   };
 
+  // MERCHANT CLUSTER: Rute yang merupakan saudara kandung /console tapi harus diakses di subdomain console.
+  const MERCHANT_SERVICE_PATHS = ['/orkut', '/gopay', '/pay', '/ai'];
+
   // 3. Rute Publik & File Sistem Global
   const PUBLIC_PATHS = [
     '/signin',
@@ -66,45 +69,67 @@ export function middleware(request: NextRequest) {
       if (sub !== 'console' && sub !== 'partner') {
         return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}`, request.url));
       }
-      // Izinkan akses di console. dan partner. tanpa rewrite (menggunakan root pages)
       return NextResponse.next();
     }
 
-    // Jika ini adalah rute publik global atau file sistem, biarkan apa adanya
     if (isPublicPath) {
       return NextResponse.next();
     }
 
-    // Jangan redirect panggilan API antar subdomain untuk menghindari CORS error
     if (isApiRoute) {
       return NextResponse.next();
     }
 
-    // Redirect jika path diawali dengan folder internal MILIK subdomain ini (Pembersihan URL)
+    // LOGIKA KHUSUS SUBDOMAIN CONSOLE (Merchant Suite)
+    if (sub === 'console') {
+      // Jika mengakses layanan saudara (orkut, gopay, dll), jangan tambahkan awalan /console
+      const isServicePath = MERCHANT_SERVICE_PATHS.some(p => pathname === p || pathname.startsWith(`${p}/`));
+      if (isServicePath) {
+        return NextResponse.next(); // Biarkan Next.js mengakses root folder /orkut, /gopay, dll
+      }
+
+      // Redirect jika path diawali dengan folder internal /console (Pembersihan URL)
+      if (pathname.startsWith('/console')) {
+        const cleanPath = pathname.replace('/console', '') || '/';
+        return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
+      }
+
+      // Default: Masukkan ke folder /console secara transparan
+      url.pathname = `/console${pathname}`;
+      return NextResponse.rewrite(url);
+    }
+
+    // LOGIKA UNTUK SUBDOMAIN LAIN (partner, docs, api, etc)
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
-    // Rewrite secara transparan untuk folder internal yang tepat
     url.pathname = `${config.internal}${pathname}`;
     return NextResponse.rewrite(url);
   }
 
   // 5. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
   if (host === rootDomain || host === wwwDomain) {
-    // FORCE REDIRECT: Signin & Signup ke console subdomain
     if (pathname === '/signin' || pathname === '/signup') {
       return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}`, request.url));
     }
 
     if (isPublicPath) return NextResponse.next();
 
+    // Mapping redirect otomatis jika user mengetik path internal di domain root
     for (const key in mappings) {
       const config = mappings[key];
       if (pathname === config.internal || pathname.startsWith(`${config.internal}/`)) {
         const cleanPath = pathname.replace(config.internal, '') || '/';
         return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}`, request.url));
+      }
+    }
+    
+    // Cek juga untuk merchant services di domain root
+    for (const p of MERCHANT_SERVICE_PATHS) {
+      if (pathname === p || pathname.startsWith(`${p}/`)) {
+        return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}`, request.url));
       }
     }
   }
