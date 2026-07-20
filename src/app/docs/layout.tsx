@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { 
   ChevronRight,
   Menu,
@@ -27,28 +27,28 @@ const DOCS_NAV = [
   {
     title: "Core",
     items: [
-      { id: "general", title: "Get Started", icon: Rocket, href: "/docs?v=general" },
+      { id: "general", title: "Get Started", icon: Rocket, href: "/docs" },
     ],
   },
   {
     title: "Payments",
     items: [
-      { id: "stspay", title: "STSPay", icon: Zap, href: "/docs?v=stspay" },
+      { id: "stspay", title: "STSPay", icon: Zap, href: "/docs/stspay" },
     ],
   },
   {
     title: "Services",
     items: [
-      { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs?v=ppob" },
-      { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs?v=orderkuota" },
-      { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs?v=gopay" },
+      { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs/ppob" },
+      { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs/orderkuota" },
+      { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay" },
     ],
   },
   {
     title: "Integration",
     items: [
-      { id: "webhooks", title: "Webhooks", icon: Webhook, href: "/docs?v=webhooks" },
-      { id: "errors", title: "Error Codes", icon: X, href: "/docs?v=errors" },
+      { id: "webhooks", title: "Webhooks", icon: Webhook, href: "/docs/webhooks" },
+      { id: "errors", title: "Error Codes", icon: X, href: "/docs/errors" },
     ],
   },
 ];
@@ -111,15 +111,19 @@ function SidebarContent({ activeType, onItemClick }: { activeType: string, onIte
 
 function DocsLayoutInner({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { toast } = useToast();
-  const activeType = searchParams.get("v") || "general";
+
+  // Detect active section from path segment
+  // docs.stspoint.id/gopay -> pathname is /gopay
+  // stspoint.id/docs/gopay -> pathname is /docs/gopay
+  const activeType = pathname.replace('/docs', '').replace('/', '') || "general";
 
   const handleCopyPage = () => {
     if (typeof window !== "undefined") {
       const content = document.getElementById("docs-content");
       if (content) {
-        const text = content.innerText;
+        const text = (content as HTMLElement).innerText;
         navigator.clipboard.writeText(text);
         toast({ 
           title: "Page Copied!", 
@@ -138,7 +142,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-72 flex flex-col min-w-0">
-        {/* Header - Fixed to top to ensure it follows the scroll */}
+        {/* Header - Fixed to top */}
         <header className="fixed top-0 right-0 left-0 lg:left-72 h-16 flex items-center justify-between px-6 lg:px-10 bg-background/80 backdrop-blur-md border-b border-border z-40">
           <div className="flex items-center gap-4 lg:hidden">
             <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(true)}>
@@ -151,7 +155,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
             <span>Documentation</span>
             <ChevronRight className="w-3 h-3 opacity-30" />
             <span className="text-foreground capitalize">
-              {activeType === 'general' ? 'Get Started' : activeType}
+              {activeType === 'general' ? 'Get Started' : activeType.replace('-', ' ')}
             </span>
           </div>
 
@@ -169,7 +173,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {/* Spacer to push content below the fixed header */}
+        {/* Spacer */}
         <div className="h-16 shrink-0" />
 
         <main className="flex-1 min-w-0">
