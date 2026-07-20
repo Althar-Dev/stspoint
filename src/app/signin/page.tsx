@@ -1,31 +1,62 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/logo";
-import { Mail, Lock, ArrowRight, AlertCircle, ChevronLeft, UserCircle, Building2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, AlertCircle, ChevronLeft, UserCircle, Building2, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 
 export default function SignInPage() {
   const auth = useAuth();
+  const db = useFirestore();
   const router = useRouter();
+  const { user, loading: authLoading } = useUser();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"merchant" | "partner">("merchant");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
 
-  // Deteksi role berdasarkan subdomain saat ini
+  // Fetch profile to handle auto-redirect if already logged in
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user?.uid]);
+  
+  const { data: profile, loading: profileLoading } = useDoc(profileRef);
+
+  // Auto-Redirect logic: If user is already logged in, send them to their dashboard
+  useEffect(() => {
+    if (!authLoading && user && !profileLoading && profile) {
+      const hostname = window.location.hostname;
+      const isDev = 
+        hostname.includes("localhost") || 
+        hostname.includes("127.0.0.1") || 
+        hostname.includes("cloudworkstations.dev") || 
+        hostname.includes("firebaseapp.com");
+      
+      const targetSub = profile.role === 'client' ? 'partner' : 'console';
+      
+      if (!isDev && hostname === 'stspoint.id') {
+        window.location.href = `https://${targetSub}.stspoint.id/`;
+      } else if (isDev) {
+        router.push(profile.role === 'client' ? "/client" : "/console");
+      }
+    }
+  }, [user, authLoading, profile, profileLoading, router]);
+
+  // Initial role detection based on subdomain
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
@@ -43,17 +74,13 @@ export default function SignInPage() {
 
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      
-      // JANGAN LAKUKAN REDIRECT JIKA DI LOCALHOST / WORKSPACE
       const isDev = 
         hostname.includes("localhost") || 
-        hostname.includes("127.0.0.1") || 
         hostname.includes("cloudworkstations.dev") || 
         hostname.includes("firebaseapp.com");
       
       if (!isDev) {
         const targetSubdomain = targetRole === "merchant" ? "console" : "partner";
-        // Hanya redirect jika kita berada di subdomain yang berbeda di produksi
         if (!hostname.startsWith(targetSubdomain + ".")) {
           window.location.href = `https://${targetSubdomain}.stspoint.id/signin`;
         }
@@ -64,42 +91,42 @@ export default function SignInPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
-    setLoading(true);
+    setSigningIn(true);
     setError("");
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // 1. Sync session cookie to root domain (untuk subdomain support)
+      // Sync session to wildcard root domain
       await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: idToken }),
       });
 
-      // 2. Determine redirect destination
-      const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-      const isDev = 
-        hostname.includes("localhost") || 
-        hostname.includes("cloudworkstations.dev") || 
-        hostname.includes("firebaseapp.com");
+      toast({ title: "Welcome back!", description: "Successfully authenticated." });
       
-      if (!isDev) {
-        const targetHost = role === "merchant" ? "console.stspoint.id" : "partner.stspoint.id";
-        window.location.href = `https://${targetHost}/`;
-      } else {
-        router.push(role === "merchant" ? "/console" : "/client");
-      }
-
-      toast({ title: "Welcome back!", description: `Logged in as ${role === 'merchant' ? 'Merchant' : 'Partner'}.` });
+      // Let the useEffect handle the redirect after profile loads
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.message || "Login failed. Please check your credentials.");
-    } finally {
-      setLoading(false);
+      setError(err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' 
+        ? "Invalid email or password." 
+        : "An error occurred during sign in.");
+      setSigningIn(false);
     }
   };
+
+  const isGlobalLoading = authLoading || (user && profileLoading);
+
+  if (isGlobalLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
+        <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Checking Session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -116,8 +143,8 @@ export default function SignInPage() {
       <div className="w-full max-w-md z-10">
         <div className="flex flex-col items-center mb-8 space-y-2">
           <Logo className="w-12 h-12 mb-2" />
-          <h1 className="text-2xl font-headline font-bold tracking-tighter">STSPoint</h1>
-          <p className="text-muted-foreground text-sm">Unified Access Gateway</p>
+          <h1 className="text-2xl font-headline font-bold tracking-tighter text-center">STSPoint Gateway</h1>
+          <p className="text-muted-foreground text-sm">Sign in to your dashboard</p>
         </div>
 
         <Card className="border-border shadow-2xl rounded-[2rem] overflow-hidden bg-card/50 backdrop-blur-xl">
@@ -182,9 +209,10 @@ export default function SignInPage() {
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/10 transition-all active:scale-95" disabled={loading}>
-                {loading ? "Processing..." : `Sign In as ${role === 'merchant' ? 'Merchant' : 'Partner'}`}
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/10 transition-all active:scale-95" disabled={signingIn}>
+                {signingIn ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {signingIn ? "Authenticating..." : `Sign In as ${role === 'merchant' ? 'Merchant' : 'Partner'}`}
+                {!signingIn && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </form>
           </CardContent>

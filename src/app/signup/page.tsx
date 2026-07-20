@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -8,7 +8,7 @@ import {
   updateProfile
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { useAuth, useFirestore } from "@/firebase";
+import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { Button } from "@/components/ui/button";
@@ -28,13 +28,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Logo } from "@/components/logo";
-import { Mail, Lock, User, ArrowRight, AlertCircle, ChevronLeft, ShieldCheck, HelpCircle, Key } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, AlertCircle, ChevronLeft, ShieldCheck, HelpCircle, Key, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "@/hooks/use-toast";
 
 export default function SignUpPage() {
   const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
+  const { user: existingUser, loading: authLoading } = useUser();
   
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,6 +45,34 @@ export default function SignUpPage() {
   const [licenseKey, setLicenseKey] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Profile data for auto-redirect
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !existingUser?.uid) return null;
+    return doc(db, "users", existingUser.uid);
+  }, [db, existingUser?.uid]);
+  
+  const { data: profile, loading: profileLoading } = useDoc(profileRef);
+
+  // Auto-Redirect if user is already logged in
+  useEffect(() => {
+    if (!authLoading && existingUser && !profileLoading && profile) {
+      const hostname = window.location.hostname;
+      const isDev = 
+        hostname.includes("localhost") || 
+        hostname.includes("127.0.0.1") || 
+        hostname.includes("cloudworkstations.dev") || 
+        hostname.includes("firebaseapp.com");
+      
+      const targetSub = profile.role === 'client' ? 'partner' : 'console';
+      
+      if (!isDev && hostname === 'stspoint.id') {
+        window.location.href = `https://${targetSub}.stspoint.id/`;
+      } else if (isDev) {
+        router.push(profile.role === 'client' ? "/client" : "/console");
+      }
+    }
+  }, [existingUser, authLoading, profile, profileLoading, router]);
 
   const generateMerchantId = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -93,8 +123,16 @@ export default function SignUpPage() {
       // 2. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      const idToken = await user.getIdToken();
       
       await updateProfile(user, { displayName: name });
+
+      // Sync session to wildcard root domain for cross-subdomain access
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: idToken }),
+      });
       
       const merchantId = generateMerchantId();
       const secretKey = generateSecretKey();
@@ -115,7 +153,7 @@ export default function SignUpPage() {
 
       await setDoc(userRef, userData);
 
-      // 4. Save Provider Data to Sub-Collection (Excluding DigiFlazz)
+      // 4. Save Provider Data to Sub-Collection
       const providers = ['orderkuota', 'gomerchant'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
@@ -153,14 +191,25 @@ export default function SignUpPage() {
           updatedAt: serverTimestamp()
         }).catch(err => console.error("Failed to update license key status:", err));
       }
-      
-      router.push("/console");
+
+      toast({ title: "Account Created!", description: "Redirecting to your dashboard..." });
       
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
       setLoading(false);
     }
   };
+
+  const isGlobalLoading = authLoading || (existingUser && profileLoading);
+
+  if (isGlobalLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
+        <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Initializing Setup...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -310,8 +359,9 @@ export default function SignUpPage() {
                 </div>
               </div>
               <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/10 transition-all active:scale-95" disabled={loading}>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {loading ? "Creating Account..." : "Create Account"}
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </form>
           </CardContent>
