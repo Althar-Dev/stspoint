@@ -257,6 +257,13 @@ export default function CustomCheckoutPage() {
   const { data: transaction, loading, error } = useDoc(transactionRef);
   const { data: channelsData } = useCollection(channelsQuery);
 
+  // Fetch Merchant Profile for custom logo/brand
+  const merchantRef = useMemoFirebase(() => {
+    if (!db || !transaction?.userId) return null;
+    return doc(db, "users", transaction.userId);
+  }, [db, transaction?.userId]);
+  const { data: merchantProfile } = useDoc(merchantRef);
+
   const activePaymentGroups = useMemo(() => {
     if (!channelsData) return [];
 
@@ -372,9 +379,6 @@ export default function CustomCheckoutPage() {
     }
   };
 
-  /**
-   * MDR LOGIC: Calculate fee (Merchant Borne)
-   */
   const calculateFeeAmount = (base: number, feeStr: string) => {
     if (!feeStr) return 0;
     if (feeStr.includes('%')) {
@@ -408,12 +412,11 @@ export default function CustomCheckoutPage() {
     setIsOvoPromptOpen(false);
 
     try {
-      // Calculate MDR Fee - But customer pays baseAmount (Merchant-Borne)
       const feeAmount = calculateFeeAmount(baseAmount, method.fee);
 
       const res = await requestPaymentInfo(method.type, {
         external_id: transaction.id, 
-        amount: baseAmount, // Official amount paid by customer
+        amount: baseAmount, 
         bank_code: method.id,
         name: transaction.payerEmail || "STS Customer",
         mobile_number: mobileNumber,
@@ -427,7 +430,7 @@ export default function CustomCheckoutPage() {
           payment_method_id: method.id,
           provider: method.provider,
           base_amount: baseAmount,
-          fee_amount: feeAmount, // Recorded to be deducted from merchant balance later
+          fee_amount: feeAmount,
           amount: baseAmount, 
           updatedAt: serverTimestamp()
         });
@@ -518,9 +521,17 @@ export default function CustomCheckoutPage() {
   return (
     <div className="light min-h-screen bg-[#F9FAFB] text-slate-900 font-sans selection:bg-indigo-100 flex flex-col">
       <header className="w-full h-16 md:h-20 bg-white border-b border-slate-300 flex items-center justify-between px-4 md:px-12 sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <Logo className="w-7 h-7 md:w-8 md:h-8" />
-          <span className="font-bold text-lg md:text-xl tracking-tight text-slate-800">STSPay</span>
+        <div className="flex items-center gap-3">
+          {merchantProfile?.logoUrl ? (
+            <div className="w-8 h-8 relative flex items-center justify-center overflow-hidden rounded-md shrink-0">
+               <img src={merchantProfile.logoUrl} alt="Merchant Logo" className="object-contain w-full h-full" />
+            </div>
+          ) : (
+            <Logo className="w-7 h-7 md:w-8 md:h-8 shrink-0" />
+          )}
+          <span className="font-bold text-lg md:text-xl tracking-tight text-slate-800 truncate max-w-[200px] md:max-w-md">
+            {merchantProfile?.merchantName || merchantProfile?.name || "STSPay"}
+          </span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
