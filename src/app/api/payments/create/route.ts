@@ -7,10 +7,23 @@ import {
   where, 
   getDocs, 
   doc, 
+  getDoc,
   setDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
 import { createXenditPaymentRequest } from '@/lib/xendit/payment-request';
+
+/**
+ * Helper: Kalkulasi fee (Merchant Borne)
+ */
+function calculateFee(base: number, feeStr: string | undefined) {
+  if (!feeStr) return 0;
+  if (feeStr.includes('%')) {
+    return Math.ceil(base * (parseFloat(feeStr) / 100));
+  }
+  const numericFee = parseInt(feeStr.replace(/[^0-9]/g, ''));
+  return isNaN(numericFee) ? 0 : numericFee;
+}
 
 /**
  * API: Create Payment (Unified STSPay Entry Point)
@@ -29,7 +42,6 @@ export async function POST(request: Request) {
       type = 'payment_link' 
     } = body;
 
-    // Capture dynamic callback URL from header
     const callbackUrl = request.headers.get('x-callback-url');
 
     // 1. Validasi Input Dasar
@@ -62,16 +74,14 @@ export async function POST(request: Request) {
     const merchantData = authSnap.docs[0].data();
     const merchantUid = merchantData.uid;
 
-    // Verify Identity
     const storedId = (merchantData.merchantId || merchantData.clientKey || "").toString();
     if (storedId !== merchant_id.toString()) {
       return NextResponse.json({ success: false, message: 'Authentication failed: Merchant ID mismatch.' }, { status: 401 });
     }
 
-    // 3. Generate External ID
+    // 3. Persiapkan Identitas Transaksi
     const external_id = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     
-    // Determine Domain for Checkout
     const host = request.headers.get('host') || 'stspoint.id';
     const isDev = host.includes('localhost') || host.includes('cloudworkstations.dev') || host.includes('firebaseapp.com');
     const checkout_url = isDev 
@@ -85,13 +95,20 @@ export async function POST(request: Request) {
     };
 
     let paymentInfo: any = null;
+    let feeAmount = 0;
 
-    // 4. Handle specific payment types (Jika direct QRIS diminta di awal)
-    // Catatan: Biasanya MDR untuk direct QRIS diatur default (misal 0.7%) jika tidak ada info channel
+    // 4. Handle direct QRIS (MDR Check)
     if (type === 'qris') {
+      // Ambil config fee QRIS dari DB
+      const qrisChannelRef = doc(firestore, 'payment_channels', 'QRIS');
+      const qrisSnap = await getDoc(qrisChannelRef);
+      const qrisConfig = qrisSnap.exists() ? qrisSnap.data() : { fee: '0.7%' }; // Default 0.7% if not set
+      
+      feeAmount = calculateFee(baseAmount, qrisConfig.fee);
+
       const qrisRes = await createXenditPaymentRequest({
         reference_id: external_id,
-        amount: baseAmount, // Di tahap create API, kita gunakan baseAmount
+        amount: baseAmount, // Pelanggan bayar harga dasar
         currency: 'IDR',
         description: description || 'STSPay QRIS Payment',
         payment_method: {
@@ -121,16 +138,16 @@ export async function POST(request: Request) {
       responseData.checkout_url = checkout_url;
     }
 
-    // 5. Simpan ke Firestore (Tercatat di Dashboard)
+    // 5. Simpan ke Firestore
     const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const globalHistoryRef = doc(firestore, 'transactions', external_id);
     const userHistoryRef = doc(firestore, 'users', merchantUid, 'transactions', external_id);
 
     const mainTxData = {
       id: external_id,
-      amount: baseAmount, // Total sementara
-      base_amount: baseAmount, // Harga asli
-      fee_amount: 0, // Akan diupdate saat checkout pilih metode
+      amount: baseAmount, 
+      base_amount: baseAmount,
+      fee_amount: feeAmount, // Dicatat untuk dipotong saat webhook masuk
       status: 'PENDING',
       payerEmail: payer_email,
       description: description || 'STSPay Payment',
