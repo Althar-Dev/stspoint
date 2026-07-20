@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -73,7 +72,7 @@ export function MainHeader({
     <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-30">
       <div className="flex items-center gap-4 flex-1">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className={`text-muted-foreground hover:text-primary ${!showSidebarTrigger ? '' : ''}`} />
+          <SidebarTrigger className="text-muted-foreground hover:text-primary" />
           {showSidebarTrigger && <div className="h-4 w-[1px] bg-border hidden md:block"></div>}
         </div>
 

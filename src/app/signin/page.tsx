@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -43,7 +42,7 @@ export default function SignInPage() {
       });
 
       // 2. Determine redirect destination
-      const isProd = !window.location.hostname.includes("localhost") && !window.location.hostname.includes("firebaseapp.com");
+      const isProd = typeof window !== "undefined" && !window.location.hostname.includes("localhost") && !window.location.hostname.includes("firebaseapp.com");
       
       if (isProd) {
         // Redirect to absolute subdomain URL in production
@@ -83,20 +82,20 @@ export default function SignInPage() {
         </div>
 
         <Card className="border-border shadow-2xl rounded-[2rem] overflow-hidden bg-card/50 backdrop-blur-xl">
-          <CardHeader className="space-y-4 pt-8 px-8">
-            <div className="space-y-1">
+          <CardHeader className="space-y-6 pt-8 px-8">
+            <div className="space-y-1 text-center">
               <CardTitle className="text-xl font-bold">Authentication</CardTitle>
               <CardDescription>Select your portal and sign in.</CardDescription>
             </div>
             
             <Tabs value={role} onValueChange={(v: any) => setRole(v)} className="w-full">
-              <TabsList className="grid grid-cols-2 h-12 p-1 bg-muted/50 rounded-xl">
-                <TabsTrigger value="merchant" className="rounded-lg gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  <Building2 className="w-3.5 h-3.5" />
+              <TabsList className="grid grid-cols-2 h-14 p-1.5 bg-muted/50 rounded-2xl">
+                <TabsTrigger value="merchant" className="rounded-xl gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-full px-6">
+                  <Building2 className="w-4 h-4" />
                   Merchant
                 </TabsTrigger>
-                <TabsTrigger value="partner" className="rounded-lg gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                  <UserCircle className="w-3.5 h-3.5" />
+                <TabsTrigger value="partner" className="rounded-xl gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-full px-6">
+                  <UserCircle className="w-4 h-4" />
                   Partner
                 </TabsTrigger>
               </TabsList>
