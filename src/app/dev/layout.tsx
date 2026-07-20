@@ -83,7 +83,9 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const db = useFirestore();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    setMounted(true); 
+  }, []);
 
   const isAuthPage = pathname === "/dev/auth" || pathname === "/auth";
 
@@ -94,22 +96,21 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Jika di halaman auth, langsung render children
-  if (isAuthPage) {
-    return <div className="w-full min-h-screen bg-black">{children}</div>;
-  }
-
-  // Handle Redirection logic in useEffect
+  // Handle Redirection logic in useEffect to obey Rules of Hooks
   useEffect(() => {
+    if (isAuthPage) return; // Don't redirect if we are already on auth page
+
     if (!authLoading && !profileLoading && mounted) {
       if (!user) {
         router.push("/dev/auth");
-      } else if (profile && !profile.dev) {
-        // Jika login sukses tapi bukan dev, lempar ke dashboard merchant
-        // atau berikan waktu agar tidak redirect instan saat refresh
       }
     }
-  }, [user, profile, authLoading, profileLoading, router, mounted]);
+  }, [user, profile, authLoading, profileLoading, router, mounted, isAuthPage]);
+
+  // Early returns MUST come after ALL hook declarations
+  if (isAuthPage) {
+    return <div className="w-full min-h-screen bg-black">{children}</div>;
+  }
 
   // Loading State
   if (authLoading || profileLoading || !mounted) {
@@ -259,7 +260,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
               <SidebarMenuButton 
                 asChild
                 tooltip="Exit to Console"
-                className="h-10 text-red-500 hover:bg-red-500/10 group-data-[collapsible=icon]:justify-center"
+                className="h-10 text-red-500 hover:bg-red-50/10 group-data-[collapsible=icon]:justify-center"
               >
                 <Link href="/console">
                   <LogOut className="w-4 h-4 shrink-0" />
