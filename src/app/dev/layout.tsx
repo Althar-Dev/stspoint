@@ -79,7 +79,8 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
 
-  const isSignInPage = pathname === "/dev/signin";
+  // Recognize /dev/auth as the public entry point
+  const isAuthPage = pathname === "/dev/auth";
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -89,21 +90,21 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
   useEffect(() => {
-    if (!authLoading && !profileLoading && !isSignInPage) {
+    if (!authLoading && !profileLoading && !isAuthPage) {
       if (!user) {
-        router.push("/dev/signin");
+        router.push("/dev/auth");
       } else if (profile && !profile.dev) {
         router.push("/console");
       }
     }
-  }, [user, profile, authLoading, profileLoading, router, isSignInPage]);
+  }, [user, profile, authLoading, profileLoading, router, isAuthPage]);
 
-  // If on sign-in page, just render children without sidebar or access protection
-  if (isSignInPage) {
+  // If on auth page, render without protection/sidebar
+  if (isAuthPage) {
     return <div className="w-full min-h-screen bg-black">{children}</div>;
   }
 
-  // Protection layer for root console
+  // Strict Protection for internal Root Console
   if (authLoading || profileLoading || !user || !profile?.dev) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
