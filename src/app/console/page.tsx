@@ -267,62 +267,64 @@ export default function OverviewPage() {
                         Top Up
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="font-headline font-bold flex items-center gap-2">
-                           <Coins className="w-5 h-5 text-primary" />
-                           Top Up Saldo
-                        </DialogTitle>
-                        <DialogDescription className="text-xs">
-                          Isi saldo akun STS Point Anda menggunakan QRIS otomatis.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-6 py-4">
-                         {!qrisData ? (
-                           <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Nominal (IDR)</Label>
-                                <div className="relative">
-                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
-                                  <Input 
-                                    type="number"
-                                    placeholder="Contoh: 10000"
-                                    value={topUpAmount}
-                                    onChange={(e) => setTopUpAmount(e.target.value)}
-                                    className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
-                                  />
+                    <DialogContent className="rounded-[2rem] border-border w-[92vw] sm:max-w-[420px] max-h-[90vh] overflow-y-auto p-0">
+                      <div className="p-6 sm:p-8 space-y-6">
+                        <DialogHeader>
+                          <DialogTitle className="font-headline font-bold flex items-center gap-2">
+                             <Coins className="w-5 h-5 text-primary" />
+                             Top Up Saldo
+                          </DialogTitle>
+                          <DialogDescription className="text-xs">
+                            Isi saldo akun STS Point Anda menggunakan QRIS otomatis.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-6 py-2">
+                           {!qrisData ? (
+                             <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Nominal (IDR)</Label>
+                                  <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
+                                    <Input 
+                                      type="number"
+                                      placeholder="Contoh: 10000"
+                                      value={topUpAmount}
+                                      onChange={(e) => setTopUpAmount(e.target.value)}
+                                      className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
+                                    />
+                                  </div>
+                                  <p className="text-[9px] text-muted-foreground ml-1">Saldo akan masuk secara otomatis setelah pembayaran terverifikasi.</p>
                                 </div>
-                                <p className="text-[9px] text-muted-foreground ml-1">Saldo akan masuk secara otomatis setelah pembayaran terverifikasi.</p>
-                              </div>
-                              <Button 
-                                onClick={handleGenerateTopUpQris}
-                                disabled={isGenerating || !topUpAmount}
-                                className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
-                              >
-                                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <QrCode className="w-4 h-4 mr-2" />}
-                                Generate QRIS Pembayaran
-                              </Button>
-                           </div>
-                         ) : (
-                           <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-300">
-                              <div className="p-4 bg-white border border-border rounded-2xl shadow-xl">
-                                 <img src={qrisData} alt="Topup QRIS" className="w-56 h-56 object-contain" />
-                              </div>
-                              <div className="space-y-1">
-                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bayar</p>
-                                 <h3 className="text-2xl font-headline font-bold text-primary">Rp {parseInt(topUpAmount).toLocaleString('id-ID')}</h3>
-                              </div>
-                              <div className="flex gap-2 w-full">
-                                 <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
-                                    <Download className="w-4 h-4" /> Download
-                                 </Button>
-                                 <Button onClick={() => setQrisData(null)} variant="ghost" className="h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
-                              </div>
-                              <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                                *Sistem akan memantau mutasi secara real-time. Jangan tutup halaman ini sampai saldo bertambah.
-                              </p>
-                           </div>
-                         )}
+                                <Button 
+                                  onClick={handleGenerateTopUpQris}
+                                  disabled={isGenerating || !topUpAmount}
+                                  className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                                >
+                                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <QrCode className="w-4 h-4 mr-2" />}
+                                  Generate QRIS Pembayaran
+                                </Button>
+                             </div>
+                           ) : (
+                             <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-300">
+                                <div className="p-4 bg-white border border-border rounded-3xl shadow-xl">
+                                   <img src={qrisData} alt="Topup QRIS" className="w-48 h-48 sm:w-56 sm:h-56 object-contain" />
+                                </div>
+                                <div className="space-y-1">
+                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bayar</p>
+                                   <h3 className="text-2xl font-headline font-bold text-primary">Rp {parseInt(topUpAmount).toLocaleString('id-ID')}</h3>
+                                </div>
+                                <div className="flex gap-2 w-full">
+                                   <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
+                                      <Download className="w-4 h-4" /> Download
+                                   </Button>
+                                   <Button onClick={() => setQrisData(null)} variant="ghost" className="h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                                  *Sistem akan memantau mutasi secara real-time. Jangan tutup halaman ini sampai saldo bertambah.
+                                </p>
+                             </div>
+                           )}
+                        </div>
                       </div>
                     </DialogContent>
                   </Dialog>
