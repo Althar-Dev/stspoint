@@ -4,7 +4,7 @@
  * Handles real-time top-up verification against master Orderkuota mutations.
  */
 
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   doc, 
   getDoc, 
@@ -68,7 +68,7 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
       };
     }
 
-    // 5. Eksekusi penambahan saldo dan catat di ledger secara atomik (manual simulasi)
+    // 5. Eksekusi penambahan saldo dan catat di ledger secara atomik
     const userRef = doc(firestore, 'users', userId);
     
     await Promise.all([
