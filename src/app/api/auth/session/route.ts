@@ -15,13 +15,15 @@ export async function POST(request: Request) {
     }
 
     const cookieStore = await cookies();
+    const host = request.headers.get('host') || '';
+    const isProd = host.includes('stspoint.id') && !host.includes('localhost');
     
-    // Set cookie for the entire root domain
+    // Set cookie for the entire root domain in production
     cookieStore.set("sts_session", token, {
-      domain: ".stspoint.id", 
+      domain: isProd ? ".stspoint.id" : undefined, 
       path: "/",
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProd,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 Days
     });
@@ -32,11 +34,14 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   const cookieStore = await cookies();
+  const host = request.headers.get('host') || '';
+  const isProd = host.includes('stspoint.id') && !host.includes('localhost');
+
   cookieStore.delete({
     name: "sts_session",
-    domain: ".stspoint.id",
+    domain: isProd ? ".stspoint.id" : undefined,
     path: "/",
   });
   return NextResponse.json({ success: true });

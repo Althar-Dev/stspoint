@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -28,8 +29,10 @@ import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { toast } from "@/hooks/use-toast";
 
 const adminMenuItems = [
   {
@@ -60,6 +63,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   const { setOpen, isMobile } = useSidebar();
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
+  const auth = useAuth();
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -77,6 +81,18 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       }
     }
   }, [user, profile, authLoading, profileLoading, router]);
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await fetch("/api/auth/session", { method: "DELETE" });
+      await signOut(auth);
+      toast({ title: "Logged out", description: "You have been signed out successfully." });
+      router.push("/signin");
+    } catch (e) {
+      toast({ variant: "destructive", title: "Logout Error", description: "Failed to clear session." });
+    }
+  };
 
   const isAuthorized = profile?.role === 'client' || profile?.dev === true;
 
@@ -133,13 +149,11 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
           <SidebarMenu>
             <SidebarMenuItem>
                <SidebarMenuButton 
-                asChild
+                onClick={handleLogout}
                 className="h-11 rounded-md text-muted-foreground hover:text-foreground transition-colors group-data-[collapsible=icon]:justify-center"
               >
-                <Link href="/signin">
-                  <LogOut className="w-4.5 h-4.5 shrink-0 text-destructive" />
-                  <span className="text-sm group-data-[collapsible=icon]:hidden">Keluar</span>
-                </Link>
+                <LogOut className="w-4.5 h-4.5 shrink-0 text-destructive" />
+                <span className="text-sm group-data-[collapsible=icon]:hidden">Keluar</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -42,9 +43,11 @@ import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect, Suspense, useState } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
+import { signOut } from "firebase/auth";
+import { toast } from "@/hooks/use-toast";
 
 const devMenuItems = [
   { title: "Root Console", icon: Terminal, url: "/dev" },
@@ -81,6 +84,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const { setOpen, isMobile } = useSidebar();
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
+  const auth = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { 
@@ -96,9 +100,8 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Handle Redirection logic in useEffect to obey Rules of Hooks
   useEffect(() => {
-    if (isAuthPage) return; // Don't redirect if we are already on auth page
+    if (isAuthPage) return;
 
     if (!authLoading && !profileLoading && mounted) {
       if (!user) {
@@ -107,12 +110,22 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
     }
   }, [user, profile, authLoading, profileLoading, router, mounted, isAuthPage]);
 
-  // Early returns MUST come after ALL hook declarations
+  const handleGlobalLogout = async () => {
+    if (!auth) return;
+    try {
+      await fetch("/api/auth/session", { method: "DELETE" });
+      await signOut(auth);
+      toast({ title: "Root Session Terminated" });
+      router.push("/dev/auth");
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to sign out." });
+    }
+  };
+
   if (isAuthPage) {
     return <div className="w-full min-h-screen bg-black">{children}</div>;
   }
 
-  // Loading State
   if (authLoading || profileLoading || !mounted) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black">
@@ -126,7 +139,6 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
     );
   }
 
-  // Not a Developer state
   if (user && profile && !profile.dev) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center space-y-8">
@@ -143,7 +155,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
            <Button asChild className="h-12 rounded-xl bg-white text-black font-bold uppercase tracking-widest text-[10px]">
              <Link href="/console">Go to Merchant Console</Link>
            </Button>
-           <Button variant="ghost" onClick={() => router.push("/dev/auth")} className="text-zinc-500 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]">
+           <Button variant="ghost" onClick={handleGlobalLogout} className="text-zinc-500 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]">
              Switch Account
            </Button>
         </div>
@@ -258,14 +270,12 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
           <SidebarMenu className="group-data-[collapsible=icon]:items-center">
             <SidebarMenuItem className="w-full">
               <SidebarMenuButton 
-                asChild
-                tooltip="Exit to Console"
+                onClick={handleGlobalLogout}
+                tooltip="Sign Out from Platform"
                 className="h-10 text-red-500 hover:bg-red-50/10 group-data-[collapsible=icon]:justify-center"
               >
-                <Link href="/console">
-                  <LogOut className="w-4 h-4 shrink-0" />
-                  <span className="text-sm group-data-[collapsible=icon]:hidden">Exit Root</span>
-                </Link>
+                <LogOut className="w-4 h-4 shrink-0" />
+                <span className="text-sm group-data-[collapsible=icon]:hidden">Logout Terminal</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
