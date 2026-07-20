@@ -34,14 +34,33 @@ export function middleware(request: NextRequest) {
     'api': { internal: '/api', subdomain: 'api' },
   };
 
-  // 3. Logika Jika Request Datang ke Subdomain (misal: console.stspoint.id)
+  // 3. Rute Publik Global (Jangan di-rewrite ke dalam folder subdomain)
+  const PUBLIC_PATHS = [
+    '/signin',
+    '/signup',
+    '/about',
+    '/support',
+    '/status',
+    '/qris-string',
+    '/terms-of-service',
+    '/privacy-policy',
+    '/auth' // Untuk rute auth dev
+  ];
+
+  const isPublicPath = PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`));
+
+  // 4. Logika Jika Request Datang ke Subdomain (misal: console.stspoint.id)
   const currentSubKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
   if (currentSubKey) {
     const config = mappings[currentSubKey];
 
+    // Jika ini adalah rute publik global, biarkan apa adanya (jangan di-rewrite ke /console/signin dsb)
+    if (isPublicPath && currentSubKey !== 'dev' && currentSubKey !== 'api') {
+      return NextResponse.next();
+    }
+
     // Redirect jika path diawali dengan folder internal MILIK subdomain ini (Pembersihan URL)
-    // Contoh: api.stspoint.id/api/payments -> api.stspoint.id/payments
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
@@ -61,12 +80,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // 4. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
+  // 5. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
   if (host === rootDomain || host === wwwDomain) {
     for (const key in mappings) {
       const config = mappings[key];
-      // Jika path dimulai dengan folder internal, redirect ke subdomain terkait
-      if (pathname === config.internal || pathname.startsWith(`${config.internal}/`)) {
+      // Jika path dimulai dengan folder internal (dan bukan rute publik), redirect ke subdomain terkait
+      if (!isPublicPath && (pathname === config.internal || pathname.startsWith(`${config.internal}/`))) {
         const cleanPath = pathname.replace(config.internal, '') || '/';
         return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}`, request.url));
       }
