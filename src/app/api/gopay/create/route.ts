@@ -71,14 +71,13 @@ export async function POST(request: Request) {
     const gomerchantData = gomerchantSnap.data();
     
     // --- STRICT PLAN CHECK ---
-    let plan = gomerchantData.plan;
+    let plan = (gomerchantData.plan || '').toLowerCase();
     if (!plan) {
       return NextResponse.json({ 
         success: false, 
         message: 'Access Denied: No active subscription plan found.' 
       }, { status: 403 });
     }
-    plan = plan.toLowerCase();
 
     // --- EXPIRY CHECK ---
     if (plan !== 'enterprise') {
@@ -89,15 +88,15 @@ export async function POST(request: Request) {
       if (new Date() > expiry) {
         return NextResponse.json({ 
           success: false, 
-          message: 'Access Denied: Your subscription has expired. Please renew in the dashboard.' 
+          message: 'Access Denied: Your subscription has expired. Please renew.' 
         }, { status: 403 });
       }
     }
     
-    // --- RPM RATE LIMITING LOGIC ---
+    // --- RPM RATE LIMITING ---
     const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
-    const lastReset = gomerchantData.rpmLastReset?.toMillis() || 0;
+    const lastReset = gomerchantData.rpmLastReset?.toMillis ? gomerchantData.rpmLastReset.toMillis() : 0;
     const requestsThisMinute = gomerchantData.rpmRequestsCount || 0;
 
     let updatedRpmCount = requestsThisMinute + 1;
@@ -132,12 +131,9 @@ export async function POST(request: Request) {
     const digitSetting = Number(gomerchantData.randomDigit) || 3;
 
     // 4. Generate Unique Nominal (Random Code)
-    let randomSuffix = 0;
-    if (digitSetting === 2) {
-      randomSuffix = Math.floor(Math.random() * 90) + 10;
-    } else {
-      randomSuffix = Math.floor(Math.random() * 900) + 100;
-    }
+    let randomSuffix = digitSetting === 2 
+      ? Math.floor(Math.random() * 90) + 10 
+      : Math.floor(Math.random() * 900) + 100;
 
     const finalAmount = baseAmount + randomSuffix;
     const trxId = external_id || `GPY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
@@ -153,8 +149,10 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // 6. Record Transaction & Deduct Quota + Update RPM
-    const transactionRef = doc(firestore, 'users', userId, 'services', 'gomerchant', 'transactions', trxId);
+    // 6. Record Transaction & Update Quota
+    const transactionRef = doc(firestore, 'stspay_transactions', trxId);
+    const userHistoryRef = doc(firestore, 'users', userId, 'transactions', trxId);
+
     const transactionData = {
       id: trxId,
       userId: userId,
@@ -175,8 +173,22 @@ export async function POST(request: Request) {
       updatedAt: serverTimestamp(),
     };
 
+    const historyData = {
+      id: trxId,
+      gameId: "INTERNAL",
+      gameName: "GoPay Bridge",
+      itemName: description || "GoPay QRIS Payment",
+      price: `Rp ${finalAmount.toLocaleString('id-ID')}`,
+      priceAmount: finalAmount,
+      userId: userId,
+      status: "Pending",
+      paymentMethod: "QRIS",
+      createdAt: serverTimestamp()
+    };
+
     await Promise.all([
       setDoc(transactionRef, transactionData),
+      setDoc(userHistoryRef, historyData),
       updateDoc(gomerchantRef, {
         quota: plan === 'enterprise' ? currentQuota : increment(-1),
         rpmRequestsCount: updatedRpmCount,
@@ -200,6 +212,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API GoPay Create Error:', error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error.' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Internal Server Error: ' + (error.message || 'Unknown error') 
+    }, { status: 500 });
   }
 }

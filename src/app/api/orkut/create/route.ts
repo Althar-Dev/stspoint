@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { secret_key, amount, payer_email, description, external_id } = body;
 
-    // 1. Validasi Input Dasar
+    // 1. Basic Input Validation
     if (!secret_key || !amount) {
       return NextResponse.json({ 
         success: false, 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     const { firestore } = initializeFirebase();
 
-    // 2. Autentikasi Merchant via secretKey
+    // 2. Authenticate Merchant via secretKey
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Cek Konfigurasi Layanan Orderkuota & Validasi Plan
+    // 3. Check Service Config & Plan Validation
     const orkutRef = doc(firestore, 'users', userId, 'services', 'orderkuota');
     const orkutSnap = await getDoc(orkutRef);
 
@@ -71,16 +71,15 @@ export async function POST(request: Request) {
     const orkutData = orkutSnap.data();
     
     // --- STRICT PLAN CHECK ---
-    let plan = orkutData.plan;
+    let plan = (orkutData.plan || '').toLowerCase();
     if (!plan) {
       return NextResponse.json({ 
         success: false, 
         message: 'Access Denied: No active subscription plan found.' 
       }, { status: 403 });
     }
-    plan = plan.toLowerCase();
 
-    // --- CEK EXPIRED ---
+    // --- EXPIRY CHECK ---
     if (plan !== 'enterprise') {
       if (!orkutData.planExpiry) {
         return NextResponse.json({ success: false, message: 'Access Denied: Invalid plan configuration.' }, { status: 403 });
@@ -94,10 +93,10 @@ export async function POST(request: Request) {
       }
     }
     
-    // --- LOGIKA RPM (Requests Per Minute) ---
+    // --- RPM RATE LIMITING ---
     const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
-    const lastReset = orkutData.rpmLastReset?.toMillis() || 0;
+    const lastReset = orkutData.rpmLastReset?.toMillis ? orkutData.rpmLastReset.toMillis() : 0;
     const requestsThisMinute = orkutData.rpmRequestsCount || 0;
 
     let updatedRpmCount = requestsThisMinute + 1;
@@ -112,7 +111,7 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    // --- LOGIKA KUOTA ---
+    // --- QUOTA LOGIC ---
     const currentQuota = orkutData.quota || 0;
     if (currentQuota <= 0 && plan !== 'enterprise') {
       return NextResponse.json({ 
@@ -128,33 +127,31 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    const baseQr = orkutData.baseQr;
+    // 4. Generate Unique Nominal
     const digitSetting = Number(orkutData.randomDigit) || 3;
-
-    // 4. Generate Kode Unik Nominal
-    let randomSuffix = 0;
-    if (digitSetting === 2) {
-      randomSuffix = Math.floor(Math.random() * 90) + 10;
-    } else {
-      randomSuffix = Math.floor(Math.random() * 900) + 100;
-    }
+    let randomSuffix = digitSetting === 2 
+      ? Math.floor(Math.random() * 90) + 10 
+      : Math.floor(Math.random() * 900) + 100;
 
     const finalAmount = baseAmount + randomSuffix;
     const trxId = external_id || `OKT-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    // 5. Generate Payload QRIS Dinamis
+    // 5. Generate Dynamic QRIS Payload
     let qrString = "";
     try {
-      qrString = createDynamicQrisString(baseQr, finalAmount.toString());
+      qrString = createDynamicQrisString(orkutData.baseQr, finalAmount.toString());
     } catch (e: any) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Failed to generate dynamic QRIS: ' + e.message 
+        message: 'Failed to generate QRIS: ' + e.message 
       }, { status: 500 });
     }
 
-    // 6. Simpan Transaksi & Potong Kuota + Update RPM
-    const transactionRef = doc(firestore, 'users', userId, 'services', 'orderkuota', 'transactions', trxId);
+    // 6. Record Transaction & Update Quota
+    // Save to global and user specific collections for visibility and security rules compliance
+    const transactionRef = doc(firestore, 'stspay_transactions', trxId);
+    const userHistoryRef = doc(firestore, 'users', userId, 'transactions', trxId);
+    
     const transactionData = {
       id: trxId,
       userId: userId,
@@ -175,8 +172,22 @@ export async function POST(request: Request) {
       updatedAt: serverTimestamp(),
     };
 
+    const historyData = {
+      id: trxId,
+      gameId: "INTERNAL",
+      gameName: "QRIS Bridge",
+      itemName: description || "Orderkuota QRIS Payment",
+      price: `Rp ${finalAmount.toLocaleString('id-ID')}`,
+      priceAmount: finalAmount,
+      userId: userId,
+      status: "Pending",
+      paymentMethod: "QRIS",
+      createdAt: serverTimestamp()
+    };
+
     await Promise.all([
       setDoc(transactionRef, transactionData),
+      setDoc(userHistoryRef, historyData),
       updateDoc(orkutRef, {
         quota: plan === 'enterprise' ? currentQuota : increment(-1),
         rpmRequestsCount: updatedRpmCount,
@@ -200,6 +211,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API Orkut Create Error:', error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error.' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Internal Server Error: ' + (error.message || 'Unknown error') 
+    }, { status: 500 });
   }
 }

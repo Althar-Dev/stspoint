@@ -62,20 +62,16 @@ export async function POST(request: Request) {
     const gomerchantData = gomerchantSnap.data();
     
     // --- STRICT PLAN CHECK ---
-    let plan = gomerchantData.plan;
+    let plan = (gomerchantData.plan || '').toLowerCase();
     if (!plan) {
       return NextResponse.json({ 
         success: false, 
         message: 'Access Denied: No active subscription plan found.' 
       }, { status: 403 });
     }
-    plan = plan.toLowerCase();
 
     // --- EXPIRY CHECK ---
-    if (plan !== 'enterprise') {
-      if (!gomerchantData.planExpiry) {
-        return NextResponse.json({ success: false, message: 'Access Denied: Invalid plan configuration.' }, { status: 403 });
-      }
+    if (plan !== 'enterprise' && gomerchantData.planExpiry) {
       const expiry = gomerchantData.planExpiry.toDate ? gomerchantData.planExpiry.toDate() : new Date(gomerchantData.planExpiry);
       if (new Date() > expiry) {
         return NextResponse.json({ 
@@ -88,7 +84,7 @@ export async function POST(request: Request) {
     // --- RPM RATE LIMITING LOGIC ---
     const rpmLimit = plan === 'pro' ? 60 : plan === 'premium' ? 180 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
-    const lastReset = gomerchantData.rpmLastReset?.toMillis() || 0;
+    const lastReset = gomerchantData.rpmLastReset?.toMillis ? gomerchantData.rpmLastReset.toMillis() : 0;
     const requestsThisMinute = gomerchantData.rpmRequestsCount || 0;
 
     let updatedRpmCount = requestsThisMinute + 1;
@@ -112,14 +108,14 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    // 4. Ambil Data Transaksi
-    const transactionRef = doc(firestore, 'users', userId, 'services', 'gomerchant', 'transactions', external_id);
+    // 4. Ambil Data Transaksi from global collection
+    const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const transactionSnap = await getDoc(transactionRef);
 
     if (!transactionSnap.exists()) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Transaction not found for this account.' 
+        message: 'Transaction not found.' 
       }, { status: 404 });
     }
 
@@ -165,12 +161,20 @@ export async function POST(request: Request) {
         );
 
         if (match) {
-          await updateDoc(transactionRef, {
-            status: 'PAID',
-            updatedAt: serverTimestamp(),
-            paid_at: match.created_at,
-            gm_trx_id: match.trx_id
-          });
+          const userHistoryRef = doc(firestore, 'users', userId, 'transactions', external_id);
+
+          await Promise.all([
+            updateDoc(transactionRef, {
+              status: 'PAID',
+              updatedAt: serverTimestamp(),
+              paid_at: match.created_at,
+              gm_trx_id: match.trx_id
+            }),
+            updateDoc(userHistoryRef, {
+              status: 'Success',
+              updatedAt: serverTimestamp()
+            })
+          ]);
 
           if (mutationRes.data.token_refreshed) {
             await updateDoc(gomerchantRef, {
@@ -209,6 +213,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API GoPay Status Error:', error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error.' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Internal Server Error: ' + (error.message || 'Unknown error') 
+    }, { status: 500 });
   }
 }

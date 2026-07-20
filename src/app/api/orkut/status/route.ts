@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { secret_key, external_id } = body;
 
-    // 1. Validasi Input Dasar
+    // 1. Basic Validation
     if (!secret_key || !external_id) {
       return NextResponse.json({ 
         success: false, 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     const { firestore } = initializeFirebase();
 
-    // 2. Autentikasi Merchant via secretKey
+    // 2. Authenticate Merchant via secretKey
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -48,38 +48,35 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Cek Konfigurasi Layanan & Validasi Plan
+    // 3. Check Service Config & Plan Validation
     const orkutRef = doc(firestore, 'users', userId, 'services', 'orderkuota');
     const orkutSnap = await getDoc(orkutRef);
 
     if (!orkutSnap.exists()) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Orderkuota service is not initialized.' 
+        message: 'Orderkuota service not initialized.' 
       }, { status: 403 });
     }
 
     const orkutData = orkutSnap.data();
-    let plan = orkutData.plan;
+    let plan = (orkutData.plan || '').toLowerCase();
 
-    // --- STRICT PLAN & EXPIRY CHECK ---
     if (!plan) {
       return NextResponse.json({ success: false, message: 'Access Denied: No active plan found.' }, { status: 403 });
     }
     
-    if (orkutData.planExpiry) {
+    if (plan !== 'enterprise' && orkutData.planExpiry) {
       const expiry = orkutData.planExpiry.toDate ? orkutData.planExpiry.toDate() : new Date(orkutData.planExpiry);
       if (new Date() > expiry) {
         return NextResponse.json({ success: false, message: 'Access Denied: Plan has expired.' }, { status: 403 });
       }
     }
 
-    plan = plan.toLowerCase();
-
     // --- RPM RATE LIMITING ---
-    const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : 1;
+    const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
-    const lastReset = orkutData.rpmLastReset?.toMillis() || 0;
+    const lastReset = orkutData.rpmLastReset?.toMillis ? orkutData.rpmLastReset.toMillis() : 0;
     const requestsThisMinute = orkutData.rpmRequestsCount || 0;
 
     let updatedRpmCount = requestsThisMinute + 1;
@@ -96,12 +93,12 @@ export async function POST(request: Request) {
 
     // --- QUOTA CHECK ---
     const currentQuota = orkutData.quota || 0;
-    if (currentQuota <= 0) {
+    if (currentQuota <= 0 && plan !== 'enterprise') {
       return NextResponse.json({ success: false, message: 'API Quota Exceeded.' }, { status: 429 });
     }
 
-    // 4. Ambil Data Transaksi
-    const transactionRef = doc(firestore, 'users', userId, 'services', 'orderkuota', 'transactions', external_id);
+    // 4. Fetch Transaction Data from global collection
+    const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const transactionSnap = await getDoc(transactionRef);
 
     if (!transactionSnap.exists()) {
@@ -113,15 +110,15 @@ export async function POST(request: Request) {
 
     const transactionData = transactionSnap.data();
 
-    // Update RPM & Quota state
+    // Consume Quota and update RPM state
     await updateDoc(orkutRef, {
-      quota: increment(-1),
+      quota: plan === 'enterprise' ? currentQuota : increment(-1),
       rpmRequestsCount: updatedRpmCount,
       rpmLastReset: shouldResetRpm ? serverTimestamp() : orkutData.rpmLastReset || serverTimestamp(),
       updatedAt: serverTimestamp()
     });
 
-    // 5. Jika status sudah PAID, langsung kembalikan respon
+    // 5. If already PAID, return success immediately
     if (transactionData.status === 'PAID') {
       return NextResponse.json({
         success: true,
@@ -129,19 +126,19 @@ export async function POST(request: Request) {
           external_id: transactionData.id,
           status: 'PAID',
           amount: transactionData.amount,
-          remaining_quota: currentQuota - 1
+          remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
         }
       });
     }
 
-    // 6. Rekonsiliasi Live jika status masih PENDING
+    // 6. Live Reconciliation if still PENDING
     if (transactionData.status === 'PENDING' && orkutData.token) {
       const mutationRes = await getOrderkuotaMutation({
         username: orkutData.username,
         token: orkutData.token
       });
 
-      if (mutationRes.status && mutationRes.result) {
+      if (mutationRes.status && mutationRes.result && Array.isArray(mutationRes.result)) {
         const mutations = mutationRes.result;
         const match = mutations.find(m => 
           m.status === 'IN' && 
@@ -149,12 +146,21 @@ export async function POST(request: Request) {
         );
 
         if (match) {
-          await updateDoc(transactionRef, {
-            status: 'PAID',
-            updatedAt: serverTimestamp(),
-            paid_at: match.tanggal,
-            orkut_trx_id: match.id
-          });
+          // Update both records
+          const userHistoryRef = doc(firestore, 'users', userId, 'transactions', external_id);
+          
+          await Promise.all([
+            updateDoc(transactionRef, {
+              status: 'PAID',
+              updatedAt: serverTimestamp(),
+              paid_at: match.tanggal,
+              orkut_trx_id: match.id
+            }),
+            updateDoc(userHistoryRef, {
+              status: 'Success',
+              updatedAt: serverTimestamp()
+            })
+          ]);
 
           return NextResponse.json({
             success: true,
@@ -164,7 +170,7 @@ export async function POST(request: Request) {
               amount: transactionData.amount,
               paid_at: match.tanggal,
               message: 'Payment detected via live mutation.',
-              remaining_quota: currentQuota - 1
+              remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
             }
           });
         }
@@ -178,12 +184,15 @@ export async function POST(request: Request) {
         status: transactionData.status,
         amount: transactionData.amount,
         created_at: transactionData.createdAt?.toDate ? transactionData.createdAt.toDate() : transactionData.createdAt,
-        remaining_quota: currentQuota - 1
+        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
       }
     });
 
   } catch (error: any) {
     console.error('API Orkut Status Error:', error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error.' }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Internal Server Error: ' + (error.message || 'Unknown error') 
+    }, { status: 500 });
   }
 }
