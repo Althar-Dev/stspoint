@@ -21,7 +21,8 @@ import {
   QrCode,
   Download,
   Coins,
-  RefreshCcw
+  RefreshCcw,
+  AlertCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -42,6 +43,7 @@ import { collection, query, where, orderBy, doc } from "firebase/firestore";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { generateDynamicQrisAction } from "@/app/orkut/qris/actions";
+import { checkTopUpStatusAction } from "./actions";
 
 export default function OverviewPage() {
   const { user, loading: authLoading } = useUser();
@@ -51,6 +53,7 @@ export default function OverviewPage() {
   // Top Up State
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("");
+  const [finalAmount, setFinalAmount] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [qrisData, setQrisData] = useState<string | null>(null);
@@ -95,21 +98,29 @@ export default function OverviewPage() {
   const { data: transactions, loading: txLoading } = useCollection(transactionsQuery);
 
   const handleGenerateTopUpQris = async () => {
-    const amount = parseInt(topUpAmount);
-    if (isNaN(amount) || amount < 1) {
+    const baseAmount = parseInt(topUpAmount);
+    if (isNaN(baseAmount) || baseAmount < 1) {
       toast({ variant: "destructive", title: "Nominal Minimal", description: "Minimal top up adalah Rp 1" });
       return;
     }
 
-    // Gunakan base QRIS dari pengaturan master (settings/orderkuota) atau fallback
-    const baseQr = masterConfig?.baseQr || "00020101021126670011ID.CO.QRIS.WWW011893600915302061073802159360091530206100303UME51440014ID.CO.QRIS.WWW02159360091530206100303UME5204123453033605802ID5911STS POINT6007JAKARTA61051234562070703A016304ABCD";
+    if (!masterConfig?.baseQr) {
+      toast({ variant: "destructive", title: "Sistem Belum Siap", description: "Base QRIS Master belum diatur oleh Admin." });
+      return;
+    }
 
     setIsGenerating(true);
     try {
-      const res = await generateDynamicQrisAction(baseQr, topUpAmount);
+      // Generate Nominal Unik (Base + 3 digit acak)
+      const randomSuffix = Math.floor(Math.random() * 900) + 100;
+      const uniqueAmount = baseAmount + randomSuffix;
+      
+      const res = await generateDynamicQrisAction(masterConfig.baseQr, uniqueAmount.toString());
+      
       if (res.success && res.dataUri) {
+        setFinalAmount(uniqueAmount);
         setQrisData(res.dataUri);
-        toast({ title: "QRIS Berhasil Dibuat", description: "Silakan pindai untuk melakukan pembayaran." });
+        toast({ title: "QRIS Berhasil Dibuat", description: "Silakan bayar sesuai nominal yang tertera (termasuk kode unik)." });
       } else {
         throw new Error(res.message);
       }
@@ -121,22 +132,40 @@ export default function OverviewPage() {
   };
 
   const handleCheckStatus = async () => {
+    if (!user?.uid || !finalAmount) return;
+    
     setIsCheckingStatus(true);
-    // Simulasi pengecekan status (biasanya sistem menunggu webhook atau polling saldo di latar belakang)
-    setTimeout(() => {
+    try {
+      const res = await checkTopUpStatusAction(user.uid, finalAmount);
+      
+      if (res.success) {
+        toast({ 
+          title: "Pembayaran Terdeteksi!", 
+          description: res.message,
+          className: "bg-emerald-500 text-white"
+        });
+        setIsTopUpOpen(false);
+        setQrisData(null);
+        setFinalAmount(null);
+      } else {
+        toast({ 
+          variant: "destructive", 
+          title: "Belum Diterima", 
+          description: res.message 
+        });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: "Gagal memverifikasi status." });
+    } finally {
       setIsCheckingStatus(false);
-      toast({ 
-        title: "Pengecekan Selesai", 
-        description: "Pembayaran belum terdeteksi. Harap tunggu beberapa saat jika Anda sudah membayar." 
-      });
-    }, 2000);
+    }
   };
 
   const handleDownloadQris = () => {
     if (!qrisData) return;
     const link = document.createElement("a");
     link.href = qrisData;
-    link.download = `TOPUP-STS-${topUpAmount}.png`;
+    link.download = `TOPUP-STS-${finalAmount}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -274,7 +303,7 @@ export default function OverviewPage() {
                   
                   <Dialog open={isTopUpOpen} onOpenChange={(o) => {
                     setIsTopUpOpen(o);
-                    if(!o) { setTopUpAmount(""); setQrisData(null); }
+                    if(!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); }
                   }}>
                     <DialogTrigger asChild>
                       <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-8 md:h-9 flex-1 shadow-lg shadow-primary/10 transition-all text-[9px] md:text-[10px] uppercase">
@@ -307,7 +336,7 @@ export default function OverviewPage() {
                                       className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
                                     />
                                   </div>
-                                  <p className="text-[9px] text-muted-foreground ml-1">Saldo akan masuk secara otomatis setelah pembayaran terverifikasi. Minimal Rp 1.</p>
+                                  <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan 3 digit unik untuk mempercepat verifikasi otomatis.</p>
                                 </div>
                                 <Button 
                                   onClick={handleGenerateTopUpQris}
@@ -324,14 +353,18 @@ export default function OverviewPage() {
                                    <img src={qrisData} alt="Topup QRIS" className="w-48 h-48 sm:w-56 sm:h-56 object-contain" />
                                 </div>
                                 <div className="space-y-1">
-                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bayar</p>
-                                   <h3 className="text-2xl font-headline font-bold text-primary">Rp {parseInt(topUpAmount).toLocaleString('id-ID')}</h3>
+                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total yang harus dibayar</p>
+                                   <h3 className="text-2xl font-headline font-bold text-primary">Rp {finalAmount?.toLocaleString('id-ID')}</h3>
+                                   <div className="flex items-center justify-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-100 mt-2">
+                                      <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                      <p className="text-[9px] font-bold text-amber-800 uppercase">PENTING: Jangan bulatkan nominal transfer!</p>
+                                   </div>
                                 </div>
                                 <div className="flex flex-col gap-2 w-full">
                                    <Button 
                                     onClick={handleCheckStatus} 
                                     disabled={isCheckingStatus}
-                                    className="w-full h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    className="w-full h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
                                    >
                                       {isCheckingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
                                       Check Status Pembayaran
@@ -340,11 +373,11 @@ export default function OverviewPage() {
                                       <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
                                          <Download className="w-4 h-4" /> Download
                                       </Button>
-                                      <Button onClick={() => setQrisData(null)} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                                      <Button onClick={() => {setQrisData(null); setFinalAmount(null);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
                                    </div>
                                 </div>
                                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                                  *Sistem akan memantau mutasi secara real-time. Jangan tutup halaman ini sampai saldo bertambah.
+                                  *Sistem memverifikasi mutasi bank secara otomatis. Pastikan nominal transfer sama persis hingga 3 digit terakhir.
                                 </p>
                              </div>
                            )}
