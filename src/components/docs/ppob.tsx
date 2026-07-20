@@ -165,7 +165,7 @@ export function DocsPpob() {
                     <tr>
                        <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">qty</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nominal pembayaran untuk tipe <strong>Pasca</strong> (Open Denom).</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nominal pembayaran untuk tipe <strong>Pasca</strong> (Wajib untuk Postpaid).</td>
                     </tr>
                  </tbody>
               </table>
