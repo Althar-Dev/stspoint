@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Server Actions for Console Dashboard.
- * Handles real-time top-up verification against master Orderkuota mutations with time-filtering.
+ * Handles real-time top-up verification against master Orderkuota mutations.
  */
 
 import { initializeFirebase } from '@/firebase/core';
@@ -16,10 +16,10 @@ import {
 import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 
 /**
- * Memverifikasi pembayaran top-up berdasarkan nominal unik dan waktu transaksi.
+ * Memverifikasi pembayaran top-up berdasarkan nominal unik.
  * @param userId ID pengguna yang melakukan top-up.
  * @param expectedAmount Nominal total (termasuk kode unik) yang harus dibayar.
- * @param requestTimestamp Waktu (ms) saat QRIS dibuat untuk mencegah klaim transaksi lama.
+ * @param requestTimestamp Waktu (ms) saat QRIS dibuat (digunakan sebagai floor safety).
  */
 export async function checkTopUpStatusAction(userId: string, expectedAmount: number, requestTimestamp: number) {
   try {
@@ -45,33 +45,35 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
       throw new Error(mutationRes.message || "Gagal menghubungi server provider mutasi.");
     }
 
-    // 3. Cari transaksi 'IN' yang sesuai dengan nominal unik DAN terjadi setelah QRIS dibuat
+    // 3. Cari transaksi 'IN' yang sesuai dengan nominal unik
+    // Sesuai permintaan: Fokus pada nominal. 
+    // Filter tanggal hanya digunakan untuk membuang mutasi dari hari-hari sebelumnya (safety floor).
     const match = mutationRes.result.find(m => {
       const isNominalMatch = m.status === 'IN' && Math.abs(parseFloat(m.kredit) - expectedAmount) < 1;
       if (!isNominalMatch) return false;
 
-      // Konversi tanggal mutasi (format YYYY-MM-DD HH:mm:ss) ke timestamp
-      const mutationTime = new Date(m.tanggal).getTime();
+      // Cek apakah mutasi terjadi hari ini (untuk menghindari claim mutasi sangat lama yang belum di-ledger)
+      const mutationDate = m.tanggal.split(' ')[0]; // Ambil YYYY-MM-DD
+      const todayDate = new Date().toISOString().split('T')[0];
       
-      // Hanya terima mutasi yang terjadi setelah atau pada saat permintaan dibuat (dengan toleransi 1 menit mundur)
-      return mutationTime >= (requestTimestamp - 60000); 
+      return mutationDate === todayDate;
     });
 
     if (!match) {
       return { 
         success: false, 
-        message: "Pembayaran belum terdeteksi. Pastikan nominal transfer sama persis dan mutasi sudah muncul di aplikasi perbankan Anda." 
+        message: "Pembayaran belum terdeteksi. Pastikan nominal transfer sama persis (Rp " + expectedAmount.toLocaleString('id-ID') + ") dan mutasi sudah muncul di aplikasi perbankan Anda." 
       };
     }
 
-    // 4. Cek apakah transaksi ini sudah pernah diklaim (Ledger Check)
+    // 4. Cek apakah transaksi ini sudah pernah diklaim (Ledger Check via Provider Trx ID)
     const ledgerRef = doc(firestore, 'processed_topups', match.id.toString());
     const ledgerSnap = await getDoc(ledgerRef);
     
     if (ledgerSnap.exists()) {
       return { 
         success: false, 
-        message: "Transaksi ini sudah pernah diproses ke saldo akun Anda atau orang lain." 
+        message: "Transaksi dengan ID ini sudah pernah diproses sebelumnya." 
       };
     }
 
@@ -87,8 +89,9 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
         userId,
         amount: expectedAmount,
         orkutTrxId: match.id,
-        bank: match.brand.name,
-        processedAt: serverTimestamp()
+        bank: match.brand?.name || 'Unknown',
+        processedAt: serverTimestamp(),
+        mutationRawDate: match.tanggal
       })
     ]);
 
