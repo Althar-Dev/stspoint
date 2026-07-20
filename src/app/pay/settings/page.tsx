@@ -17,7 +17,8 @@ import {
   Globe,
   Lock,
   Info,
-  Store
+  Store,
+  Image as ImageIcon
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -33,6 +34,7 @@ export default function STSPaySettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [merchantName, setMerchantName] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -46,6 +48,7 @@ export default function STSPaySettingsPage() {
       setBusinessName(profile.name || "");
       setMerchantName(profile.merchantName || "");
       setBusinessEmail(profile.email || "");
+      setLogoUrl(profile.logoUrl || "");
     }
   }, [profile]);
 
@@ -56,6 +59,7 @@ export default function STSPaySettingsPage() {
       await updateDoc(profileRef, {
         name: businessName,
         merchantName: merchantName,
+        logoUrl: logoUrl,
         updatedAt: serverTimestamp()
       });
       toast({ title: "Berhasil", description: "Profil bisnis dan merchant telah diperbarui." });
@@ -103,6 +107,20 @@ export default function STSPaySettingsPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Logo URL (Icon)</Label>
+              <div className="relative">
+                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://link-gambar.com/logo.png"
+                  className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                />
+              </div>
+              <p className="text-[9px] text-muted-foreground ml-1">Logo ini akan muncul di Sidebar Dashboard dan Halaman Checkout pelanggan Anda.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -203,9 +203,15 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
       >
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href="/pay" className="flex items-center gap-2 group shrink-0">
-            <Logo className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0" />
+            {profile?.logoUrl ? (
+              <div className="w-8 h-8 relative flex items-center justify-center overflow-hidden rounded-md shrink-0 border border-border bg-white shadow-sm">
+                <img src={profile.logoUrl} alt="Merchant Logo" className="object-contain w-full h-full" />
+              </div>
+            ) : (
+              <Logo className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0" />
+            )}
             <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">
-              STSPay<span className="text-primary/50 text-[10px] ml-1 font-bold uppercase tracking-widest">gateway</span>
+              {profile?.merchantName || profile?.name || "STSPay"}
             </span>
           </Link>
         </SidebarHeader>
