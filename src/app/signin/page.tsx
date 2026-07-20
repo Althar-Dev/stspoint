@@ -43,11 +43,17 @@ export default function SignInPage() {
 
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      const isProd = !hostname.includes("localhost") && !hostname.includes("firebaseapp.com");
       
-      if (isProd) {
+      // JANGAN LAKUKAN REDIRECT JIKA DI LOCALHOST / WORKSPACE
+      const isDev = 
+        hostname.includes("localhost") || 
+        hostname.includes("127.0.0.1") || 
+        hostname.includes("cloudworkstations.dev") || 
+        hostname.includes("firebaseapp.com");
+      
+      if (!isDev) {
         const targetSubdomain = targetRole === "merchant" ? "console" : "partner";
-        // Hanya redirect jika kita berada di subdomain yang berbeda
+        // Hanya redirect jika kita berada di subdomain yang berbeda di produksi
         if (!hostname.startsWith(targetSubdomain + ".")) {
           window.location.href = `https://${targetSubdomain}.stspoint.id/signin`;
         }
@@ -65,7 +71,7 @@ export default function SignInPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // 1. Sync session cookie to root domain
+      // 1. Sync session cookie to root domain (untuk subdomain support)
       await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,9 +79,13 @@ export default function SignInPage() {
       });
 
       // 2. Determine redirect destination
-      const isProd = typeof window !== "undefined" && !window.location.hostname.includes("localhost") && !window.location.hostname.includes("firebaseapp.com");
+      const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+      const isDev = 
+        hostname.includes("localhost") || 
+        hostname.includes("cloudworkstations.dev") || 
+        hostname.includes("firebaseapp.com");
       
-      if (isProd) {
+      if (!isDev) {
         const targetHost = role === "merchant" ? "console.stspoint.id" : "partner.stspoint.id";
         window.location.href = `https://${targetHost}/`;
       } else {
@@ -118,12 +128,12 @@ export default function SignInPage() {
             </div>
             
             <Tabs value={role} onValueChange={handleRoleSwitch} className="w-full">
-              <TabsList className="grid grid-cols-2 h-14 p-1.5 bg-muted/50 rounded-2xl">
-                <TabsTrigger value="merchant" className="rounded-xl gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-full px-6">
+              <TabsList className="grid grid-cols-2 h-16 p-1.5 bg-muted/50 rounded-2xl">
+                <TabsTrigger value="merchant" className="rounded-xl gap-2 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full px-6 transition-all">
                   <Building2 className="w-4 h-4" />
                   Merchant
                 </TabsTrigger>
-                <TabsTrigger value="partner" className="rounded-xl gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-full px-6">
+                <TabsTrigger value="partner" className="rounded-xl gap-2 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full px-6 transition-all">
                   <UserCircle className="w-4 h-4" />
                   Partner
                 </TabsTrigger>
