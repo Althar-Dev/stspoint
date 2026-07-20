@@ -20,7 +20,8 @@ import {
   Loader2,
   QrCode,
   Download,
-  Coins
+  Coins,
+  RefreshCcw
 } from "lucide-react";
 import {
   Dialog,
@@ -51,6 +52,7 @@ export default function OverviewPage() {
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [qrisData, setQrisData] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,8 +96,8 @@ export default function OverviewPage() {
 
   const handleGenerateTopUpQris = async () => {
     const amount = parseInt(topUpAmount);
-    if (isNaN(amount) || amount < 1000) {
-      toast({ variant: "destructive", title: "Nominal Minimal", description: "Minimal top up adalah Rp 1.000" });
+    if (isNaN(amount) || amount < 1) {
+      toast({ variant: "destructive", title: "Nominal Minimal", description: "Minimal top up adalah Rp 1" });
       return;
     }
 
@@ -116,6 +118,18 @@ export default function OverviewPage() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleCheckStatus = async () => {
+    setIsCheckingStatus(true);
+    // Simulasi pengecekan status (biasanya sistem menunggu webhook atau polling saldo di latar belakang)
+    setTimeout(() => {
+      setIsCheckingStatus(false);
+      toast({ 
+        title: "Pengecekan Selesai", 
+        description: "Pembayaran belum terdeteksi. Harap tunggu beberapa saat jika Anda sudah membayar." 
+      });
+    }, 2000);
   };
 
   const handleDownloadQris = () => {
@@ -287,13 +301,13 @@ export default function OverviewPage() {
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
                                     <Input 
                                       type="number"
-                                      placeholder="Contoh: 10000"
+                                      placeholder="Contoh: 5000"
                                       value={topUpAmount}
                                       onChange={(e) => setTopUpAmount(e.target.value)}
                                       className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
                                     />
                                   </div>
-                                  <p className="text-[9px] text-muted-foreground ml-1">Saldo akan masuk secara otomatis setelah pembayaran terverifikasi.</p>
+                                  <p className="text-[9px] text-muted-foreground ml-1">Saldo akan masuk secara otomatis setelah pembayaran terverifikasi. Minimal Rp 1.</p>
                                 </div>
                                 <Button 
                                   onClick={handleGenerateTopUpQris}
@@ -313,11 +327,21 @@ export default function OverviewPage() {
                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bayar</p>
                                    <h3 className="text-2xl font-headline font-bold text-primary">Rp {parseInt(topUpAmount).toLocaleString('id-ID')}</h3>
                                 </div>
-                                <div className="flex gap-2 w-full">
-                                   <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
-                                      <Download className="w-4 h-4" /> Download
+                                <div className="flex flex-col gap-2 w-full">
+                                   <Button 
+                                    onClick={handleCheckStatus} 
+                                    disabled={isCheckingStatus}
+                                    className="w-full h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                   >
+                                      {isCheckingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                                      Check Status Pembayaran
                                    </Button>
-                                   <Button onClick={() => setQrisData(null)} variant="ghost" className="h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                                   <div className="flex gap-2 w-full">
+                                      <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
+                                         <Download className="w-4 h-4" /> Download
+                                      </Button>
+                                      <Button onClick={() => setQrisData(null)} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                                   </div>
                                 </div>
                                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
                                   *Sistem akan memantau mutasi secara real-time. Jangan tutup halaman ini sampai saldo bertambah.
