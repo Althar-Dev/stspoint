@@ -27,7 +27,8 @@ import {
   Timer,
   Download,
   CreditCard,
-  ArrowRight
+  ArrowRight,
+  Info
 } from "lucide-react";
 import { 
   Accordion,
@@ -155,6 +156,8 @@ export default function CustomCheckoutPage() {
       minAmountError: "Minimum Amount Not Met",
       minAmountDesc: (name: string) => `Minimum payment for ${name} is IDR 10,000. Please choose another method.`,
       minPay: "Min Pay",
+      baseAmount: "Subtotal",
+      fee: "Admin Fee",
       va_steps: [
         "Open your mobile banking app.",
         (bank: string) => `Select Transfer > Virtual Account ${bank}.`,
@@ -222,6 +225,8 @@ export default function CustomCheckoutPage() {
       minAmountError: "Minimal Nominal Tidak Terpenuhi",
       minAmountDesc: (name: string) => `Minimal pembayaran untuk ${name} adalah Rp 10.000. Silakan pilih metode lain.`,
       minPay: "Min Bayar",
+      baseAmount: "Harga Dasar",
+      fee: "Biaya Layanan",
       va_steps: [
         "Buka aplikasi mobile banking Anda.",
         (bank: string) => `Pilih Transfer > Virtual Account ${bank}.`,
@@ -271,6 +276,7 @@ export default function CustomCheckoutPage() {
           id: c.id,
           name: c.name,
           type: group.id,
+          fee: c.fee,
           min: c.min || (group.id === 'va' || group.id === 'retail' ? 10000 : 1000),
           provider: c.provider || 'Xendit',
           logo: c.logo ? (c.logo.startsWith('http') ? c.logo : `/assets/bank/${c.logo}`) : `/assets/bank/${c.id.toLowerCase()}.png`
@@ -351,11 +357,20 @@ export default function CustomCheckoutPage() {
       if (prId) {
         await cancelStsTransaction(prId, transaction.provider || 'Xendit');
       }
-      await updateDoc(transactionRef, {
+      
+      // Reset amount to base_amount if changing method
+      const resetData: any = {
         payment_info: null,
         payment_method_id: null,
         updatedAt: serverTimestamp()
-      });
+      };
+
+      if (transaction.base_amount) {
+        resetData.amount = transaction.base_amount;
+        resetData.fee_amount = 0;
+      }
+
+      await updateDoc(transactionRef, resetData);
       setSelectedMethod(null);
     } catch (e: any) {
       toast({ variant: "destructive", title: "Error", description: "Gagal membatalkan tagihan sebelumnya." });
@@ -364,9 +379,26 @@ export default function CustomCheckoutPage() {
     }
   };
 
+  /**
+   * MDR LOGIC: Calculate fee based on channel config
+   */
+  const calculateFeeAmount = (base: number, feeStr: string) => {
+    if (!feeStr) return 0;
+    if (feeStr.includes('%')) {
+      return Math.ceil(base * (parseFloat(feeStr) / 100));
+    }
+    const numericFee = parseInt(feeStr.replace(/[^0-9]/g, ''));
+    return isNaN(numericFee) ? 0 : numericFee;
+  };
+
   const handleSelectMethod = async (method: any, mobileNumber?: string) => {
+    if (!transaction) return;
+
+    // Use base_amount if available, otherwise fallback to current amount
+    const baseAmount = transaction.base_amount || transaction.amount;
     const minPay = Number(method.min);
-    if ((transaction?.amount || 0) < minPay) {
+    
+    if (baseAmount < minPay) {
       return; 
     }
     
@@ -382,15 +414,20 @@ export default function CustomCheckoutPage() {
     setSelectedMethod(method);
     setIsGenerating(true);
     setIsOvoPromptOpen(false);
+
     try {
+      // Calculate MDR Fee
+      const feeAmount = calculateFeeAmount(baseAmount, method.fee);
+      const totalAmount = baseAmount + feeAmount;
+
       const res = await requestPaymentInfo(method.type, {
-        external_id: transaction?.id, 
-        amount: transaction?.amount,
+        external_id: transaction.id, 
+        amount: totalAmount,
         bank_code: method.id,
-        name: transaction?.payerEmail || "STS Customer",
+        name: transaction.payerEmail || "STS Customer",
         mobile_number: mobileNumber,
         provider: method.provider,
-        payer_email: transaction?.payerEmail
+        payer_email: transaction.payerEmail
       });
 
       if (res.success && transactionRef) {
@@ -398,6 +435,9 @@ export default function CustomCheckoutPage() {
           payment_info: res,
           payment_method_id: method.id,
           provider: method.provider,
+          base_amount: baseAmount,
+          fee_amount: feeAmount,
+          amount: totalAmount, // Official total to be paid
           updatedAt: serverTimestamp()
         });
       } else {
@@ -454,7 +494,6 @@ export default function CustomCheckoutPage() {
 
         <main className="max-w-7xl mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 w-full">
           <div className="lg:col-span-8 p-4 md:p-12 lg:p-16 space-y-12">
-            {/* Amount Section Skeleton */}
             <div className="text-center space-y-4">
               <Skeleton className="w-32 h-32 mx-auto rounded-full" />
               <div className="space-y-2">
@@ -462,8 +501,6 @@ export default function CustomCheckoutPage() {
                 <Skeleton className="w-64 h-12 mx-auto" />
               </div>
             </div>
-
-            {/* Method Detail Skeleton */}
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
                 <Skeleton className="w-32 h-6" />
@@ -473,8 +510,6 @@ export default function CustomCheckoutPage() {
               <Skeleton className="w-full h-12 rounded-xl" />
             </div>
           </div>
-
-          {/* Sidebar Skeleton */}
           <aside className="lg:col-span-4 p-4 lg:p-12 lg:border-l border-slate-200">
              <div className="space-y-8">
                 <div className="bg-white p-8 space-y-8 rounded-2xl border border-slate-200">
@@ -489,9 +524,6 @@ export default function CustomCheckoutPage() {
                       <Skeleton className="w-32 h-8" />
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-center gap-4">
-                  <Skeleton className="w-32 h-8 rounded-md" />
                 </div>
              </div>
           </aside>
@@ -515,6 +547,10 @@ export default function CustomCheckoutPage() {
   const isCanceled = transaction.status === "CANCELED";
   const currentPaymentData = transaction.payment_info;
   const currentMethod = activePaymentGroups.flatMap(g => g.methods).find(m => m.id === transaction.payment_method_id) || selectedMethod;
+
+  // MDR breakdown
+  const basePrice = transaction.base_amount || transaction.amount;
+  const adminFee = transaction.fee_amount || 0;
 
   return (
     <div className="light min-h-screen bg-[#F9FAFB] text-slate-900 font-sans selection:bg-indigo-100 flex flex-col">
@@ -695,7 +731,7 @@ export default function CustomCheckoutPage() {
                         <AccordionContent className="px-8 pb-8 pt-2">
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {group.methods.map((method: any) => {
-                              const isTooLow = (transaction?.amount || 0) < Number(method.min);
+                              const isTooLow = basePrice < Number(method.min);
                               return (
                                 <button
                                   key={method.id}
@@ -734,7 +770,6 @@ export default function CustomCheckoutPage() {
             </div>
           )}
 
-          {/* Mobile Attribution */}
           <div className="lg:hidden pt-10 flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 border rounded-md">
               <span className="text-[9px] font-bold tracking-widest">Powered by</span>
@@ -753,6 +788,7 @@ export default function CustomCheckoutPage() {
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{T[lang].invoice}</p>
                   <p className="text-xs font-mono break-all">{transaction.id}</p>
                 </div>
+                
                 <div className={`flex items-center gap-3 p-4 rounded-md border ${isPaid || isExpired || isCanceled ? 'bg-slate-50 text-slate-400' : 'bg-indigo-50/50 border-indigo-200 text-indigo-600'}`}>
                   {isPaid ? <CheckCircle2 className="w-5 h-5" /> : <Timer className={`w-5 h-5 ${!isExpired && !isCanceled && 'animate-pulse'}`} />}
                   <p className="text-sm font-medium">
@@ -761,11 +797,30 @@ export default function CustomCheckoutPage() {
                     )}
                   </p>
                 </div>
+
+                <div className="space-y-4 pt-4">
+                   <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500 font-medium">{T[lang].baseAmount}</span>
+                      <span className="font-bold">IDR {basePrice.toLocaleString('id-ID')}</span>
+                   </div>
+                   {adminFee > 0 && (
+                     <div className="flex items-center justify-between text-sm animate-in slide-in-from-top-2">
+                        <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                          {T[lang].fee} 
+                          <Info className="w-3 h-3 text-slate-300" />
+                        </span>
+                        <span className="font-bold text-indigo-600">+ IDR {adminFee.toLocaleString('id-ID')}</span>
+                     </div>
+                   )}
+                </div>
+
                 <div className="border-t-2 border-dashed border-slate-400 my-8" />
+                
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-500">{T[lang].totalBill}</span>
                   <span className="text-xl font-bold text-slate-800">IDR {transaction.amount.toLocaleString('id-ID')}</span>
                 </div>
+
                 {(!isPaid && !isExpired && !isCanceled) && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -790,7 +845,6 @@ export default function CustomCheckoutPage() {
               </div>
             </Card>
 
-            {/* Desktop Attribution: Positioned under sticky summary */}
             <div className="hidden lg:flex flex-col items-center gap-4 py-4">
               <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 border rounded-md">
                 <span className="text-[10px] font-bold tracking-widest">Powered by</span>

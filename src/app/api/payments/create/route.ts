@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase/core';
 import { 
@@ -85,11 +86,12 @@ export async function POST(request: Request) {
 
     let paymentInfo: any = null;
 
-    // 4. Handle specific payment types
+    // 4. Handle specific payment types (Jika direct QRIS diminta di awal)
+    // Catatan: Biasanya MDR untuk direct QRIS diatur default (misal 0.7%) jika tidak ada info channel
     if (type === 'qris') {
       const qrisRes = await createXenditPaymentRequest({
         reference_id: external_id,
-        amount: baseAmount,
+        amount: baseAmount, // Di tahap create API, kita gunakan baseAmount
         currency: 'IDR',
         description: description || 'STSPay QRIS Payment',
         payment_method: {
@@ -126,7 +128,9 @@ export async function POST(request: Request) {
 
     const mainTxData = {
       id: external_id,
-      amount: baseAmount,
+      amount: baseAmount, // Total sementara
+      base_amount: baseAmount, // Harga asli
+      fee_amount: 0, // Akan diupdate saat checkout pilih metode
       status: 'PENDING',
       payerEmail: payer_email,
       description: description || 'STSPay Payment',
