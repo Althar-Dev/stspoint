@@ -22,6 +22,13 @@ service cloud.firestore {
       }
     }
 
+    // Aturan untuk Ledger Top-up (Krusial untuk Verifikasi Saldo)
+    match /processed_topups/{topupId} {
+      allow get: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow list, update, delete: if isDev();
+    }
+
     // Aturan untuk Transaksi STSPay (Global Collection)
     match /stspay_transactions/{transactionId} {
       allow get: if true;
