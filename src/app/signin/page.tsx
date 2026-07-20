@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -24,6 +25,36 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Deteksi role berdasarkan subdomain saat ini
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      if (hostname.startsWith("partner.")) {
+        setRole("partner");
+      } else {
+        setRole("merchant");
+      }
+    }
+  }, []);
+
+  const handleRoleSwitch = (newRole: string) => {
+    const targetRole = newRole as "merchant" | "partner";
+    setRole(targetRole);
+
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const isProd = !hostname.includes("localhost") && !hostname.includes("firebaseapp.com");
+      
+      if (isProd) {
+        const targetSubdomain = targetRole === "merchant" ? "console" : "partner";
+        // Hanya redirect jika kita berada di subdomain yang berbeda
+        if (!hostname.startsWith(targetSubdomain + ".")) {
+          window.location.href = `https://${targetSubdomain}.stspoint.id/signin`;
+        }
+      }
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
@@ -34,7 +65,7 @@ export default function SignInPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // 1. Sync session cookie to root domain (for production subdomains)
+      // 1. Sync session cookie to root domain
       await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,11 +76,9 @@ export default function SignInPage() {
       const isProd = typeof window !== "undefined" && !window.location.hostname.includes("localhost") && !window.location.hostname.includes("firebaseapp.com");
       
       if (isProd) {
-        // Redirect to absolute subdomain URL in production
         const targetHost = role === "merchant" ? "console.stspoint.id" : "partner.stspoint.id";
-        window.location.href = `https://${targetHost}/console`;
+        window.location.href = `https://${targetHost}/`;
       } else {
-        // Local/Workspace redirect
         router.push(role === "merchant" ? "/console" : "/client");
       }
 
@@ -88,7 +117,7 @@ export default function SignInPage() {
               <CardDescription>Select your portal and sign in.</CardDescription>
             </div>
             
-            <Tabs value={role} onValueChange={(v: any) => setRole(v)} className="w-full">
+            <Tabs value={role} onValueChange={handleRoleSwitch} className="w-full">
               <TabsList className="grid grid-cols-2 h-14 p-1.5 bg-muted/50 rounded-2xl">
                 <TabsTrigger value="merchant" className="rounded-xl gap-2 text-xs font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm h-full px-6">
                   <Building2 className="w-4 h-4" />

@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * STSPoint Unified Subdomain Middleware
- * Menangani pembersihan URL agar folder internal tidak muncul di subdomain.
+ * Menangani pembersihan URL dan pemetaan folder internal ke subdomain secara transparan.
  */
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
@@ -26,19 +26,24 @@ export function middleware(request: NextRequest) {
   };
 
   // 3. Cek apakah host saat ini adalah salah satu subdomain yang terdaftar
-  const sub = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
+  const subKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
-  if (sub) {
-    const config = mappings[sub];
+  if (subKey) {
+    const config = mappings[subKey];
 
     // JIKA PATH DIAWALI DENGAN FOLDER INTERNAL (Misal: console.stspoint.id/console)
-    // REDIRECT UNTUK MENGHAPUS PREFIX TERSEBUT DARI URL BROWSER
+    // REDIRECT UNTUK MENGHAPUS PREFIX TERSEBUT DARI URL BROWSER AGAR URL BERSIH
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
-    // REWRITE SECARA TRANSPARAN (User tetap melihat console.stspoint.id/ tapi sistem baca /console)
+    // PENGECUALIAN: Jangan rewrite halaman autentikasi inti agar tetap konsisten
+    if (pathname === '/signin' || pathname === '/signup') {
+      return NextResponse.next();
+    }
+
+    // REWRITE SECARA TRANSPARAN (User melihat console.stspoint.id/ tapi sistem membaca folder /console)
     url.pathname = `${config.internal}${pathname}`;
     return NextResponse.rewrite(url);
   }
