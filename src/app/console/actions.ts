@@ -73,7 +73,23 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
     const userRef = doc(firestore, 'users', userId);
     const ledgerRef = doc(firestore, 'processed_topups', foundMatch.id.toString());
     const txId = `TOPUP-${foundMatch.id}`;
+    
+    // Referensi untuk global dan sub-koleksi user
     const txRef = doc(firestore, 'transactions', txId);
+    const userTxRef = doc(firestore, 'users', userId, 'transactions', txId);
+    
+    const transactionData = {
+      id: txId,
+      gameId: "INTERNAL",
+      gameName: "Wallet",
+      itemName: `Top Up Saldo via ${foundMatch.brand?.name || 'QRIS'}`,
+      price: expectedAmount.toString(),
+      priceAmount: expectedAmount,
+      userId: userId,
+      status: "Success",
+      createdAt: serverTimestamp(),
+      paymentMethod: "QRIS_AUTO"
+    };
     
     await Promise.all([
       updateDoc(userRef, {
@@ -88,19 +104,10 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
         processedAt: serverTimestamp(),
         rawMutation: foundMatch
       }),
-      // Menambahkan catatan ke tabel transaksi agar muncul di history
-      setDoc(txRef, {
-        id: txId,
-        gameId: "INTERNAL",
-        gameName: "Wallet",
-        itemName: `Top Up Saldo via ${foundMatch.brand?.name || 'QRIS'}`,
-        price: expectedAmount.toString(),
-        priceAmount: expectedAmount,
-        userId: userId,
-        status: "Success",
-        createdAt: serverTimestamp(),
-        paymentMethod: "QRIS_AUTO"
-      })
+      // Mencatat di tabel global untuk admin/audit
+      setDoc(txRef, transactionData),
+      // Mencatat di sub-koleksi spesifik user
+      setDoc(userTxRef, transactionData)
     ]);
 
     return { 

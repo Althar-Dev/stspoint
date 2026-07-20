@@ -8,10 +8,7 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('dev', false) == true;
     }
 
-    // Aturan yang lebih fleksibel untuk mendukung Server-Side Bridge (Server Actions)
-    // Masalah permission sebelumnya terjadi karena Server Action dianggap unauthenticated.
-    // Kita buka akses pada koleksi terkait agar sinkronisasi saldo dan PPOB berjalan lancar.
-    
+    // Aturan yang fleksibel untuk mendukung Server-Side Bridge (Server Actions)
     match /users/{userId} {
       allow read, write: if true;
       
@@ -20,6 +17,10 @@ service cloud.firestore {
       }
       
       match /ai/{configId} {
+        allow read, write: if true;
+      }
+
+      match /transactions/{transactionId} {
         allow read, write: if true;
       }
     }
