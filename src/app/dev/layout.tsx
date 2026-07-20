@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -79,8 +80,8 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
 
-  // Recognize /dev/auth as the public entry point
-  const isAuthPage = pathname === "/dev/auth";
+  // FIX: Deteksi halaman auth harus fleksibel (bisa /dev/auth atau /auth di subdomain)
+  const isAuthPage = pathname === "/dev/auth" || pathname === "/auth";
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -99,12 +100,12 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
     }
   }, [user, profile, authLoading, profileLoading, router, isAuthPage]);
 
-  // If on auth page, render without protection/sidebar
+  // Jika di halaman auth, tampilkan tanpa sidebar dan proteksi
   if (isAuthPage) {
     return <div className="w-full min-h-screen bg-black">{children}</div>;
   }
 
-  // Strict Protection for internal Root Console
+  // Proteksi Ketat untuk Root Console
   if (authLoading || profileLoading || !user || !profile?.dev) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
