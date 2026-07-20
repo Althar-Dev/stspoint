@@ -128,13 +128,13 @@ export default function SignInPage() {
             </div>
             
             <Tabs value={role} onValueChange={handleRoleSwitch} className="w-full">
-              <TabsList className="grid grid-cols-2 h-16 p-1.5 bg-muted/50 rounded-2xl">
-                <TabsTrigger value="merchant" className="rounded-xl gap-2 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full px-6 transition-all">
-                  <Building2 className="w-4 h-4" />
+              <TabsList className="grid grid-cols-2 h-16 p-2 bg-muted/50 rounded-2xl">
+                <TabsTrigger value="merchant" className="rounded-xl gap-2 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full px-8 transition-all">
+                  <Building2 className="w-5 h-5" />
                   Merchant
                 </TabsTrigger>
-                <TabsTrigger value="partner" className="rounded-xl gap-2 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full px-6 transition-all">
-                  <UserCircle className="w-4 h-4" />
+                <TabsTrigger value="partner" className="rounded-xl gap-2 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full px-8 transition-all">
+                  <UserCircle className="w-5 h-5" />
                   Partner
                 </TabsTrigger>
               </TabsList>

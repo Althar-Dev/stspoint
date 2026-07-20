@@ -12,11 +12,10 @@ export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const { pathname } = url;
 
-  // 1. CEK LINGKUNGAN PENGEMBANGAN (Localhost / Workspace / Cloud Workstations)
+  // 1. CEK LINGKUNGAN PENGEMBANGAN
   const isDev = 
     host.includes('localhost') || 
     host.includes('127.0.0.1') || 
-    host.includes('9002') || 
     host.includes('cloudworkstations.dev') || 
     host.includes('firebaseapp.com');
 
@@ -34,30 +33,24 @@ export function middleware(request: NextRequest) {
   };
 
   // 3. Logika Pembersihan Path Internal di Subdomain
-  // Contoh: console.stspoint.id/console -> console.stspoint.id/
   const subKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
   if (subKey) {
     const config = mappings[subKey];
 
-    // Redirect jika path diawali dengan folder internal (membersihkan URL)
+    // Redirect jika path diawali dengan folder internal (membersihkan URL publik)
+    // Contoh: console.stspoint.id/console -> console.stspoint.id/
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
-    // Biarkan halaman auth tetap bisa diakses tanpa rewrite jika diakses langsung
-    if (pathname === '/signin' || pathname === '/signup') {
-      return NextResponse.next();
-    }
-
-    // Rewrite secara transparan (User tidak melihat folder internal di URL)
+    // Biarkan halaman auth diproses oleh rewrite agar bisa mendeteksi subdomain
     url.pathname = `${config.internal}${pathname}`;
     return NextResponse.rewrite(url);
   }
 
   // 4. Redirect dari domain utama ke subdomain jika mengakses path folder internal
-  // Contoh: stspoint.id/console -> console.stspoint.id/
   if (host === rootDomain) {
     for (const key in mappings) {
       const config = mappings[key];
