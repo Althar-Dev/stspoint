@@ -86,7 +86,6 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: gomerchant } = useDoc(gomerchantRef);
 
-  // Simple query to avoid index requirements during prototyping
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -96,7 +95,6 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
-  // Client-side sorting for robustness
   const transactions = useMemo(() => {
     return [...rawTransactions].sort((a, b) => {
       const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
@@ -548,7 +546,7 @@ export default function OverviewPage() {
                         {row.gameName || row.gameId}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 font-mono text-[9px] text-muted-foreground whitespace-nowrap uppercase">{row.id?.substring(0, 8)}</td>
+                    <td className="px-4 py-3 font-mono text-[9px] text-muted-foreground whitespace-nowrap uppercase">{row.id?.substring(0, 10)}</td>
                     <td className="px-4 py-3 font-bold whitespace-nowrap">{row.itemName}</td>
                     <td className="px-4 py-3 font-bold text-primary whitespace-nowrap">{row.price}</td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">

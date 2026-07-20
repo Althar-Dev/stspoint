@@ -42,7 +42,6 @@ export default function AllTransactionsPage() {
 
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
-  // Client-side sorting and limiting to 50 items
   const transactions = useMemo(() => {
     const sorted = [...rawTransactions].sort((a, b) => {
       const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
@@ -71,7 +70,6 @@ export default function AllTransactionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-accent">
@@ -94,7 +92,6 @@ export default function AllTransactionsPage() {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="relative group max-w-md w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
         <Input 
@@ -105,7 +102,6 @@ export default function AllTransactionsPage() {
         />
       </div>
 
-      {/* Transactions Table */}
       <Card className="border-border shadow-sm rounded-xl md:rounded-2xl overflow-hidden bg-card"> 
         <CardHeader className="px-4 py-3 md:px-6 md:py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
           <div className="flex items-center justify-between">
@@ -136,7 +132,7 @@ export default function AllTransactionsPage() {
                   <tr key={i}><td colSpan={6} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
               ) : transactions.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-20 text-center text-muted-foreground italic font-medium">Tidak ada transaksi ditemukan.</td></tr>
+                <tr><td colSpan={6} className="px-6 py-20 text-center text-muted-foreground italic font-medium">seharusnya tampil di sini</td></tr>
               ) : (
                 transactions.map((row, i) => (
                   <tr key={i} className="hover:bg-slate-50/30 transition-colors">
@@ -155,9 +151,9 @@ export default function AllTransactionsPage() {
                         row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
                         'bg-rose-500/10 text-rose-600'
                       } border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm uppercase flex items-center w-fit gap-1 ml-auto`}>
-                        {row.status === 'Success' && <CheckCircle2 className="w-2 h-2" />}
-                        {row.status === 'Pending' && <Clock className="w-2 h-2" />}
-                        {row.status === 'Failed' && <XCircle className="w-2 h-2" />}
+                        {row.status === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                        {row.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                        {row.status === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
                         {row.status}
                       </Badge>
                     </td>
