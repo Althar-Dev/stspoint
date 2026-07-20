@@ -9,7 +9,6 @@ import {
   setDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { createStsPayment } from '@/lib/xendit/create';
 import { createXenditPaymentRequest } from '@/lib/xendit/payment-request';
 
 /**
@@ -50,7 +49,7 @@ export async function POST(request: Request) {
 
     const { firestore } = initializeFirebase();
 
-    // 2. Autentikasi Merchant (Sequential to avoid index/case issues)
+    // 2. Autentikasi Merchant
     const usersRef = collection(firestore, 'users');
     const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
@@ -70,9 +69,19 @@ export async function POST(request: Request) {
 
     // 3. Generate External ID
     const external_id = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const host = request.headers.get('host');
-    const checkout_url = `${protocol}://${host}/checkout/${external_id}`;
+    
+    // Determine Domain for Checkout
+    const host = request.headers.get('host') || 'stspoint.id';
+    const isDev = host.includes('localhost') || host.includes('cloudworkstations.dev') || host.includes('firebaseapp.com');
+    
+    // URL Format: https://checkout.stspoint.id/{id}
+    const checkout_domain = isDev ? host : 'checkout.stspoint.id';
+    const protocol = isDev ? (request.headers.get('x-forwarded-proto') || 'http') : 'https';
+    
+    // In Dev, we might need /checkout/ prefix, in Prod with subdomain rewrite we don't
+    const checkout_url = isDev 
+      ? `${protocol}://${checkout_domain}/checkout/${external_id}`
+      : `${protocol}://${checkout_domain}/${external_id}`;
 
     let responseData: any = {
       external_id,
@@ -80,9 +89,11 @@ export async function POST(request: Request) {
       amount: baseAmount
     };
 
-    let paymentInfo: any = {};
+    let paymentInfo: any = null;
 
     // 4. Handle specific payment types
+    // If 'qris' is requested, we generate it immediately.
+    // If 'payment_link' is requested, we leave paymentInfo NULL so the user can CHOOSE on the checkout page.
     if (type === 'qris') {
       const qrisRes = await createXenditPaymentRequest({
         reference_id: external_id,
@@ -113,25 +124,7 @@ export async function POST(request: Request) {
 
       responseData.qr_string = paymentInfo.qr_string;
     } else {
-      const invoiceRes = await createStsPayment({
-        external_id,
-        amount: baseAmount,
-        payer_email,
-        description: description || 'STSPay Payment Link',
-        client_name: merchantData.name || 'STS Merchant'
-      });
-
-      if (!invoiceRes.success) {
-        return NextResponse.json({ success: false, message: invoiceRes.message }, { status: 500 });
-      }
-
-      paymentInfo = {
-        invoice_id: invoiceRes.data?.id,
-        invoice_url: invoiceRes.data?.invoice_url,
-        provider: 'Xendit',
-        type: 'payment_link'
-      };
-
+      // payment_link mode: Return the URL to pick method
       responseData.checkout_url = checkout_url;
     }
 
@@ -147,7 +140,7 @@ export async function POST(request: Request) {
       type: 'payment',
       mode: type,
       callbackUrl: callbackUrl || null,
-      payment_info: paymentInfo,
+      payment_info: paymentInfo, // NULL means "User must pick method"
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
