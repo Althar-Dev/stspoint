@@ -57,6 +57,7 @@ export default function OverviewPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [qrisData, setQrisData] = useState<string | null>(null);
+  const [qrisCreatedAt, setQrisCreatedAt] = useState<number | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -68,7 +69,6 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: profile, loading: profileLoading } = useDoc(userProfileRef);
 
-  // Fetch Master Settings for Bridge Base QRIS & Digit Logic
   const masterOrkutRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, "settings", "orderkuota");
@@ -111,25 +111,22 @@ export default function OverviewPage() {
 
     setIsGenerating(true);
     try {
-      // Logika Kode Unik sesuai Setting (Default 3 digit)
       const digitSetting = Number(masterConfig.randomDigit) || 3;
       let randomSuffix = 0;
       
       if (digitSetting === 2) {
-        // Range 10-99
         randomSuffix = Math.floor(Math.random() * 90) + 10;
       } else {
-        // Range 100-999
         randomSuffix = Math.floor(Math.random() * 900) + 100;
       }
 
       const uniqueAmount = baseAmount + randomSuffix;
-      
       const res = await generateDynamicQrisAction(masterConfig.baseQr, uniqueAmount.toString());
       
       if (res.success && res.dataUri) {
         setFinalAmount(uniqueAmount);
         setQrisData(res.dataUri);
+        setQrisCreatedAt(Date.now()); // Catat waktu pembuatan
         toast({ title: "QRIS Berhasil Dibuat", description: `Silakan bayar Rp ${uniqueAmount.toLocaleString('id-ID')} (termasuk kode unik ${randomSuffix}).` });
       } else {
         throw new Error(res.message);
@@ -142,11 +139,12 @@ export default function OverviewPage() {
   };
 
   const handleCheckStatus = async () => {
-    if (!user?.uid || !finalAmount) return;
+    if (!user?.uid || !finalAmount || !qrisCreatedAt) return;
     
     setIsCheckingStatus(true);
     try {
-      const res = await checkTopUpStatusAction(user.uid, finalAmount);
+      // Kirim timestamp pembuatan agar sistem hanya mencari mutasi baru
+      const res = await checkTopUpStatusAction(user.uid, finalAmount, qrisCreatedAt);
       
       if (res.success) {
         toast({ 
@@ -157,6 +155,7 @@ export default function OverviewPage() {
         setIsTopUpOpen(false);
         setQrisData(null);
         setFinalAmount(null);
+        setQrisCreatedAt(null);
       } else {
         toast({ 
           variant: "destructive", 
@@ -313,7 +312,7 @@ export default function OverviewPage() {
                   
                   <Dialog open={isTopUpOpen} onOpenChange={(o) => {
                     setIsTopUpOpen(o);
-                    if(!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); }
+                    if(!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); setQrisCreatedAt(null); }
                   }}>
                     <DialogTrigger asChild>
                       <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-8 md:h-9 flex-1 shadow-lg shadow-primary/10 transition-all text-[9px] md:text-[10px] uppercase">
@@ -383,7 +382,7 @@ export default function OverviewPage() {
                                       <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
                                          <Download className="w-4 h-4" /> Download
                                       </Button>
-                                      <Button onClick={() => {setQrisData(null); setFinalAmount(null);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                                      <Button onClick={() => {setQrisData(null); setFinalAmount(null); setQrisCreatedAt(null);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
                                    </div>
                                 </div>
                                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
@@ -454,7 +453,7 @@ export default function OverviewPage() {
                         <AreaChart data={item.chart.map((v, idx) => ({ value: v, id: idx }))}>
                           <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#gradient-quota)" strokeWidth={1.5} dot={false} />
                           <defs>
-                            <linearGradient id="gradient-quota" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="gradient-quota" x1="0" x1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                             </linearGradient>
                           </defs>

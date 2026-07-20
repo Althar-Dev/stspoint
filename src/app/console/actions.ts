@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Server Actions for Console Dashboard.
- * Handles real-time top-up verification against master Orderkuota mutations.
+ * Handles real-time top-up verification against master Orderkuota mutations with time-filtering.
  */
 
 import { initializeFirebase } from '@/firebase/core';
@@ -16,11 +16,12 @@ import {
 import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 
 /**
- * Memverifikasi pembayaran top-up berdasarkan nominal unik.
+ * Memverifikasi pembayaran top-up berdasarkan nominal unik dan waktu transaksi.
  * @param userId ID pengguna yang melakukan top-up.
  * @param expectedAmount Nominal total (termasuk kode unik) yang harus dibayar.
+ * @param requestTimestamp Waktu (ms) saat QRIS dibuat untuk mencegah klaim transaksi lama.
  */
-export async function checkTopUpStatusAction(userId: string, expectedAmount: number) {
+export async function checkTopUpStatusAction(userId: string, expectedAmount: number, requestTimestamp: number) {
   try {
     const { firestore } = initializeFirebase();
     
@@ -44,16 +45,22 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
       throw new Error(mutationRes.message || "Gagal menghubungi server provider mutasi.");
     }
 
-    // 3. Cari transaksi 'IN' yang sesuai dengan nominal unik (presisi 1 rupiah)
-    const match = mutationRes.result.find(m => 
-      m.status === 'IN' && 
-      Math.abs(parseFloat(m.kredit) - expectedAmount) < 1
-    );
+    // 3. Cari transaksi 'IN' yang sesuai dengan nominal unik DAN terjadi setelah QRIS dibuat
+    const match = mutationRes.result.find(m => {
+      const isNominalMatch = m.status === 'IN' && Math.abs(parseFloat(m.kredit) - expectedAmount) < 1;
+      if (!isNominalMatch) return false;
+
+      // Konversi tanggal mutasi (format YYYY-MM-DD HH:mm:ss) ke timestamp
+      const mutationTime = new Date(m.tanggal).getTime();
+      
+      // Hanya terima mutasi yang terjadi setelah atau pada saat permintaan dibuat (dengan toleransi 1 menit mundur)
+      return mutationTime >= (requestTimestamp - 60000); 
+    });
 
     if (!match) {
       return { 
         success: false, 
-        message: "Pembayaran belum terdeteksi di mutasi kami. Pastikan Anda membayar nominal yang tepat hingga digit terakhir." 
+        message: "Pembayaran belum terdeteksi. Pastikan nominal transfer sama persis dan mutasi sudah muncul di aplikasi perbankan Anda." 
       };
     }
 
