@@ -3,50 +3,74 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * STSPoint API Routing Middleware
- * Handles clean URL rewrites (removing /api prefix requirement for clients)
+ * STSPoint Unified Subdomain Middleware
+ * Handles: checkout, dev, console, and partner (mapped from /client)
  */
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const url = request.nextUrl.clone();
+  const host = request.headers.get('host') || '';
+  const { pathname } = url;
 
-  // List of paths that should be internally mapped to the /api directory
-  // We include specific gopay and orkut paths to avoid conflicting with their UI routes
-  const apiRewrites = [
-    '/payments',
-    '/ppob',
-    '/webhooks',
-    '/gopay/create',
-    '/gopay/status',
-    '/orkut/create',
-    '/orkut/status'
-  ];
+  // 1. Skip logic for local development or workspace
+  const isDev = host.includes('localhost') || host.includes('9002') || host.includes('firebaseapp.com');
+  if (isDev) return NextResponse.next();
 
-  const shouldRewrite = apiRewrites.some(path => pathname.startsWith(prefix(path)));
+  const rootDomain = 'stspoint.id';
 
-  if (shouldRewrite && !pathname.startsWith('/api')) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/api${pathname}`;
+  // 2. Map Subdomains to Internal Paths
+  // partner.stspoint.id -> /client
+  if (host.startsWith('partner.')) {
+    url.pathname = `/client${pathname}`;
     return NextResponse.rewrite(url);
+  }
+
+  // console.stspoint.id -> /console
+  if (host.startsWith('console.')) {
+    url.pathname = `/console${pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // dev.stspoint.id -> /dev
+  if (host.startsWith('dev.')) {
+    url.pathname = `/dev${pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // checkout.stspoint.id -> /checkout
+  if (host.startsWith('checkout.')) {
+    url.pathname = `/checkout${pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // 3. Handle Redirects from Main Domain to Subdomains
+  if (host === rootDomain) {
+    if (pathname.startsWith('/console')) {
+      return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname.replace('/console', '')}`, request.url));
+    }
+    if (pathname.startsWith('/client')) {
+      return NextResponse.redirect(new URL(`https://partner.${rootDomain}${pathname.replace('/client', '')}`, request.url));
+    }
+    if (pathname.startsWith('/dev')) {
+      return NextResponse.redirect(new URL(`https://dev.${rootDomain}${pathname.replace('/dev', '')}`, request.url));
+    }
+    if (pathname.startsWith('/checkout')) {
+      return NextResponse.redirect(new URL(`https://checkout.${rootDomain}${pathname.replace('/checkout', '')}`, request.url));
+    }
   }
 
   return NextResponse.next();
 }
 
-/**
- * Helper to ensure exact or nested path matches
- */
-function prefix(path: string) {
-  return path.endsWith('/') ? path : `${path}`;
-}
-
 export const config = {
   matcher: [
-    '/payments/:path*',
-    '/ppob/:path*',
-    '/webhooks/:path*',
-    '/gopay/create',
-    '/gopay/status',
-    '/orkut/create',
-    '/orkut/status',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - assets (public assets)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|assets|favicon.ico).*)',
   ],
 };

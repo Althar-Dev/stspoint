@@ -61,6 +61,10 @@ export function MainHeader({
 
   const handleLogout = async () => {
     if (!auth) return;
+    
+    // Clear wildcard session cookie
+    await fetch("/api/auth/session", { method: "DELETE" });
+    
     await signOut(auth);
     router.push("/signin");
   };
@@ -68,9 +72,7 @@ export function MainHeader({
   return (
     <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-30">
       <div className="flex items-center gap-4 flex-1">
-        {/* Sidebar Trigger - Mobile (Always visible) & Desktop (Conditional) */}
         <div className="flex items-center gap-2">
-          {/* SidebarTrigger must be visible on mobile md:block logic might be confusing, ensured it shows on small screens */}
           <SidebarTrigger className={`text-muted-foreground hover:text-primary ${!showSidebarTrigger ? '' : ''}`} />
           {showSidebarTrigger && <div className="h-4 w-[1px] bg-border hidden md:block"></div>}
         </div>

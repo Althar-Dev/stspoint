@@ -204,7 +204,7 @@ export default function STSPayTestPage() {
                        </p>
                     </div>
 
-                    <Button asChild className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold gap-2">
+                    <Button asChild className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-white dark:text-black font-bold gap-2">
                        <Link href={`/checkout/${result.externalId}`}>
                          Open Payment Link
                          <ArrowUpRight className="w-4 h-4" />
