@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 
 /**
  * API: Set Wildcard Session Cookie for .stspoint.id
- * This allows single login across all subdomains.
  */
 export async function POST(request: Request) {
   try {
@@ -18,7 +17,6 @@ export async function POST(request: Request) {
     const host = request.headers.get('host') || '';
     const isProd = host.includes('stspoint.id') && !host.includes('localhost');
     
-    // Set cookie for the entire root domain in production
     cookieStore.set("sts_session", token, {
       domain: isProd ? ".stspoint.id" : undefined, 
       path: "/",
@@ -44,5 +42,6 @@ export async function DELETE(request: Request) {
     domain: isProd ? ".stspoint.id" : undefined,
     path: "/",
   });
+  
   return NextResponse.json({ success: true });
 }

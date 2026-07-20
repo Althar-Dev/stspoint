@@ -24,7 +24,7 @@ import {
   ChevronDown,
   Package,
   Settings,
-  BookOpen
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -37,8 +37,10 @@ import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { doc, updateDoc, deleteField, serverTimestamp, getDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { toast } from "@/hooks/use-toast";
 
 const mainMenuItems = [
   {
@@ -91,6 +93,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
   const { setOpen, isMobile } = useSidebar();
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
+  const auth = useAuth();
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -98,38 +101,6 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
   }, [db, user?.uid]);
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
-
-  // Lazy Cleanup for Expired Plans
-  useEffect(() => {
-    if (!db || !user?.uid) return;
-
-    const checkExpirations = async () => {
-      const services = ['orderkuota', 'gomerchant'];
-      const now = new Date();
-
-      for (const svcId of services) {
-        const svcRef = doc(db, "users", user.uid, "services", svcId);
-        const svcSnap = await getDoc(svcRef);
-        
-        if (svcSnap.exists()) {
-          const data = svcSnap.data();
-          if (data.plan && data.planExpiry) {
-            const expiry = data.planExpiry.toDate ? data.planExpiry.toDate() : new Date(data.planExpiry);
-            if (now > expiry) {
-              await updateDoc(svcRef, {
-                plan: deleteField(),
-                planExpiry: deleteField(),
-                updatedAt: serverTimestamp()
-              });
-              console.log(`Plan expired and removed for service: ${svcId}`);
-            }
-          }
-        }
-      }
-    };
-
-    checkExpirations();
-  }, [db, user?.uid, pathname]);
 
   useEffect(() => {
     if (!authLoading && !profileLoading) {
@@ -140,6 +111,18 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
       }
     }
   }, [user, profile, authLoading, profileLoading, router]);
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      await fetch("/api/auth/session", { method: "DELETE" });
+      toast({ title: "Logged out" });
+      window.location.href = "/signin";
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to logout." });
+    }
+  };
 
   const renderMenuItem = (group: any) => {
     if (group.url) {
@@ -250,6 +233,15 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
         <SidebarFooter className="px-2 group-data-[state=expanded]:px-3 py-4 border-t border-border group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
           <SidebarMenu className="group-data-[collapsible=icon]:items-center">
             {footerMenuItems.map((group) => renderMenuItem(group))}
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                onClick={handleLogout}
+                className="h-10 text-destructive hover:bg-destructive/5 hover:text-destructive transition-colors group-data-[collapsible=icon]:justify-center"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                <span className="text-sm group-data-[collapsible=icon]:hidden">Logout</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>

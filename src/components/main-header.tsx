@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -30,11 +31,11 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { useAuth } from "@/firebase";
 import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/use-toast";
 
 interface MainHeaderProps {
   searchPlaceholder?: string;
@@ -60,12 +61,14 @@ export function MainHeader({
 
   const handleLogout = async () => {
     if (!auth) return;
-    
-    // Clear wildcard session cookie
-    await fetch("/api/auth/session", { method: "DELETE" });
-    
-    await signOut(auth);
-    router.push("/signin");
+    try {
+      await signOut(auth);
+      await fetch("/api/auth/session", { method: "DELETE" });
+      toast({ title: "Logged out", description: "Sesi telah berakhir." });
+      window.location.href = "/signin";
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Gagal logout." });
+    }
   };
 
   return (
