@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Server Actions for Console Dashboard.
- * Handles real-time top-up verification against master Orderkuota mutations.
+ * Menangani verifikasi top-up real-time berdasarkan nominal unik.
  */
 
 import { initializeFirebase } from '@/firebase/core';
@@ -17,68 +17,62 @@ import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 
 /**
  * Memverifikasi pembayaran top-up berdasarkan nominal unik.
- * @param userId ID pengguna yang melakukan top-up.
- * @param expectedAmount Nominal total (termasuk kode unik) yang harus dibayar.
- * @param requestTimestamp Waktu (ms) saat QRIS dibuat (digunakan sebagai floor safety).
+ * Fokus utama pada nominal yang pas dan pengecekan ledger agar tidak double claim.
  */
-export async function checkTopUpStatusAction(userId: string, expectedAmount: number, requestTimestamp: number) {
+export async function checkTopUpStatusAction(userId: string, expectedAmount: number) {
   try {
     const { firestore } = initializeFirebase();
     
-    // 1. Ambil konfigurasi master bridge dari Firestore
+    // 1. Ambil konfigurasi master bridge
     const masterRef = doc(firestore, 'settings', 'orderkuota');
     const masterSnap = await getDoc(masterRef);
     
     if (!masterSnap.exists() || !masterSnap.data().token) {
-      throw new Error("Sistem Bridge Master belum dikonfigurasi oleh Admin.");
+      throw new Error("Sistem Bridge Master belum dikonfigurasi.");
     }
     
     const master = masterSnap.data();
 
-    // 2. Tarik data mutasi live dari provider
+    // 2. Tarik mutasi terbaru
     const mutationRes = await getOrderkuotaMutation({
       username: master.username,
       token: master.token
     });
 
     if (!mutationRes.status || !mutationRes.result) {
-      throw new Error(mutationRes.message || "Gagal menghubungi server provider mutasi.");
+      throw new Error(mutationRes.message || "Gagal mengambil data dari provider.");
     }
 
-    // 3. Cari transaksi 'IN' yang sesuai dengan nominal unik
-    // Sesuai permintaan: Fokus pada nominal. 
-    // Filter tanggal hanya digunakan untuk membuang mutasi dari hari-hari sebelumnya (safety floor).
-    const match = mutationRes.result.find(m => {
-      const isNominalMatch = m.status === 'IN' && Math.abs(parseFloat(m.kredit) - expectedAmount) < 1;
-      if (!isNominalMatch) return false;
+    // 3. Cari mutasi 'IN' yang nominalnya cocok (tanpa filter tanggal yang kaku)
+    // Mencari mutasi yang nominalnya pas dan belum ada di ledger kita
+    let foundMatch = null;
 
-      // Cek apakah mutasi terjadi hari ini (untuk menghindari claim mutasi sangat lama yang belum di-ledger)
-      const mutationDate = m.tanggal.split(' ')[0]; // Ambil YYYY-MM-DD
-      const todayDate = new Date().toISOString().split('T')[0];
-      
-      return mutationDate === todayDate;
-    });
+    for (const m of mutationRes.result) {
+      const amount = parseFloat(m.kredit);
+      const isNominalMatch = m.status === 'IN' && Math.abs(amount - expectedAmount) < 1;
 
-    if (!match) {
+      if (isNominalMatch) {
+        // Cek apakah ID mutasi ini sudah pernah diklaim di database kita
+        const ledgerRef = doc(firestore, 'processed_topups', m.id.toString());
+        const ledgerSnap = await getDoc(ledgerRef);
+
+        if (!ledgerSnap.exists()) {
+          foundMatch = m;
+          break; // Temukan yang terbaru dan belum terpakai
+        }
+      }
+    }
+
+    if (!foundMatch) {
       return { 
         success: false, 
-        message: "Pembayaran belum terdeteksi. Pastikan nominal transfer sama persis (Rp " + expectedAmount.toLocaleString('id-ID') + ") dan mutasi sudah muncul di aplikasi perbankan Anda." 
+        message: `Pembayaran Rp ${expectedAmount.toLocaleString('id-ID')} belum masuk. Pastikan transfer nominal yang sesuai dan tunggu mutasi muncul di bank Anda.` 
       };
     }
 
-    // 4. Cek apakah transaksi ini sudah pernah diklaim (Ledger Check via Provider Trx ID)
-    const ledgerRef = doc(firestore, 'processed_topups', match.id.toString());
-    const ledgerSnap = await getDoc(ledgerRef);
-    
-    if (ledgerSnap.exists()) {
-      return { 
-        success: false, 
-        message: "Transaksi dengan ID ini sudah pernah diproses sebelumnya." 
-      };
-    }
-
-    // 5. Eksekusi penambahan saldo dan catat di ledger secara atomik
+    // 4. Eksekusi penambahan saldo
     const userRef = doc(firestore, 'users', userId);
+    const ledgerRef = doc(firestore, 'processed_topups', foundMatch.id.toString());
     
     await Promise.all([
       updateDoc(userRef, {
@@ -88,23 +82,23 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
       setDoc(ledgerRef, {
         userId,
         amount: expectedAmount,
-        orkutTrxId: match.id,
-        bank: match.brand?.name || 'Unknown',
+        orkutTrxId: foundMatch.id,
+        bank: foundMatch.brand?.name || 'Unknown',
         processedAt: serverTimestamp(),
-        mutationRawDate: match.tanggal
+        rawMutation: foundMatch
       })
     ]);
 
     return { 
       success: true, 
-      message: `Berhasil! Saldo Rp ${expectedAmount.toLocaleString('id-ID')} telah ditambahkan ke akun Anda.` 
+      message: `Pembayaran Terdeteksi! Saldo Rp ${expectedAmount.toLocaleString('id-ID')} telah ditambahkan.` 
     };
 
   } catch (error: any) {
     console.error("TopUp Verify Error:", error);
     return { 
       success: false, 
-      message: error.message || "Terjadi kesalahan internal saat memverifikasi pembayaran." 
+      message: error.message || "Gagal memproses verifikasi." 
     };
   }
 }
