@@ -151,6 +151,7 @@ export async function POST(request: Request) {
 
     // 6. Record Transaction & Update Quota
     const transactionRef = doc(firestore, 'stspay_transactions', trxId);
+    const globalHistoryRef = doc(firestore, 'transactions', trxId);
     const userHistoryRef = doc(firestore, 'users', userId, 'transactions', trxId);
 
     const transactionData = {
@@ -188,6 +189,7 @@ export async function POST(request: Request) {
 
     await Promise.all([
       setDoc(transactionRef, transactionData),
+      setDoc(globalHistoryRef, historyData),
       setDoc(userHistoryRef, historyData),
       updateDoc(gomerchantRef, {
         quota: plan === 'enterprise' ? currentQuota : increment(-1),

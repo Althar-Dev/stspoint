@@ -130,7 +130,10 @@ export async function POST(request: Request) {
 
     // 5. Simpan ke Firestore
     const transactionRef = doc(firestore, 'stspay_transactions', external_id);
-    await setDoc(transactionRef, {
+    const globalHistoryRef = doc(firestore, 'transactions', external_id);
+    const userHistoryRef = doc(firestore, 'users', merchantUid, 'transactions', external_id);
+
+    const mainTxData = {
       id: external_id,
       amount: baseAmount,
       status: 'PENDING',
@@ -140,10 +143,29 @@ export async function POST(request: Request) {
       type: 'payment',
       mode: type,
       callbackUrl: callbackUrl || null,
-      payment_info: paymentInfo, // NULL means "User must pick method"
+      payment_info: paymentInfo, 
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    const historyData = {
+      id: external_id,
+      gameId: "STSPAY",
+      gameName: "Gateway",
+      itemName: description || "Payment Transaction",
+      price: `Rp ${baseAmount.toLocaleString('id-ID')}`,
+      priceAmount: baseAmount,
+      userId: merchantUid,
+      status: "Pending",
+      paymentMethod: type === 'qris' ? "QRIS" : "Multi-Channel",
+      createdAt: serverTimestamp()
+    };
+
+    await Promise.all([
+      setDoc(transactionRef, mainTxData),
+      setDoc(globalHistoryRef, historyData),
+      setDoc(userHistoryRef, historyData)
+    ]);
 
     return NextResponse.json({
       success: true,

@@ -148,8 +148,8 @@ export async function POST(request: Request) {
     }
 
     // 6. Record Transaction & Update Quota
-    // Save to global and user specific collections for visibility and security rules compliance
     const transactionRef = doc(firestore, 'stspay_transactions', trxId);
+    const globalHistoryRef = doc(firestore, 'transactions', trxId);
     const userHistoryRef = doc(firestore, 'users', userId, 'transactions', trxId);
     
     const transactionData = {
@@ -187,6 +187,7 @@ export async function POST(request: Request) {
 
     await Promise.all([
       setDoc(transactionRef, transactionData),
+      setDoc(globalHistoryRef, historyData),
       setDoc(userHistoryRef, historyData),
       updateDoc(orkutRef, {
         quota: plan === 'enterprise' ? currentQuota : increment(-1),
