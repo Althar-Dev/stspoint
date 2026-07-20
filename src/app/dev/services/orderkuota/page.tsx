@@ -1,0 +1,356 @@
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  Wallet, 
+  RefreshCcw,
+  Clock,
+  Link as LinkIcon,
+  ShieldAlert,
+  Lock,
+  PowerOff,
+  User as UserIcon,
+  Save,
+  Loader2,
+  Activity,
+  Copy,
+  Hash,
+  Settings as SettingsIcon,
+  Globe
+} from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, updateDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { toast } from "@/hooks/use-toast";
+import { requestOrderkuotaOtp, getOrderkuotaToken } from "@/lib/orderkuota/connect";
+import { getOrderkuotaProfile } from "@/lib/orderkuota/profile";
+
+export default function OrderkuotaBridgePage() {
+  const { user, loading: authLoading } = useUser();
+  const db = useFirestore();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
+
+  // Connection Info
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpInfo, setOtpInfo] = useState("");
+  
+  // Settings Info
+  const [baseQrInput, setBaseQrInput] = useState("");
+  const [digitSetting, setDigitSetting] = useState<string>("3");
+
+  const settingsRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, "settings", "orderkuota");
+  }, [db]);
+  
+  const { data: config, loading: configLoading } = useDoc(settingsRef);
+
+  const isConnected = !!config?.token;
+
+  useEffect(() => {
+    if (config) {
+      setBaseQrInput(config.baseQr || "");
+      setDigitSetting(config.randomDigit?.toString() || "3");
+    }
+  }, [config]);
+
+  const handleRequestOtp = async () => {
+    if (!username || !password) {
+      toast({ variant: "destructive", title: "Missing Info", description: "Username and password are required." });
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const res = await requestOrderkuotaOtp({ username, password });
+      if (res.status && res.result) {
+        setOtpInfo(res.result.otp_value);
+        setStep(2);
+        toast({ title: "OTP Sent", description: `Check ${res.result.otp}: ${res.result.otp_value}` });
+      } else {
+        throw new Error(res.message || "Failed to get OTP from bridge.");
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "OTP Error", description: error.message });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      toast({ variant: "destructive", title: "Missing OTP", description: "Please enter the code." });
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const res = await getOrderkuotaToken({ username, otp });
+      if (res.status && res.result && settingsRef) {
+        const data = {
+          id: res.result.id,
+          username: res.result.username,
+          token: res.result.token,
+          balance: parseFloat(res.result.balance),
+          updatedAt: serverTimestamp()
+        };
+        
+        await setDoc(settingsRef, data, { merge: true });
+        
+        setIsDialogOpen(false);
+        setStep(1);
+        setOtp("");
+        toast({ title: "Bridge Connected!", description: `Master account ${res.result.name} is now active.` });
+      } else {
+        throw new Error(res.message || "Token exchange failed.");
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Auth Failed", description: error.message });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!settingsRef) return;
+    setIsProcessing(true);
+    try {
+      await updateDoc(settingsRef, {
+        baseQr: baseQrInput,
+        randomDigit: parseInt(digitSetting),
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Settings Updated", description: "Platform bridge configuration saved." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Save Failed", description: "Could not update global settings." });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!settingsRef) return;
+    setIsProcessing(true);
+    try {
+      await updateDoc(settingsRef, {
+        token: "",
+        username: "",
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Bridge Terminated", description: "Master account disconnected." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: "Disconnect failed." });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: `${label} copied.` });
+  };
+
+  const isLoading = authLoading || configLoading;
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-headline font-bold tracking-tight">Orderkuota <span className="text-primary">Master Bridge</span></h1>
+          <p className="text-muted-foreground text-sm">Manage the platform's primary connection to Orderkuota distribution network.</p>
+        </div>
+        {isConnected && (
+           <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[10px] uppercase h-7 px-3 rounded-full flex items-center gap-2">
+             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+             Bridge Operational
+           </Badge>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        {/* Connection Card */}
+        <Card className="md:col-span-5 border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
+           <CardHeader className="bg-muted/30 p-8 border-b border-border">
+              <div className="flex items-center justify-between mb-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                   <Globe className="w-4 h-4 text-primary" />
+                   Upstream Authentication
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs">Secure the master node connection for top-ups and bridge operations.</CardDescription>
+           </CardHeader>
+           <CardContent className="p-8 space-y-6">
+              {isLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              ) : !isConnected ? (
+                <div className="text-center space-y-6 py-6">
+                   <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto border border-dashed border-primary/20">
+                      <LinkIcon className="w-8 h-8 text-primary/30" />
+                   </div>
+                   <Dialog open={isDialogOpen} onOpenChange={(o) => { setIsDialogOpen(o); if(!o) setStep(1); }}>
+                      <DialogTrigger asChild>
+                        <Button className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-xl shadow-primary/10">
+                           Connect Master Account
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="rounded-[2.5rem] border-border max-w-sm">
+                         <DialogHeader>
+                            <DialogTitle className="font-headline font-bold">{step === 1 ? 'Master Login' : 'Verify Bridge'}</DialogTitle>
+                            <DialogDescription className="text-xs">Provide credentials for the platform's primary distributor account.</DialogDescription>
+                         </DialogHeader>
+                         {step === 1 ? (
+                           <div className="space-y-4 py-4">
+                              <div className="space-y-2">
+                                 <Label className="text-[10px] font-bold uppercase ml-1">Username</Label>
+                                 <Input value={username} onChange={(e) => setUsername(e.target.value)} className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all" />
+                              </div>
+                              <div className="space-y-2">
+                                 <Label className="text-[10px] font-bold uppercase ml-1">Password</Label>
+                                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all" />
+                              </div>
+                              <Button onClick={handleRequestOtp} disabled={isProcessing} className="w-full h-12 rounded-xl font-bold">Request Master OTP</Button>
+                           </div>
+                         ) : (
+                           <div className="space-y-4 py-4">
+                              <div className="space-y-2">
+                                 <Label className="text-[10px] font-bold uppercase text-center block mb-2">OTP for {otpInfo}</Label>
+                                 <Input value={otp} onChange={(e) => setOtp(e.target.value)} className="h-14 text-center text-2xl font-headline font-bold tracking-[0.5em] rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all" maxLength={6} />
+                              </div>
+                              <Button onClick={handleVerifyOtp} disabled={isProcessing} className="w-full h-12 rounded-xl font-bold">Verify & Activate Bridge</Button>
+                              <Button variant="ghost" onClick={() => setStep(1)} className="w-full text-xs">Back</Button>
+                           </div>
+                         )}
+                      </DialogContent>
+                   </Dialog>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-2xl border border-border">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                         <UserIcon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                         <p className="text-sm font-bold truncate">{config.username}</p>
+                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Active Master Node</p>
+                      </div>
+                      <AlertDialog>
+                         <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10"><PowerOff className="w-4 h-4" /></Button>
+                         </AlertDialogTrigger>
+                         <AlertDialogContent className="rounded-xl">
+                            <AlertDialogHeader><AlertDialogTitle>Disconnect Bridge?</AlertDialogTitle><AlertDialogDescription>This will break the Top-Up functionality and PPOB fulfillment for all users.</AlertDialogDescription></AlertDialogHeader>
+                            <AlertDialogFooter>
+                               <AlertDialogCancel>Cancel</AlertDialogCancel>
+                               <AlertDialogAction onClick={handleDisconnect} className="bg-red-500">Confirm Disconnect</AlertDialogAction>
+                            </AlertDialogFooter>
+                         </AlertDialogContent>
+                      </AlertDialog>
+                   </div>
+                   
+                   <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase ml-1">Current Balance</Label>
+                      <div className="h-12 flex items-center px-4 rounded-xl bg-muted/30 border border-border">
+                         <p className="text-lg font-headline font-bold">Rp {(config.balance || 0).toLocaleString('id-ID')}</p>
+                      </div>
+                   </div>
+                </div>
+              )}
+           </CardContent>
+        </Card>
+
+        {/* Global Settings Card */}
+        <Card className="md:col-span-7 border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
+           <CardHeader className="bg-muted/30 p-8 border-b border-border">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                 <SettingsIcon className="w-4 h-4 text-primary" />
+                 Global Distribution Settings
+              </CardTitle>
+           </CardHeader>
+           <CardContent className="p-8 space-y-6">
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Platform Base QRIS</Label>
+                 <Textarea 
+                  value={baseQrInput} 
+                  onChange={(e) => setBaseQrInput(e.target.value)}
+                  placeholder="Paste the master QRIS string here..."
+                  className="min-h-[150px] rounded-2xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono text-[10px] break-all leading-relaxed"
+                 />
+                 <p className="text-[9px] text-muted-foreground ml-1">Used globally for internal wallet top-ups across all subdomains.</p>
+              </div>
+
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                    <Hash className="w-3 h-3" />
+                    Random Digit Strategy
+                 </Label>
+                 <Select value={digitSetting} onValueChange={setDigitSetting}>
+                    <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-transparent">
+                       <SelectValue placeholder="Select digits" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border">
+                       <SelectItem value="2" className="text-xs">2 Digits (10-99)</SelectItem>
+                       <SelectItem value="3" className="text-xs">3 Digits (100-999)</SelectItem>
+                    </SelectContent>
+                 </Select>
+              </div>
+
+              <div className="pt-4 border-t border-border flex justify-end">
+                 <Button onClick={handleSaveSettings} disabled={isProcessing || !isConnected} className="h-12 px-10 rounded-xl font-bold uppercase tracking-widest text-[11px] gap-2 shadow-lg shadow-primary/10">
+                    {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Bridge Config
+                 </Button>
+              </div>
+           </CardContent>
+        </Card>
+      </div>
+
+      <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
+         <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+         <div className="space-y-1">
+            <h4 className="text-sm font-bold text-amber-900 uppercase tracking-tight">Security Protocol</h4>
+            <p className="text-xs text-amber-800 leading-relaxed">
+               Updating the Master Bridge settings will affect all automatic payment reconciliation logic for the entire STSPoint infrastructure. Ensure the Base QRIS provided matches the Master Account connected.
+            </p>
+         </div>
+      </div>
+    </div>
+  );
+}

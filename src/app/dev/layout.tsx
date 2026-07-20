@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -27,7 +26,8 @@ import {
   ChevronDown,
   LayoutGrid,
   Package,
-  Settings
+  Settings,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -62,9 +62,10 @@ const devMenuItems = [
     title: "Service Management", 
     icon: Package, 
     items: [
-      { title: "PPOB", url: "/dev/services/ppob" },
-      { title: "SMM", url: "/dev/services/smm" },
-      { title: "OTP", url: "/dev/services/otp" },
+      { title: "Orderkuota Bridge", url: "/dev/services/orderkuota" },
+      { title: "PPOB Engine", url: "/dev/services/ppob" },
+      { title: "SMM Bridge", url: "/dev/services/smm" },
+      { title: "OTP Gateway", url: "/dev/services/otp" },
     ]
   },
   { title: "Live Traffic", icon: Activity, url: "/dev/traffic" },
@@ -88,7 +89,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!authLoading && !profileLoading) {
       if (!user) {
-        router.push("/signin");
+        router.push("/dev/signin");
       } else if (profile && !profile.dev) {
         router.push("/console");
       }

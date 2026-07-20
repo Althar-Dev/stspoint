@@ -63,6 +63,13 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: profile, loading: profileLoading } = useDoc(userProfileRef);
 
+  // Fetch Master Settings for Bridge Base QRIS
+  const masterOrkutRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, "settings", "orderkuota");
+  }, [db]);
+  const { data: masterConfig } = useDoc(masterOrkutRef);
+
   const orderkuotaRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "orderkuota");
@@ -92,9 +99,8 @@ export default function OverviewPage() {
       return;
     }
 
-    // Menggunakan base QRIS sistem (sebagai contoh menggunakan baseQr user jika terhubung, 
-    // atau fallback ke base platform di lingkungan nyata)
-    const baseQr = "00020101021126670011ID.CO.QRIS.WWW011893600915302061073802159360091530206100303UME51440014ID.CO.QRIS.WWW02159360091530206100303UME5204123453033605802ID5911STS POINT6007JAKARTA61051234562070703A016304ABCD";
+    // Gunakan base QRIS dari pengaturan master (settings/orderkuota) atau fallback
+    const baseQr = masterConfig?.baseQr || "00020101021126670011ID.CO.QRIS.WWW011893600915302061073802159360091530206100303UME51440014ID.CO.QRIS.WWW02159360091530206100303UME5204123453033605802ID5911STS POINT6007JAKARTA61051234562070703A016304ABCD";
 
     setIsGenerating(true);
     try {
