@@ -9,8 +9,7 @@ import {
   updateDoc,
   increment,
   serverTimestamp,
-  setDoc,
-  getDoc
+  setDoc
 } from 'firebase/firestore';
 import { getOrderkuotaPPOBPricelist, getMarkupRules, forwardOrderToOkeConnect, checkStatusOkeConnect, type OrkutPPOBProduct, type MarkupRule } from '@/service/orderkuota';
 import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
@@ -78,7 +77,7 @@ export async function POST(request: Request) {
 
     const userDoc = authSnap.docs[0];
     const userData = userDoc.data();
-    const userId = userData.uid;
+    const userId = userData.uid || userDoc.id;
     const userBalance = userData.balance || 0;
 
     // 2. Load Product & Markup Rules
@@ -87,7 +86,7 @@ export async function POST(request: Request) {
       getMarkupRules()
     ]);
 
-    const product = productsRes.data.find(p => p.buyer_sku_code === sku);
+    const product = productsRes.data.find(p => p.buyer_sku_code.toUpperCase() === sku.toUpperCase());
     if (!product) {
       return NextResponse.json({ success: false, error: `Product SKU '${sku}' not found` }, { status: 404 });
     }
@@ -148,7 +147,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 8. Record to Global Transaction Ledger
+    // 8. Record to Global Transaction Ledger (CRITICAL: Primary source for all dashboards)
     const txData = {
       id: ref_id,
       gameId: product.brand,
@@ -164,9 +163,10 @@ export async function POST(request: Request) {
       callbackUrl: callbackUrl || null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      paymentMethod: 'H2H_API',
+      paymentMethod: 'API_H2H',
       provider_msg: statusRes.message || h2hRes.message,
-      type: 'ppob'
+      type: 'ppob',
+      is_pasca: isPasca
     };
 
     const globalTxRef = doc(firestore, 'transactions', ref_id);

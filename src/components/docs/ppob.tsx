@@ -57,7 +57,7 @@ export function DocsPpob() {
              Query Parameters
            </h4>
            <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
-              <table className="w-full text-left text-xs border-collapse min-w-[600px]">
+              <table className="w-full text-left text-xs border-collapse min-w-[650px]">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
@@ -329,7 +329,7 @@ echo $response;
             Synchronize transaction status manually using the <code className="font-bold text-foreground">ref_id</code> you sent during order creation.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <UiBadge className="bg-blue-500 text-white border-none uppercase font-bold text-[10px]">GET</UiBadge>
+            <UiBadge className="bg-blue-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
             <span className="text-primary">/ppob/status</span>
           </div>
         </div>
