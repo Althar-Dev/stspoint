@@ -79,6 +79,8 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
 
+  const isSignInPage = pathname === "/dev/signin";
+
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid);
@@ -87,14 +89,36 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
   useEffect(() => {
-    if (!authLoading && !profileLoading) {
+    if (!authLoading && !profileLoading && !isSignInPage) {
       if (!user) {
         router.push("/dev/signin");
       } else if (profile && !profile.dev) {
         router.push("/console");
       }
     }
-  }, [user, profile, authLoading, profileLoading, router]);
+  }, [user, profile, authLoading, profileLoading, router, isSignInPage]);
+
+  // If on sign-in page, just render children without sidebar or access protection
+  if (isSignInPage) {
+    return <div className="w-full min-h-screen bg-black">{children}</div>;
+  }
+
+  // Protection layer for root console
+  if (authLoading || profileLoading || !user || !profile?.dev) {
+    return (
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
+        <div className="relative w-48 h-0.5 bg-muted rounded-full overflow-hidden">
+          <div className="absolute top-0 left-0 h-full bg-primary animate-loading-bar" style={{ width: '40%' }}></div>
+        </div>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></div>
+             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground">Secure Access</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderMenuItem = (group: any) => {
     if (group.url) {
@@ -173,22 +197,6 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
       </Collapsible>
     );
   };
-
-  if (authLoading || profileLoading || !user || !profile?.dev) {
-    return (
-      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
-        <div className="relative w-48 h-0.5 bg-muted rounded-full overflow-hidden">
-          <div className="absolute top-0 left-0 h-full bg-primary animate-loading-bar" style={{ width: '40%' }}></div>
-        </div>
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2">
-             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></div>
-             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground">Secure Access</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
