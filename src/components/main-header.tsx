@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -134,12 +135,12 @@ export function MainHeader({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/console/setting" className="cursor-pointer gap-2 py-2.5 rounded-xl">
+              <Link href="/setting" className="cursor-pointer gap-2 py-2.5 rounded-xl">
                 <User className="w-4 h-4" /> Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/console/subscribe" className="cursor-pointer gap-2 py-2.5 rounded-xl">
+              <Link href="/subscribe" className="cursor-pointer gap-2 py-2.5 rounded-xl">
                 <CreditCard className="w-4 h-4" /> Subscription
               </Link>
             </DropdownMenuItem>

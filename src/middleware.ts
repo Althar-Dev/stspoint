@@ -4,57 +4,53 @@ import type { NextRequest } from 'next/server';
 
 /**
  * STSPoint Unified Subdomain Middleware
- * Handles: checkout, dev, console, and partner (mapped from /client)
+ * Menangani pembersihan URL agar folder internal tidak muncul di subdomain.
  */
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const host = request.headers.get('host') || '';
   const { pathname } = url;
 
-  // 1. Skip logic for local development or workspace
+  // 1. Lewati logika jika di localhost atau workspace agar tidak merusak pengembangan
   const isDev = host.includes('localhost') || host.includes('9002') || host.includes('firebaseapp.com');
   if (isDev) return NextResponse.next();
 
   const rootDomain = 'stspoint.id';
 
-  // 2. Map Subdomains to Internal Paths
-  // partner.stspoint.id -> /client
-  if (host.startsWith('partner.')) {
-    url.pathname = `/client${pathname}`;
+  // 2. Definisi Mapping Subdomain
+  const mappings: Record<string, { internal: string; subdomain: string }> = {
+    'console': { internal: '/console', subdomain: 'console' },
+    'partner': { internal: '/client', subdomain: 'partner' },
+    'dev': { internal: '/dev', subdomain: 'dev' },
+    'checkout': { internal: '/checkout', subdomain: 'checkout' },
+  };
+
+  // 3. Cek apakah host saat ini adalah salah satu subdomain yang terdaftar
+  const sub = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
+
+  if (sub) {
+    const config = mappings[sub];
+
+    // JIKA PATH DIAWALI DENGAN FOLDER INTERNAL (Misal: console.stspoint.id/console)
+    // REDIRECT UNTUK MENGHAPUS PREFIX TERSEBUT DARI URL BROWSER
+    if (pathname.startsWith(config.internal)) {
+      const cleanPath = pathname.replace(config.internal, '') || '/';
+      return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
+    }
+
+    // REWRITE SECARA TRANSPARAN (User tetap melihat console.stspoint.id/ tapi sistem baca /console)
+    url.pathname = `${config.internal}${pathname}`;
     return NextResponse.rewrite(url);
   }
 
-  // console.stspoint.id -> /console
-  if (host.startsWith('console.')) {
-    url.pathname = `/console${pathname}`;
-    return NextResponse.rewrite(url);
-  }
-
-  // dev.stspoint.id -> /dev
-  if (host.startsWith('dev.')) {
-    url.pathname = `/dev${pathname}`;
-    return NextResponse.rewrite(url);
-  }
-
-  // checkout.stspoint.id -> /checkout
-  if (host.startsWith('checkout.')) {
-    url.pathname = `/checkout${pathname}`;
-    return NextResponse.rewrite(url);
-  }
-
-  // 3. Handle Redirects from Main Domain to Subdomains
+  // 4. Redirect jika user mencoba akses path internal dari domain utama stspoint.id
   if (host === rootDomain) {
-    if (pathname.startsWith('/console')) {
-      return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname.replace('/console', '')}`, request.url));
-    }
-    if (pathname.startsWith('/client')) {
-      return NextResponse.redirect(new URL(`https://partner.${rootDomain}${pathname.replace('/client', '')}`, request.url));
-    }
-    if (pathname.startsWith('/dev')) {
-      return NextResponse.redirect(new URL(`https://dev.${rootDomain}${pathname.replace('/dev', '')}`, request.url));
-    }
-    if (pathname.startsWith('/checkout')) {
-      return NextResponse.redirect(new URL(`https://checkout.${rootDomain}${pathname.replace('/checkout', '')}`, request.url));
+    for (const key in mappings) {
+      const config = mappings[key];
+      if (pathname.startsWith(config.internal)) {
+        const cleanPath = pathname.replace(config.internal, '') || '/';
+        return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}`, request.url));
+      }
     }
   }
 
