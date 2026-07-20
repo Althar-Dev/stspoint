@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -11,7 +10,8 @@ service cloud.firestore {
 
     // Aturan untuk profil pengguna
     match /users/{userId} {
-      allow read, write: if (request.auth != null && request.auth.uid == userId) || isDev();
+      allow read: if (request.auth != null && request.auth.uid == userId) || isDev();
+      allow write: if (request.auth != null && request.auth.uid == userId) || isDev();
       
       match /services/{serviceId} {
         allow read, write: if (request.auth != null && request.auth.uid == userId) || isDev();
