@@ -12,8 +12,41 @@ import {
   setDoc,
   getDoc
 } from 'firebase/firestore';
-import { getOrderkuotaPPOBPricelist, forwardOrderToOkeConnect, checkStatusOkeConnect } from '@/service/orderkuota';
+import { getOrderkuotaPPOBPricelist, getMarkupRules, forwardOrderToOkeConnect, checkStatusOkeConnect, type OrkutPPOBProduct, type MarkupRule } from '@/service/orderkuota';
 import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
+
+/**
+ * Helper: Kalkulasi Harga Jual berdasarkan Aturan Markup
+ */
+function calculateSellPrice(product: OrkutPPOBProduct, rules: MarkupRule[]) {
+  const specificProviderRules = rules.filter(r => r.targetProvider === product.provider);
+  const globalRules = rules.filter(r => r.targetProvider === 'all');
+
+  const findBestRule = (ruleSet: MarkupRule[]) => {
+    // Filter berdasarkan rentang harga (modal)
+    const candidates = ruleSet.filter(r => {
+      const min = r.minPrice || 0;
+      const max = r.maxPrice || 999999999;
+      return product.price >= min && product.price <= max;
+    });
+
+    // Hierarki: SKU > Brand > Tipe > Global
+    return candidates.find(r => r.targetType === 'sku' && r.targetValue.toUpperCase() === product.buyer_sku_code.toUpperCase()) ||
+           candidates.find(r => r.targetType === 'brand' && r.targetValue.toUpperCase() === product.brand.toUpperCase()) ||
+           candidates.find(r => r.targetType === 'type' && r.targetValue.toLowerCase() === product.type.toLowerCase()) ||
+           candidates.find(r => r.targetType === 'global');
+  };
+
+  const rule = findBestRule(specificProviderRules) || findBestRule(globalRules);
+  
+  if (!rule) return product.price;
+
+  if (rule.markupType === 'nominal') {
+    return product.price + rule.value;
+  } else {
+    return Math.ceil(product.price * (1 + rule.value / 100));
+  }
+}
 
 /**
  * API: PPOB Order & Product List
@@ -39,12 +72,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid secret_key' }, { status: 401 });
     }
 
-    const productsRes = await getOrderkuotaPPOBPricelist();
+    // Ambil data produk dan aturan markup secara bersamaan
+    const [productsRes, markupRes] = await Promise.all([
+      getOrderkuotaPPOBPricelist(),
+      getMarkupRules()
+    ]);
+
     if (!productsRes.success) {
       return NextResponse.json({ success: false, error: productsRes.message }, { status: 500 });
     }
 
-    let filtered = productsRes.data;
+    const rules = markupRes.data || [];
+    
+    // Terapkan Markup ke setiap produk
+    let filtered = productsRes.data.map(p => ({
+      ...p,
+      price: calculateSellPrice(p, rules) // Tampilkan harga jual ke pelanggan
+    }));
+
     if (type) {
       const targetType = type.toLowerCase() === 'pasca' ? 'Pasca' : 'Prepaid';
       filtered = filtered.filter(p => p.type?.toLowerCase() === targetType.toLowerCase());
@@ -87,27 +132,33 @@ export async function POST(request: Request) {
     const userId = userData.uid;
     const userBalance = userData.balance || 0;
 
-    // 2. Find Product Price
-    const productsRes = await getOrderkuotaPPOBPricelist();
+    // 2. Cari Produk dan Hitung Harga Jual (Markup)
+    const [productsRes, markupRes] = await Promise.all([
+      getOrderkuotaPPOBPricelist(),
+      getMarkupRules()
+    ]);
+
     const product = productsRes.data.find(p => p.buyer_sku_code === sku);
 
     if (!product) {
       return NextResponse.json({ success: false, error: `Product SKU '${sku}' not found` }, { status: 404 });
     }
 
-    const price = product.price; 
+    // HITUNG HARGA JUAL (SELLING PRICE)
+    const sellPrice = calculateSellPrice(product, markupRes.data || []); 
     
     // 3. Check Balance (Only for Prepaid)
-    if (product.type === 'Prepaid' && userBalance < price) {
+    if (product.type === 'Prepaid' && userBalance < sellPrice) {
       return NextResponse.json({ 
         success: false, 
         error: 'Insufficient account balance',
         current_balance: userBalance,
-        required_amount: price
+        required_amount: sellPrice
       }, { status: 403 });
     }
 
     // 4. Forward Order to H2H Bridge
+    // Note: Provider (OkeConnect) tetap dicharge harga modal (product.price)
     const h2hRes = await forwardOrderToOkeConnect({
       type: product.type === 'Pasca' ? 'Pasca' : 'Prepaid',
       product: sku,
@@ -139,10 +190,10 @@ export async function POST(request: Request) {
 
     const finalStatus = statusRes.success ? statusRes.status : 'Pending';
 
-    // 6. Deduct Balance (Atomic)
+    // 6. Deduct Balance (Atomic) - Potong harga JUAL
     if (product.type === 'Prepaid') {
       await updateDoc(doc(firestore, 'users', userId), {
-        balance: increment(-price),
+        balance: increment(-sellPrice),
         updatedAt: serverTimestamp()
       });
     }
@@ -159,8 +210,8 @@ export async function POST(request: Request) {
       sku: sku,
       target: target,
       qty: qty || null,
-      price: `Rp ${price.toLocaleString('id-ID')}`,
-      priceAmount: price,
+      price: `Rp ${sellPrice.toLocaleString('id-ID')}`,
+      priceAmount: sellPrice,
       userId: userId,
       status: finalStatus,
       callbackUrl: callbackUrl || null,
@@ -184,8 +235,8 @@ export async function POST(request: Request) {
         sku: sku,
         target: target,
         status: finalStatus,
-        price: price,
-        remaining_balance: product.type === 'Prepaid' ? userBalance - price : userBalance
+        price: sellPrice,
+        remaining_balance: product.type === 'Prepaid' ? userBalance - sellPrice : userBalance
       }
     });
 
