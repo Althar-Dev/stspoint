@@ -9,8 +9,6 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,7 +44,6 @@ export default function SignUpPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Profile data for auto-redirect
   const profileRef = useMemoFirebase(() => {
     if (!db || !existingUser?.uid) return null;
     return doc(db, "users", existingUser.uid);
@@ -54,9 +51,11 @@ export default function SignUpPage() {
   
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Auto-Redirect if user is already logged in
   useEffect(() => {
     if (!authLoading && existingUser && !profileLoading && profile) {
+      const targetPath = profile.role === 'client' ? "/client" : "/console";
+      const targetSub = profile.role === 'client' ? 'partner' : 'console';
+      
       const hostname = window.location.hostname;
       const isDev = 
         hostname.includes("localhost") || 
@@ -64,13 +63,14 @@ export default function SignUpPage() {
         hostname.includes("cloudworkstations.dev") || 
         hostname.includes("firebaseapp.com");
       
-      const targetSub = profile.role === 'client' ? 'partner' : 'console';
-      
-      if (!isDev && hostname === 'stspoint.id') {
-        window.location.href = `https://${targetSub}.stspoint.id/`;
-      } else if (isDev) {
-        router.push(profile.role === 'client' ? "/client" : "/console");
+      if (!isDev) {
+        if (!hostname.startsWith(targetSub + ".")) {
+          window.location.href = `https://${targetSub}.stspoint.id/`;
+          return;
+        }
       }
+      
+      router.push(targetPath);
     }
   }, [existingUser, authLoading, profile, profileLoading, router]);
 
@@ -103,7 +103,6 @@ export default function SignUpPage() {
     setError("");
     
     try {
-      // 1. If Client, validate license key first
       if (role === 'client') {
         if (!licenseKey) {
           throw new Error("License Key is required for Client registration.");
@@ -120,24 +119,25 @@ export default function SignUpPage() {
         }
       }
 
-      // 2. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
       
       await updateProfile(user, { displayName: name });
 
-      // Sync session to wildcard root domain for cross-subdomain access
-      await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: idToken }),
-      });
+      try {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: idToken }),
+        });
+      } catch (sessionErr) {
+        console.warn("Session sync warning:", sessionErr);
+      }
       
       const merchantId = generateMerchantId();
       const secretKey = generateSecretKey();
       
-      // 3. Save Main User Data
       const userRef = doc(db, 'users', user.uid);
       const userData = {
         uid: user.uid,
@@ -153,7 +153,6 @@ export default function SignUpPage() {
 
       await setDoc(userRef, userData);
 
-      // 4. Save Provider Data to Sub-Collection
       const providers = ['orderkuota', 'gomerchant'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
@@ -172,7 +171,6 @@ export default function SignUpPage() {
         });
       }
 
-      // 5. Initialize AI Config
       const aiConfigRef = doc(db, 'users', user.uid, 'ai', 'config');
       await setDoc(aiConfigRef, {
         id: "config",
@@ -182,27 +180,23 @@ export default function SignUpPage() {
         updatedAt: serverTimestamp()
       });
 
-      // 6. If Client, consume the license key
       if (role === 'client') {
         const keyRef = doc(db, 'license_keys', licenseKey);
         await updateDoc(keyRef, {
           status: 'used',
           usedBy: user.uid,
           updatedAt: serverTimestamp()
-        }).catch(err => console.error("Failed to update license key status:", err));
+        });
       }
 
       toast({ title: "Account Created!", description: "Redirecting to your dashboard..." });
-      
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
       setLoading(false);
     }
   };
 
-  const isGlobalLoading = authLoading || (existingUser && profileLoading);
-
-  if (isGlobalLoading) {
+  if (authLoading || (existingUser && profileLoading)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />

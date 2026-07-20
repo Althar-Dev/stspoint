@@ -48,7 +48,8 @@ export function middleware(request: NextRequest) {
     '/manifest.json',
     '/robots.txt',
     '/sitemap.xml',
-    '/favicon.ico'
+    '/favicon.ico',
+    '/assets/'
   ];
 
   const isPublicPath = PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`));
@@ -66,9 +67,7 @@ export function middleware(request: NextRequest) {
     }
 
     // PENTING: Jangan redirect panggilan API antar subdomain untuk menghindari CORS error
-    // Biarkan saja dia ter-rewrite ke folder internal API jika memang dia memanggil /api/
     if (isApiRoute) {
-      // Jika kita berada di subdomain selain 'api', biarkan dia mengakses /api secara internal
       return NextResponse.next();
     }
 
@@ -94,7 +93,6 @@ export function middleware(request: NextRequest) {
 
   // 5. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
   if (host === rootDomain || host === wwwDomain) {
-    // Jangan ganggu file sistem di root
     if (isPublicPath) return NextResponse.next();
 
     for (const key in mappings) {
@@ -111,13 +109,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - assets (public assets)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|assets|favicon.ico).*)',
   ],
 };

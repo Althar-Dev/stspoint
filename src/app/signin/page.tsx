@@ -28,7 +28,6 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [signingIn, setSigningIn] = useState(false);
 
-  // Fetch profile to handle auto-redirect if already logged in
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid);
@@ -36,9 +35,11 @@ export default function SignInPage() {
   
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Auto-Redirect logic
   useEffect(() => {
     if (!authLoading && user && !profileLoading && profile) {
+      const targetPath = profile.role === 'client' ? "/client" : "/console";
+      const targetSub = profile.role === 'client' ? 'partner' : 'console';
+      
       const hostname = window.location.hostname;
       const isDev = 
         hostname.includes("localhost") || 
@@ -46,13 +47,14 @@ export default function SignInPage() {
         hostname.includes("cloudworkstations.dev") || 
         hostname.includes("firebaseapp.com");
       
-      const targetSub = profile.role === 'client' ? 'partner' : 'console';
-      
-      if (!isDev && (hostname === 'stspoint.id' || hostname === 'www.stspoint.id')) {
-        window.location.href = `https://${targetSub}.stspoint.id/`;
-      } else if (isDev) {
-        router.push(profile.role === 'client' ? "/client" : "/console");
+      if (!isDev) {
+        if (!hostname.startsWith(targetSub + ".")) {
+          window.location.href = `https://${targetSub}.stspoint.id/`;
+          return;
+        }
       }
+      
+      router.push(targetPath);
     }
   }, [user, authLoading, profile, profileLoading, router]);
 
@@ -97,7 +99,6 @@ export default function SignInPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // Gunakan URL relatif untuk menghindari CORS issues pada API session
       try {
         await fetch("/api/auth/session", {
           method: "POST",
@@ -118,9 +119,7 @@ export default function SignInPage() {
     }
   };
 
-  const isGlobalLoading = authLoading || (user && profileLoading);
-
-  if (isGlobalLoading) {
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
