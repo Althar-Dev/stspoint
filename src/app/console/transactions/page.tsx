@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,7 +116,7 @@ export default function AllTransactionsPage() {
           </div>
         </CardHeader>
         <div className="w-full overflow-x-auto"> 
-          <table className="w-full min-w-full text-[10px] md:text-xs text-left"> 
+          <table className="w-full min-w-[800px] text-[10px] md:text-xs text-left border-collapse"> 
             <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
               <tr>
                 <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[8px] md:text-[9px] tracking-widest whitespace-nowrap">Time</th>
@@ -132,22 +133,22 @@ export default function AllTransactionsPage() {
                   <tr key={i}><td colSpan={6} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
               ) : transactions.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-20 text-center text-muted-foreground italic font-medium">seharusnya tampil di sini</td></tr>
+                <tr><td colSpan={6} className="px-6 py-20 text-center text-muted-foreground italic font-medium">Belum ada riwayat transaksi.</td></tr>
               ) : (
                 transactions.map((row, i) => (
-                  <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                  <tr key={i} className="hover:bg-slate-50/30 transition-colors group">
                     <td className="px-6 py-4 text-muted-foreground text-[9px] whitespace-nowrap">{formatTransactionDate(row.createdAt)}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm">
+                      <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm uppercase">
                         {row.gameName || row.gameId}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 font-mono text-[9px] text-muted-foreground whitespace-nowrap uppercase">{row.id?.substring(0, 10)}</td>
-                    <td className="px-6 py-4 font-bold whitespace-nowrap">{row.itemName}</td>
+                    <td className="px-6 py-4 font-bold whitespace-nowrap truncate max-w-[200px]">{row.itemName}</td>
                     <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{row.price}</td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <Badge className={`${
-                        row.status === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                        row.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
                         row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
                         'bg-rose-500/10 text-rose-600'
                       } border-none text-[8px] font-bold px-2 py-0 h-4 rounded-sm uppercase flex items-center w-fit gap-1 ml-auto`}>

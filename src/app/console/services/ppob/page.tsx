@@ -110,9 +110,6 @@ export default function PPOBConsolePage() {
     return Array.from(b).sort();
   }, [products, selectedCategory, selectedType]);
 
-  /**
-   * Logika Penentuan Markup
-   */
   const getProductMarkup = (product: OrkutPPOBProduct): MarkupRule | null => {
     const specificProviderRules = markupRules.filter(r => r.targetProvider === product.provider);
     const globalRules = markupRules.filter(r => r.targetProvider === 'all');
@@ -142,9 +139,6 @@ export default function PPOBConsolePage() {
     return checkSet(specificProviderRules) || checkSet(globalRules);
   };
 
-  /**
-   * Logika Rentang Markup Khusus Pasca
-   */
   const getPascaMarkupInfo = (product: OrkutPPOBProduct) => {
     const relevantRules = markupRules.filter(r => 
       (r.targetProvider === 'all' || r.targetProvider === product.provider) &&
@@ -338,7 +332,7 @@ export default function PPOBConsolePage() {
           
           <CardContent className="p-0 flex-1 overflow-hidden">
             <div className="w-full h-full overflow-auto">
-              <Table className="w-full min-w-[700px]">
+              <Table className="w-full min-w-[900px] border-collapse">
                 <TableHeader className="bg-slate-50/50 dark:bg-white/5 sticky top-0 z-10">
                   <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead className="px-4 md:px-8 font-bold text-[10px] uppercase tracking-widest whitespace-nowrap">SKU</TableHead>
@@ -384,10 +378,10 @@ export default function PPOBConsolePage() {
                               {item.brand}
                             </Badge>
                           </TableCell>
-                          <TableCell className="font-medium text-xs whitespace-nowrap max-w-[200px] md:max-w-[300px] truncate">
+                          <TableCell className="font-medium text-xs whitespace-nowrap max-w-[250px] truncate">
                             {item.product_name}
                           </TableCell>
-                          <TableCell className="font-bold text-primary text-xs whitespace-nowrap text-right">
+                          <TableCell className="font-bold text-primary text-xs whitespace-nowrap text-right font-mono">
                             {item.type === 'Pasca' ? (
                               (() => {
                                 const range = getPascaMarkupInfo(item);
