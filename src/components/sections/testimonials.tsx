@@ -15,7 +15,7 @@ const TESTIMONIALS = [
   {
     name: "Sarah Annisa",
     role: "Lead Architect, NexusPay",
-    comment: "The documentation is world-class. We were able to integrate the PPOB and GoPay bridge modules into our existing application in less than 24 hours.",
+    comment: "The documentation is world-class. We were able to integrate the PPOB and Payment modules into our existing application in less than 24 hours.",
     avatar: "https://picsum.photos/seed/tech2/100/100",
   },
   {

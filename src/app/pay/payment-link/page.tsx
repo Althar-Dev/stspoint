@@ -72,11 +72,14 @@ export default function STSPayTestPage() {
       if (res.success && res.externalId) {
         // 2. Catat ke Firestore koleksi top-level 'stspay_transactions'
         const transactionRef = doc(db, "stspay_transactions", res.externalId);
+        const globalHistoryRef = doc(db, "transactions", res.externalId);
+        const userHistoryRef = doc(db, "users", user.uid, "transactions", res.externalId);
+
         const transactionData = {
           id: res.externalId,
           xenditInvoiceId: res.invoiceId,
           amount: res.amount,
-          status: res.status,
+          status: 'PENDING',
           payerEmail: res.payerEmail,
           description: res.description,
           invoiceUrl: res.invoiceUrl,
@@ -86,12 +89,46 @@ export default function STSPayTestPage() {
           updatedAt: serverTimestamp(),
         };
 
+        const historyData = {
+          id: res.externalId,
+          gameId: "STSPAY",
+          gameName: "STSPAY",
+          itemName: desc || "Payment Request",
+          price: `Rp ${amtNum.toLocaleString('id-ID')}`,
+          priceAmount: amtNum,
+          userId: user.uid,
+          status: "Pending",
+          paymentMethod: "Checkout Link",
+          createdAt: serverTimestamp()
+        };
+
+        // Mutation calls without await as per guidelines
         setDoc(transactionRef, transactionData)
           .catch(async (serverError) => {
             const permissionError = new FirestorePermissionError({
               path: transactionRef.path,
               operation: 'create',
               requestResourceData: transactionData,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+          });
+
+        setDoc(globalHistoryRef, historyData)
+          .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: globalHistoryRef.path,
+              operation: 'create',
+              requestResourceData: historyData,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+          });
+
+        setDoc(userHistoryRef, historyData)
+          .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: userHistoryRef.path,
+              operation: 'create',
+              requestResourceData: historyData,
             } satisfies SecurityRuleContext);
             errorEmitter.emit('permission-error', permissionError);
           });

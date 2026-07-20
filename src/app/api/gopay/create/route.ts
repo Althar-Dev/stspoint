@@ -177,7 +177,7 @@ export async function POST(request: Request) {
     const historyData = {
       id: trxId,
       gameId: "INTERNAL",
-      gameName: "GoPay Bridge",
+      gameName: "GoMerchant",
       itemName: description || "GoPay QRIS Payment",
       price: `Rp ${finalAmount.toLocaleString('id-ID')}`,
       priceAmount: finalAmount,

@@ -163,7 +163,7 @@ export async function POST(request: Request) {
     const historyData = {
       id: external_id,
       gameId: "STSPAY",
-      gameName: "Gateway",
+      gameName: "STSPAY",
       itemName: description || "Payment Request",
       price: `Rp ${baseAmount.toLocaleString('id-ID')}`,
       priceAmount: baseAmount,

@@ -175,7 +175,7 @@ export async function POST(request: Request) {
     const historyData = {
       id: trxId,
       gameId: "INTERNAL",
-      gameName: "QRIS Bridge",
+      gameName: "Orderkuota",
       itemName: description || "Orderkuota QRIS Payment",
       price: `Rp ${finalAmount.toLocaleString('id-ID')}`,
       priceAmount: finalAmount,

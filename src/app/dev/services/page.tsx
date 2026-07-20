@@ -44,7 +44,7 @@ const PROVIDERS = [
   { 
     id: "gomerchant", 
     name: "GoMerchant", 
-    type: "GoPay Bridge", 
+    type: "GoMerchant", 
     icon: Globe, 
     color: "text-cyan-500",
     endpoint: "https://api.gomerchant.biz.id/v1"
