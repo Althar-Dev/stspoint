@@ -33,8 +33,6 @@ export default function STSPaySettingsPage() {
   const [businessName, setBusinessName] = useState("");
   const [merchantName, setMerchantName] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
-  const [bankName, setBankName] = useState("BCA");
-  const [accountNumber, setAccountNumber] = useState("**** 1283");
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -160,7 +158,7 @@ export default function STSPaySettingsPage() {
                </div>
                <div className="flex-1 space-y-1 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-2">
-                    <h4 className="font-bold text-lg">{accountNumber}</h4>
+                    <h4 className="font-bold text-lg">**** 1283</h4>
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] uppercase font-bold h-4">Verified</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight">a.n {profile?.name || "---"}</p>
@@ -189,7 +187,6 @@ export default function STSPaySettingsPage() {
           <CardContent className="p-0 divide-y divide-border">
             {[
               { label: 'Sandbox Mode', desc: 'Gunakan lingkungan testing untuk simulasi transaksi tanpa uang sungguhan.', icon: Lock, status: false },
-              { label: 'Webhook Alerts', desc: 'Kirim notifikasi otomatis ke server Anda setiap ada transaksi sukses.', icon: Bell, status: true },
               { label: 'Auto-Settlement', desc: 'Cairkan saldo secara otomatis setiap hari ke rekening utama.', icon: Banknote, status: false },
               { label: 'Double Verification', desc: 'Wajibkan verifikasi 2FA untuk setiap penarikan saldo.', icon: ShieldCheck, status: true },
             ].map((pref, i) => (
