@@ -22,6 +22,7 @@ export function middleware(request: NextRequest) {
   if (isDev) return NextResponse.next();
 
   const rootDomain = 'stspoint.id';
+  const wwwDomain = 'www.stspoint.id';
 
   // 2. Definisi Mapping Subdomain Produksi
   const mappings: Record<string, { internal: string; subdomain: string }> = {
@@ -32,22 +33,23 @@ export function middleware(request: NextRequest) {
     'docs': { internal: '/docs', subdomain: 'docs' },
   };
 
-  // 3. Logika Pembersihan Path Internal di Subdomain
-  // Cek apakah host saat ini adalah salah satu subdomain kita
+  // 3. Logika Jika Request Datang ke Subdomain (misal: console.stspoint.id)
   const currentSubKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
   if (currentSubKey) {
     const config = mappings[currentSubKey];
 
-    // Redirect jika path diawali dengan folder internal (membersihkan URL publik)
+    // Redirect jika path diawali dengan folder internal MILIK subdomain ini (Pembersihan URL)
+    // Contoh: console.stspoint.id/console/dashboard -> console.stspoint.id/dashboard
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
     // CEK CROSS-SUBDOMAIN: Jika user di subdomain A mengakses path milik subdomain B
+    // Contoh: partner.stspoint.id/console -> REDIRECT KE console.stspoint.id/
     for (const key in mappings) {
-      if (key !== currentSubKey && pathname.startsWith(mappings[key].internal)) {
+      if (key !== currentSubKey && (pathname === mappings[key].internal || pathname.startsWith(`${mappings[key].internal}/`))) {
         const targetConfig = mappings[key];
         const cleanPath = pathname.replace(targetConfig.internal, '') || '/';
         return NextResponse.redirect(new URL(`https://${targetConfig.subdomain}.${rootDomain}${cleanPath}`, request.url));
@@ -59,11 +61,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // 4. Redirect dari domain utama ke subdomain jika mengakses path folder internal secara manual
-  if (host === rootDomain) {
+  // 4. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
+  if (host === rootDomain || host === wwwDomain) {
     for (const key in mappings) {
       const config = mappings[key];
-      if (pathname.startsWith(config.internal)) {
+      // Jika path dimulai dengan folder internal, redirect ke subdomain terkait
+      if (pathname === config.internal || pathname.startsWith(`${config.internal}/`)) {
         const cleanPath = pathname.replace(config.internal, '') || '/';
         return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}`, request.url));
       }
