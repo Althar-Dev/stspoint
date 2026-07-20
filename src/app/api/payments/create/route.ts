@@ -50,21 +50,23 @@ export async function POST(request: Request) {
 
     const { firestore } = initializeFirebase();
 
-    // 2. Autentikasi Merchant
+    // 2. Autentikasi Merchant (Sequential to avoid index/case issues)
     const usersRef = collection(firestore, 'users');
-    const authQuery = query(
-      usersRef, 
-      where('merchantId', '==', merchant_id), 
-      where('secretKey', '==', secret_key)
-    );
-    
+    const authQuery = query(usersRef, where('secretKey', '==', secret_key));
     const authSnap = await getDocs(authQuery);
+
     if (authSnap.empty) {
-      return NextResponse.json({ success: false, message: 'Invalid Merchant ID or Secret Key.' }, { status: 401 });
+      return NextResponse.json({ success: false, message: 'Authentication failed: Invalid Secret Key.' }, { status: 401 });
     }
 
     const merchantData = authSnap.docs[0].data();
     const merchantUid = merchantData.uid;
+
+    // Verify Identity (Match against merchantId OR clientKey for Partners)
+    const storedId = (merchantData.merchantId || merchantData.clientKey || "").toString();
+    if (storedId !== merchant_id.toString()) {
+      return NextResponse.json({ success: false, message: 'Authentication failed: Merchant ID mismatch.' }, { status: 401 });
+    }
 
     // 3. Generate External ID
     const external_id = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
