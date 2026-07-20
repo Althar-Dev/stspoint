@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,11 +45,12 @@ export default function AllTransactionsPage() {
 
   // Helper to determine effective status based on 15m rule
   const getEffectiveStatus = (status: string, createdAt: any) => {
-    if (status !== 'Pending' && status !== 'PENDING') return status;
+    const s = String(status).toUpperCase();
+    if (s !== 'PENDING') return status;
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
-    return diffInMinutes > 15 ? 'Expired' : status;
+    return diffInMinutes > 15 ? 'Failed' : status;
   };
 
   const transactions = useMemo(() => {
@@ -172,8 +172,7 @@ export default function AllTransactionsPage() {
                         } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
                           {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-3 h-3" />}
                           {row.effectiveStatus === 'Pending' && <Clock className="w-3 h-3" />}
-                          {(row.effectiveStatus === 'Failed' || row.effectiveStatus === 'Expired') && <XCircle className="w-3 h-3" />}
-                          {row.effectiveStatus === 'Expired' && <Timer className="w-3 h-3" />}
+                          {row.effectiveStatus === 'Failed' && <XCircle className="w-3 h-3" />}
                           {row.effectiveStatus}
                         </Badge>
                       </td>

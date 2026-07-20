@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,11 +99,12 @@ export default function OverviewPage() {
 
   // Helper to determine effective status based on 15m rule
   const getEffectiveStatus = (status: string, createdAt: any) => {
-    if (status !== 'Pending' && status !== 'PENDING') return status;
+    const s = String(status).toUpperCase();
+    if (s !== 'PENDING') return status;
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
-    return diffInMinutes > 15 ? 'Expired' : status;
+    return diffInMinutes > 15 ? 'Failed' : status;
   };
 
   const transactions = useMemo(() => {
@@ -199,7 +199,7 @@ export default function OverviewPage() {
   };
 
   const { stats, activityChartData, weeklyUsageTrend } = useMemo(() => {
-    const counts = { success: 0, pending: 0, failed: 0, expired: 0 };
+    const counts = { success: 0, pending: 0, failed: 0 };
     const buckets = [
       { time: "00:00", success: 0, pending: 0, failed: 0 },
       { time: "04:00", success: 0, pending: 0, failed: 0 },
@@ -219,8 +219,7 @@ export default function OverviewPage() {
         const effectiveStatus = tx.effectiveStatus;
         if (effectiveStatus === "Success") counts.success++;
         else if (effectiveStatus === "Pending" || effectiveStatus === "PENDING") counts.pending++;
-        else if (effectiveStatus === "Failed") counts.failed++;
-        else if (effectiveStatus === "Expired") counts.expired++;
+        else counts.failed++;
 
         const txDate = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt || 0);
         const hour = txDate.getHours();
@@ -228,7 +227,7 @@ export default function OverviewPage() {
         if (bucketIdx > 5) bucketIdx = 5;
         if (effectiveStatus === "Success") buckets[bucketIdx].success++;
         else if (effectiveStatus === "Pending" || effectiveStatus === "PENDING") buckets[bucketIdx].pending++;
-        else if (effectiveStatus === "Failed" || effectiveStatus === "Expired") buckets[bucketIdx].failed++;
+        else buckets[bucketIdx].failed++;
 
         const txDayStart = startOfDay(txDate).getTime();
         const trendDay = last7Days.find(d => d.date.getTime() === txDayStart);
@@ -499,7 +498,7 @@ export default function OverviewPage() {
               {[
                 { label: "Success", value: stats.success.toLocaleString(), color: "text-green-500", key: "success", stroke: "#22c55e" },
                 { label: "Pending", value: stats.pending.toLocaleString(), color: "text-orange-500", key: "pending", stroke: "#f97316" },
-                { label: "Gagal/Expired", value: (stats.failed + stats.expired).toLocaleString(), color: "text-rose-500", key: "failed", stroke: "#f43f5e" },
+                { label: "Failed", value: stats.failed.toLocaleString(), color: "text-rose-500", key: "failed", stroke: "#f43f5e" },
               ].map((stat, i) => (
                 <React.Fragment key={i}>
                   <div className="flex-1 relative flex flex-col items-center justify-center p-4">
@@ -529,7 +528,7 @@ export default function OverviewPage() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-primary" />
-                <CardTitle className="text-xs md:text-sm font-bold">Recent Transactions</CardTitle>
+                <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest text-muted-foreground">Recent Transactions</CardTitle>
               </div>
               <Button variant="outline" asChild className="rounded-lg h-8 md:h-9 text-[10px] font-bold px-4 transition-all hover:bg-primary hover:text-primary-foreground">
                 <Link href="/console/transactions">View All</Link>
@@ -575,8 +574,7 @@ export default function OverviewPage() {
                         } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
                           {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-3 h-3" />}
                           {row.effectiveStatus === 'Pending' && <Clock className="w-3 h-3" />}
-                          {(row.effectiveStatus === 'Failed' || row.effectiveStatus === 'Expired') && <XCircle className="w-3 h-3" />}
-                          {row.effectiveStatus === 'Expired' && <Timer className="w-3 h-3" />}
+                          {row.effectiveStatus === 'Failed' && <XCircle className="w-3 h-3" />}
                           {row.effectiveStatus}
                         </Badge>
                       </td>
