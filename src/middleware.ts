@@ -93,6 +93,11 @@ export function middleware(request: NextRequest) {
 
   // 5. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
   if (host === rootDomain || host === wwwDomain) {
+    // FORCE REDIRECT: Signin & Signup ke console subdomain
+    if (pathname === '/signin' || pathname === '/signup') {
+      return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}`, request.url));
+    }
+
     if (isPublicPath) return NextResponse.next();
 
     for (const key in mappings) {
