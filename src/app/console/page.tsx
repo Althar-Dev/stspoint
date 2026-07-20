@@ -24,7 +24,8 @@ import {
   RefreshCcw,
   AlertCircle,
   XCircle,
-  Timer
+  Timer,
+  Clock
 } from "lucide-react";
 import {
   Dialog,
@@ -104,6 +105,7 @@ export default function OverviewPage() {
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
+    // Set to Failed if more than 15 minutes
     return diffInMinutes > 15 ? 'Failed' : status;
   };
 
@@ -262,7 +264,7 @@ export default function OverviewPage() {
   const isGlobalLoading = authLoading || profileLoading || (!!user && !userProfileRef);
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 min-w-0 overflow-hidden">
+    <div className="w-full max-w-7xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-1">
         <div>
           <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">
