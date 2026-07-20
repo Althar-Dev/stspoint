@@ -1,23 +1,20 @@
-
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, getDoc, increment } from 'firebase/firestore';
 import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
  * HANDLER WEBHOOK STSPAY (Incoming from Provider like Xendit)
- * Dispatches to Merchant using dynamic callbackUrl if available.
+ * Dispatches to Merchant and Updates Net Balance (Merchant-Borne Fee logic).
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     console.log('STSPay Webhook Received:', JSON.stringify(body, null, 2));
 
-    // 1. Ekstrak External ID / Order ID
     const transactionId = body?.data?.reference_id || body?.order_id || body?.external_id || body?.id;
     
     if (!transactionId) {
-      console.warn('Webhook warning: No ID found in payload');
       return NextResponse.json({ message: 'ID not found' }, { status: 400 });
     }
 
@@ -26,13 +23,12 @@ export async function POST(request: Request) {
     
     const txSnap = await getDoc(transactionRef);
     if (!txSnap.exists()) {
-      console.error(`Webhook error: Transaction ${transactionId} not found in Firestore`);
       return NextResponse.json({ message: 'Transaction record not found' }, { status: 404 });
     }
 
     const txData = txSnap.data();
 
-    // 2. Deteksi Status dari Provider
+    // 2. Detect Status
     let internalStatus = 'PENDING';
     const xenditStatus = body?.data?.status || body?.status;
     
@@ -44,7 +40,26 @@ export async function POST(request: Request) {
       internalStatus = 'FAILED';
     }
 
-    // 3. Update Database
+    // 3. Update Database & Merchant Balance (Only on transition to PAID)
+    if (internalStatus === 'PAID' && txData.status !== 'PAID') {
+      const netAmount = (txData.amount || 0) - (txData.fee_amount || 0);
+      const merchantStsPayRef = doc(firestore, 'users', txData.userId, 'services', 'stspay');
+      
+      await updateDoc(merchantStsPayRef, {
+        balance: increment(netAmount),
+        updatedAt: serverTimestamp()
+      });
+
+      // Update Ledger Record
+      const userHistoryRef = doc(firestore, 'users', txData.userId, 'transactions', transactionId);
+      const globalHistoryRef = doc(firestore, 'transactions', transactionId);
+      
+      await Promise.all([
+        updateDoc(userHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }),
+        updateDoc(globalHistoryRef, { status: 'Success', updatedAt: serverTimestamp() })
+      ]);
+    }
+
     await updateDoc(transactionRef, {
       status: internalStatus,
       updatedAt: serverTimestamp(),
@@ -53,7 +68,6 @@ export async function POST(request: Request) {
     });
 
     // 4. Trigger Webhook to Merchant
-    // Uses txData.callbackUrl (captured during creation from X-Callback-URL header)
     if (internalStatus !== 'PENDING') {
       await notifyMerchant(txData.userId, {
         event: `payment.${internalStatus.toLowerCase()}`,
@@ -61,13 +75,13 @@ export async function POST(request: Request) {
           external_id: transactionId,
           status: internalStatus,
           amount: txData.amount,
+          fee: txData.fee_amount || 0,
+          net_amount: (txData.amount || 0) - (txData.fee_amount || 0),
           payer_email: txData.payerEmail,
           timestamp: new Date().toISOString()
         }
       }, txData.callbackUrl);
     }
-
-    console.log(`Webhook handled: Transaction ${transactionId} is now ${internalStatus}`);
     
     return NextResponse.json({ status: 'OK' });
   } catch (error: any) {

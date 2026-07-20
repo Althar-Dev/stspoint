@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, updateDoc, serverTimestamp, collection } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,7 +76,6 @@ const Player = dynamic(
   { ssr: false }
 );
 
-// Template UI for groups
 const GROUPS_UI = [
   { id: "va", name: "Bank Transfer", icon: Landmark, dbKeys: ['va', 'virtual_account'] },
   { id: "retail", name: "Retail Outlet", icon: Store, dbKeys: ['retail', 'over_the_counter', 'cstore'] },
@@ -156,8 +154,8 @@ export default function CustomCheckoutPage() {
       minAmountError: "Minimum Amount Not Met",
       minAmountDesc: (name: string) => `Minimum payment for ${name} is IDR 10,000. Please choose another method.`,
       minPay: "Min Pay",
-      baseAmount: "Subtotal",
-      fee: "Admin Fee",
+      baseAmount: "Total Price",
+      fee: "Service Fee (Paid by Store)",
       va_steps: [
         "Open your mobile banking app.",
         (bank: string) => `Select Transfer > Virtual Account ${bank}.`,
@@ -225,8 +223,8 @@ export default function CustomCheckoutPage() {
       minAmountError: "Minimal Nominal Tidak Terpenuhi",
       minAmountDesc: (name: string) => `Minimal pembayaran untuk ${name} adalah Rp 10.000. Silakan pilih metode lain.`,
       minPay: "Min Bayar",
-      baseAmount: "Harga Dasar",
-      fee: "Biaya Layanan",
+      baseAmount: "Total Harga",
+      fee: "Biaya Layanan (Ditanggung Toko)",
       va_steps: [
         "Buka aplikasi mobile banking Anda.",
         (bank: string) => `Pilih Transfer > Virtual Account ${bank}.`,
@@ -358,17 +356,12 @@ export default function CustomCheckoutPage() {
         await cancelStsTransaction(prId, transaction.provider || 'Xendit');
       }
       
-      // Reset amount to base_amount if changing method
       const resetData: any = {
         payment_info: null,
         payment_method_id: null,
+        fee_amount: 0,
         updatedAt: serverTimestamp()
       };
-
-      if (transaction.base_amount) {
-        resetData.amount = transaction.base_amount;
-        resetData.fee_amount = 0;
-      }
 
       await updateDoc(transactionRef, resetData);
       setSelectedMethod(null);
@@ -380,7 +373,7 @@ export default function CustomCheckoutPage() {
   };
 
   /**
-   * MDR LOGIC: Calculate fee based on channel config
+   * MDR LOGIC: Calculate fee (Merchant Borne)
    */
   const calculateFeeAmount = (base: number, feeStr: string) => {
     if (!feeStr) return 0;
@@ -394,7 +387,6 @@ export default function CustomCheckoutPage() {
   const handleSelectMethod = async (method: any, mobileNumber?: string) => {
     if (!transaction) return;
 
-    // Use base_amount if available, otherwise fallback to current amount
     const baseAmount = transaction.base_amount || transaction.amount;
     const minPay = Number(method.min);
     
@@ -416,13 +408,12 @@ export default function CustomCheckoutPage() {
     setIsOvoPromptOpen(false);
 
     try {
-      // Calculate MDR Fee
+      // Calculate MDR Fee - But customer pays baseAmount (Merchant-Borne)
       const feeAmount = calculateFeeAmount(baseAmount, method.fee);
-      const totalAmount = baseAmount + feeAmount;
 
       const res = await requestPaymentInfo(method.type, {
         external_id: transaction.id, 
-        amount: totalAmount,
+        amount: baseAmount, // Official amount paid by customer
         bank_code: method.id,
         name: transaction.payerEmail || "STS Customer",
         mobile_number: mobileNumber,
@@ -436,8 +427,8 @@ export default function CustomCheckoutPage() {
           payment_method_id: method.id,
           provider: method.provider,
           base_amount: baseAmount,
-          fee_amount: feeAmount,
-          amount: totalAmount, // Official total to be paid
+          fee_amount: feeAmount, // Recorded to be deducted from merchant balance later
+          amount: baseAmount, 
           updatedAt: serverTimestamp()
         });
       } else {
@@ -483,7 +474,6 @@ export default function CustomCheckoutPage() {
   if (loading || !mounted) {
     return (
       <div className="light min-h-screen bg-[#F9FAFB] flex flex-col">
-        {/* Header Skeleton */}
         <header className="w-full h-16 md:h-20 bg-white border-b border-slate-300 flex items-center justify-between px-4 md:px-12 sticky top-0 z-50">
           <div className="flex items-center gap-2">
             <Skeleton className="w-8 h-8 rounded-md" />
@@ -501,32 +491,7 @@ export default function CustomCheckoutPage() {
                 <Skeleton className="w-64 h-12 mx-auto" />
               </div>
             </div>
-            <div className="max-w-2xl mx-auto space-y-6">
-              <div className="flex items-center justify-between">
-                <Skeleton className="w-32 h-6" />
-                <Skeleton className="w-16 h-8" />
-              </div>
-              <Skeleton className="w-full h-[400px] rounded-2xl" />
-              <Skeleton className="w-full h-12 rounded-xl" />
-            </div>
           </div>
-          <aside className="lg:col-span-4 p-4 lg:p-12 lg:border-l border-slate-200">
-             <div className="space-y-8">
-                <div className="bg-white p-8 space-y-8 rounded-2xl border border-slate-200">
-                  <Skeleton className="w-40 h-8" />
-                  <div className="space-y-4">
-                    <Skeleton className="w-full h-12" />
-                    <Skeleton className="w-full h-12" />
-                  </div>
-                  <div className="border-t border-dashed pt-8 border-slate-200">
-                    <div className="flex justify-between">
-                      <Skeleton className="w-24 h-4" />
-                      <Skeleton className="w-32 h-8" />
-                    </div>
-                  </div>
-                </div>
-             </div>
-          </aside>
         </main>
       </div>
     );
@@ -548,9 +513,7 @@ export default function CustomCheckoutPage() {
   const currentPaymentData = transaction.payment_info;
   const currentMethod = activePaymentGroups.flatMap(g => g.methods).find(m => m.id === transaction.payment_method_id) || selectedMethod;
 
-  // MDR breakdown
-  const basePrice = transaction.base_amount || transaction.amount;
-  const adminFee = transaction.fee_amount || 0;
+  const displayAmount = transaction.amount;
 
   return (
     <div className="light min-h-screen bg-[#F9FAFB] text-slate-900 font-sans selection:bg-indigo-100 flex flex-col">
@@ -582,7 +545,7 @@ export default function CustomCheckoutPage() {
             )}
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{T[lang].totalPayment}</p>
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-indigo-600 tracking-tight">
-              IDR {transaction.amount.toLocaleString('id-ID')}
+              IDR {displayAmount.toLocaleString('id-ID')}
             </h1>
           </div>
 
@@ -731,7 +694,7 @@ export default function CustomCheckoutPage() {
                         <AccordionContent className="px-8 pb-8 pt-2">
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             {group.methods.map((method: any) => {
-                              const isTooLow = basePrice < Number(method.min);
+                              const isTooLow = transaction.amount < Number(method.min);
                               return (
                                 <button
                                   key={method.id}
@@ -769,14 +732,6 @@ export default function CustomCheckoutPage() {
               </Card>
             </div>
           )}
-
-          <div className="lg:hidden pt-10 flex flex-col items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 border rounded-md">
-              <span className="text-[9px] font-bold tracking-widest">Powered by</span>
-              <Logo className="w-5 h-5" />
-              <span className="text-[10px] font-black italic">STSPay</span>
-            </div>
-          </div>
         </div>
 
         <aside className="lg:col-span-4 flex flex-col h-full">
@@ -801,15 +756,14 @@ export default function CustomCheckoutPage() {
                 <div className="space-y-4 pt-4">
                    <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-500 font-medium">{T[lang].baseAmount}</span>
-                      <span className="font-bold">IDR {basePrice.toLocaleString('id-ID')}</span>
+                      <span className="font-bold">IDR {displayAmount.toLocaleString('id-ID')}</span>
                    </div>
-                   {adminFee > 0 && (
-                     <div className="flex items-center justify-between text-sm animate-in slide-in-from-top-2">
-                        <span className="text-slate-500 font-medium flex items-center gap-1.5">
+                   {transaction.fee_amount > 0 && (
+                     <div className="flex items-center justify-between text-[10px] italic text-muted-foreground animate-in slide-in-from-top-1">
+                        <span className="flex items-center gap-1.5">
                           {T[lang].fee} 
-                          <Info className="w-3 h-3 text-slate-300" />
                         </span>
-                        <span className="font-bold text-indigo-600">+ IDR {adminFee.toLocaleString('id-ID')}</span>
+                        <span>- IDR {transaction.fee_amount.toLocaleString('id-ID')}</span>
                      </div>
                    )}
                 </div>
@@ -818,7 +772,7 @@ export default function CustomCheckoutPage() {
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-500">{T[lang].totalBill}</span>
-                  <span className="text-xl font-bold text-slate-800">IDR {transaction.amount.toLocaleString('id-ID')}</span>
+                  <span className="text-xl font-bold text-slate-800">IDR {displayAmount.toLocaleString('id-ID')}</span>
                 </div>
 
                 {(!isPaid && !isExpired && !isCanceled) && (
@@ -844,14 +798,6 @@ export default function CustomCheckoutPage() {
                 )}
               </div>
             </Card>
-
-            <div className="hidden lg:flex flex-col items-center gap-4 py-4">
-              <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 border rounded-md">
-                <span className="text-[10px] font-bold tracking-widest">Powered by</span>
-                <Logo className="w-5 h-5" />
-                <span className="text-[10px] font-black italic">STSPay</span>
-              </div>
-            </div>
           </div>
         </aside>
       </main>
