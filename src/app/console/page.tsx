@@ -23,7 +23,7 @@ import {
   Coins,
   RefreshCcw,
   AlertCircle
-} from "lucide-material";
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
