@@ -6,27 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Wallet, 
-  ArrowUpRight, 
-  TrendingUp, 
-  CreditCard,
   History,
   Activity,
   ShieldCheck,
   ChevronRight,
-  ArrowRight,
   Plus,
   RefreshCcw,
   Clock,
-  Terminal,
   XCircle,
-  Timer,
-  CheckCircle2
+  CheckCircle2,
+  PieChart as PieChartIcon
 } from "lucide-react";
 import React, { useMemo } from "react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { Area, AreaChart, ResponsiveContainer, YAxis, XAxis, Tooltip } from "recharts";
-import { format } from "date-fns";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import Link from "next/link";
 
 export default function STSPayDashboard() {
@@ -43,7 +37,6 @@ export default function STSPayDashboard() {
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    // Query tanpa orderBy agar tidak perlu index komposit manual di awal
     return query(
       collection(db, "transactions"),
       where("userId", "==", user.uid),
@@ -64,7 +57,6 @@ export default function STSPayDashboard() {
   };
 
   const transactions = useMemo(() => {
-    // Mapping status efektif dan urutkan di sisi klien
     const processed = rawTransactions.map(tx => ({
       ...tx,
       effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
@@ -74,22 +66,36 @@ export default function STSPayDashboard() {
       const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
       const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
-    }).slice(0, 10); // Ambil 10 terbaru untuk overview
+    });
   }, [rawTransactions]);
 
-  const chartData = [
-    { time: '00:00', amount: 400 },
-    { time: '04:00', amount: 300 },
-    { time: '08:00', amount: 900 },
-    { time: '12:00', amount: 1200 },
-    { time: '16:00', amount: 800 },
-    { time: '20:00', amount: 1100 },
-    { time: '23:59', amount: 1500 },
-  ];
+  const statusDistribution = useMemo(() => {
+    const counts = { success: 0, expired: 0, failed: 0 };
+    transactions.forEach(tx => {
+      const s = String(tx.effectiveStatus).toUpperCase();
+      if (s === 'SUCCESS' || s === 'PAID' || s === 'SETTLED' || s === 'SUCCEEDED') counts.success++;
+      else if (s === 'EXPIRED') counts.expired++;
+      else if (s === 'FAILED' || s === 'CANCELED') counts.failed++;
+    });
+    
+    return [
+      { name: 'Success', value: counts.success, color: '#10b981' },
+      { name: 'Expired', value: counts.expired, color: '#94a3b8' },
+      { name: 'Failed', value: counts.failed, color: '#ef4444' },
+    ].filter(item => item.value > 0 || transactions.length === 0);
+  }, [transactions]);
 
   const totalVolume = useMemo(() => {
-    return transactions.reduce((acc, curr) => acc + (curr.priceAmount || 0), 0);
+    return transactions
+      .filter(t => ['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED'].includes(String(t.effectiveStatus).toUpperCase()))
+      .reduce((acc, curr) => acc + (curr.priceAmount || 0), 0);
   }, [transactions]);
+
+  const STATUS_COLORS: Record<string, string> = {
+    'Success': '#10b981',
+    'Expired': '#94a3b8',
+    'Failed': '#ef4444',
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -110,31 +116,46 @@ export default function STSPayDashboard() {
         <Card className="md:col-span-2 border-border shadow-sm rounded-md bg-card overflow-hidden">
           <CardHeader className="px-6 py-6 border-b border-border flex flex-row items-center justify-between dark:bg-[#0A0A0A]">
             <div className="space-y-1">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gateway Volume (24h)</CardTitle>
-              <h2 className="text-3xl font-headline font-bold">Rp {totalVolume.toLocaleString('id-ID')}</h2>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Transaction Quality</CardTitle>
+              <h2 className="text-2xl font-headline font-bold">Status Distribution</h2>
             </div>
-            <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 font-bold text-[9px] uppercase px-2 h-6">
-              Active Flow
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold text-[9px] uppercase px-2 h-6">
+              {transactions.length} Total Records
             </Badge>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="payGradient" x1="0" x1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis hide />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '10px' }}
-                  />
-                  <Area type="monotone" dataKey="amount" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#payGradient)" />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="h-[250px] w-full flex flex-col md:flex-row items-center justify-center">
+              {transactions.length === 0 && !txLoading ? (
+                <div className="flex flex-col items-center justify-center space-y-2 opacity-20">
+                   <PieChartIcon className="w-12 h-12" />
+                   <p className="text-xs font-bold uppercase tracking-widest">No Data Available</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusDistribution}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      animationBegin={0}
+                      animationDuration={1500}
+                    >
+                      {statusDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}
+                      itemStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -159,21 +180,22 @@ export default function STSPayDashboard() {
           </Card>
 
           <Card className="border-border shadow-sm rounded-md bg-card p-6">
-             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Infrastructure Health</h4>
+             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Financial Metrics</h4>
              <div className="space-y-4">
-                {[
-                  { label: 'System Uptime', value: '99.98%', icon: Activity, color: 'text-emerald-500' },
-                  { label: 'API Latency', value: '64ms', icon: Clock, color: 'text-blue-500' },
-                  { label: 'Security SSL', value: 'Verified', icon: ShieldCheck, color: 'text-primary' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                     <div className="flex items-center gap-3">
-                        <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
-                        <span className="text-xs font-medium text-muted-foreground">{item.label}</span>
-                     </div>
-                     <span className="text-xs font-bold">{item.value}</span>
-                  </div>
-                ))}
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <Activity className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-xs font-medium text-muted-foreground">Successful Volume</span>
+                   </div>
+                   <span className="text-xs font-bold text-emerald-600">Rp {totalVolume.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-3">
+                      <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground">Security Protocol</span>
+                   </div>
+                   <span className="text-xs font-bold">TLS 1.3</span>
+                </div>
              </div>
           </Card>
         </div>
@@ -206,7 +228,7 @@ export default function STSPayDashboard() {
                  ) : transactions.length === 0 ? (
                    <tr><td colSpan={5} className="px-8 py-20 text-center text-muted-foreground italic">Belum ada aktivitas transaksi di gateway Anda.</td></tr>
                  ) : (
-                   transactions.map((row) => (
+                   transactions.slice(0, 10).map((row) => (
                      <tr key={row.id} className="hover:bg-muted/20 transition-colors">
                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{row.id?.substring(0, 12).toUpperCase()}</td>
                        <td className="px-6 py-4 whitespace-nowrap">
