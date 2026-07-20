@@ -29,13 +29,12 @@ export default function STSPayTransactionsPage() {
     setIsMounted(true);
   }, []);
 
-  // Removed orderBy to avoid index requirement, client-side sorting instead
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, "transactions"),
       where("userId", "==", user.uid),
-      where("gameId", "==", "STSPAY") // Filter specific to gateway transactions
+      where("gameId", "==", "STSPAY")
     );
   }, [db, user?.uid]);
 
@@ -65,11 +64,14 @@ export default function STSPayTransactionsPage() {
     });
 
     // 3. Filter by search
-    return sorted.filter(t => 
+    const filtered = sorted.filter(t => 
       t.id?.toLowerCase().includes(search.toLowerCase()) ||
       t.itemName?.toLowerCase().includes(search.toLowerCase()) ||
       (t.payerEmail || "").toLowerCase().includes(search.toLowerCase())
     );
+
+    // 4. Limit to 50 latest
+    return filtered.slice(0, 50);
   }, [rawTransactions, search]);
 
   return (
@@ -100,10 +102,15 @@ export default function STSPayTransactionsPage() {
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="w-full max-w-full border-border shadow-sm rounded-md overflow-hidden bg-card">
           <CardHeader className="px-6 py-4 border-b border-border bg-muted/30 dark:bg-[#0A0A0A] shrink-0">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-              <History className="w-4 h-4 text-primary" />
-              Riwayat Transaksi Masuk
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                <History className="w-4 h-4 text-primary" />
+                Riwayat Transaksi Gateway
+              </CardTitle>
+              <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
+                Max 50 Records
+              </Badge>
+            </div>
           </CardHeader>
           <div className="w-full overflow-x-auto">
             <table className="w-full min-w-[850px] text-xs text-left">

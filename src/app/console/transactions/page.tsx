@@ -20,7 +20,7 @@ import {
 import React, { useState, useEffect, useMemo } from "react";
 import { format, isToday, isYesterday, isSameYear } from "date-fns";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import Link from "next/link";
 
 export default function AllTransactionsPage() {
@@ -68,9 +68,11 @@ export default function AllTransactionsPage() {
     const filtered = sorted.filter(tx => 
       tx.itemName?.toLowerCase().includes(search.toLowerCase()) ||
       tx.id?.toLowerCase().includes(search.toLowerCase()) ||
-      tx.gameName?.toLowerCase().includes(search.toLowerCase())
+      tx.gameName?.toLowerCase().includes(search.toLowerCase()) ||
+      (tx.payerEmail || "").toLowerCase().includes(search.toLowerCase())
     );
 
+    // Limit to 50 records
     return filtered.slice(0, 50);
   }, [rawTransactions, search]);
 
@@ -97,7 +99,7 @@ export default function AllTransactionsPage() {
             <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight truncate">
               Transaction <span className="text-primary">History</span>
             </h1>
-            <p className="text-muted-foreground text-xs truncate">Menampilkan 50 transaksi terakhir Anda.</p>
+            <p className="text-muted-foreground text-xs truncate">Menampilkan 50 transaksi terbaru Anda.</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -113,7 +115,7 @@ export default function AllTransactionsPage() {
       <div className="relative group max-w-md w-full px-1">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
         <Input 
-          placeholder="Cari Ref ID atau nama produk..." 
+          placeholder="Cari Ref ID, produk, atau email..." 
           className="h-12 text-sm pl-11 bg-card border-border rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-primary/10"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
