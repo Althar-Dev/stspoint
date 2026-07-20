@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,9 @@ import {
   Download,
   Coins,
   RefreshCcw,
-  AlertCircle
+  AlertCircle,
+  XCircle,
+  Timer
 } from "lucide-react";
 import {
   Dialog,
@@ -37,9 +40,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useMemo } from "react";
 import { Area, AreaChart, ResponsiveContainer, Area as RechartsArea } from "recharts";
-import { format, isToday, isYesterday, isSameYear, startOfDay, subDays } from "date-fns";
+import { format, isToday, isYesterday, isSameYear, startOfDay, subDays, addMinutes, isAfter } from "date-fns";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, doc } from "firebase/firestore";
+import { collection, query, where, orderBy, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { generateDynamicQrisAction } from "@/app/orkut/qris/actions";
@@ -95,12 +98,24 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
+  // Helper to determine effective status based on 15m rule
+  const getEffectiveStatus = (status: string, createdAt: any) => {
+    if (status !== 'Pending' && status !== 'PENDING') return status;
+    if (!createdAt) return status;
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
+    return diffInMinutes > 15 ? 'Expired' : status;
+  };
+
   const transactions = useMemo(() => {
     return [...rawTransactions].sort((a, b) => {
       const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
       const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
-    });
+    }).map(tx => ({
+      ...tx,
+      effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
+    }));
   }, [rawTransactions]);
 
   const handleGenerateTopUpQris = async () => {
@@ -184,7 +199,7 @@ export default function OverviewPage() {
   };
 
   const { stats, activityChartData, weeklyUsageTrend } = useMemo(() => {
-    const counts = { success: 0, pending: 0, failed: 0 };
+    const counts = { success: 0, pending: 0, failed: 0, expired: 0 };
     const buckets = [
       { time: "00:00", success: 0, pending: 0, failed: 0 },
       { time: "04:00", success: 0, pending: 0, failed: 0 },
@@ -201,17 +216,19 @@ export default function OverviewPage() {
 
     if (transactions) {
       transactions.forEach(tx => {
-        if (tx.status === "Success") counts.success++;
-        else if (tx.status === "Pending") counts.pending++;
-        else if (tx.status === "Failed") counts.failed++;
+        const effectiveStatus = tx.effectiveStatus;
+        if (effectiveStatus === "Success") counts.success++;
+        else if (effectiveStatus === "Pending" || effectiveStatus === "PENDING") counts.pending++;
+        else if (effectiveStatus === "Failed") counts.failed++;
+        else if (effectiveStatus === "Expired") counts.expired++;
 
         const txDate = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt || 0);
         const hour = txDate.getHours();
         let bucketIdx = Math.floor(hour / 4);
         if (bucketIdx > 5) bucketIdx = 5;
-        if (tx.status === "Success") buckets[bucketIdx].success++;
-        else if (tx.status === "Pending") buckets[bucketIdx].pending++;
-        else if (tx.status === "Failed") buckets[bucketIdx].failed++;
+        if (effectiveStatus === "Success") buckets[bucketIdx].success++;
+        else if (effectiveStatus === "Pending" || effectiveStatus === "PENDING") buckets[bucketIdx].pending++;
+        else if (effectiveStatus === "Failed" || effectiveStatus === "Expired") buckets[bucketIdx].failed++;
 
         const txDayStart = startOfDay(txDate).getTime();
         const trendDay = last7Days.find(d => d.date.getTime() === txDayStart);
@@ -482,7 +499,7 @@ export default function OverviewPage() {
               {[
                 { label: "Success", value: stats.success.toLocaleString(), color: "text-green-500", key: "success", stroke: "#22c55e" },
                 { label: "Pending", value: stats.pending.toLocaleString(), color: "text-orange-500", key: "pending", stroke: "#f97316" },
-                { label: "Failed", value: stats.failed.toLocaleString(), color: "text-rose-500", key: "failed", stroke: "#f43f5e" },
+                { label: "Gagal/Expired", value: (stats.failed + stats.expired).toLocaleString(), color: "text-rose-500", key: "failed", stroke: "#f43f5e" },
               ].map((stat, i) => (
                 <React.Fragment key={i}>
                   <div className="flex-1 relative flex flex-col items-center justify-center p-4">
@@ -552,11 +569,15 @@ export default function OverviewPage() {
                       <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{row.price}</td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <Badge className={`${
-                          row.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
-                          row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
+                          row.effectiveStatus === 'Success' ? 'bg-green-500/10 text-green-600' : 
+                          row.effectiveStatus === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
                           'bg-rose-500/10 text-rose-600'
                         } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
-                          {row.status}
+                          {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-3 h-3" />}
+                          {row.effectiveStatus === 'Pending' && <Clock className="w-3 h-3" />}
+                          {(row.effectiveStatus === 'Failed' || row.effectiveStatus === 'Expired') && <XCircle className="w-3 h-3" />}
+                          {row.effectiveStatus === 'Expired' && <Timer className="w-3 h-3" />}
+                          {row.effectiveStatus}
                         </Badge>
                       </td>
                     </tr>

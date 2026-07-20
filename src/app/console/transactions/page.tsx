@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +15,13 @@ import {
   RefreshCcw,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  Timer
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { format, isToday, isYesterday, isSameYear } from "date-fns";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { collection, query, where, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import Link from "next/link";
 
 export default function AllTransactionsPage() {
@@ -42,8 +44,22 @@ export default function AllTransactionsPage() {
 
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
+  // Helper to determine effective status based on 15m rule
+  const getEffectiveStatus = (status: string, createdAt: any) => {
+    if (status !== 'Pending' && status !== 'PENDING') return status;
+    if (!createdAt) return status;
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
+    return diffInMinutes > 15 ? 'Expired' : status;
+  };
+
   const transactions = useMemo(() => {
-    const sorted = [...rawTransactions].sort((a, b) => {
+    const processed = rawTransactions.map(tx => ({
+      ...tx,
+      effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
+    }));
+
+    const sorted = processed.sort((a, b) => {
       const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
       const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
@@ -146,18 +162,19 @@ export default function AllTransactionsPage() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap uppercase tracking-tighter">#{row.id?.substring(0, 14)}</td>
-                      <td className="px-6 py-4 font-bold whitespace-nowrap max-w-[250px] truncate">{row.itemName}</td>
+                      <td className="px-6 py-4 font-bold whitespace-nowrap max-w-[200px] truncate">{row.itemName}</td>
                       <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{row.price}</td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <Badge className={`${
-                          row.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
-                          row.status === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
+                          row.effectiveStatus === 'Success' ? 'bg-green-500/10 text-green-600' : 
+                          row.effectiveStatus === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
                           'bg-rose-500/10 text-rose-600'
                         } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
-                          {row.status === 'Success' && <CheckCircle2 className="w-3 h-3" />}
-                          {row.status === 'Pending' && <Clock className="w-3 h-3" />}
-                          {row.status === 'Failed' && <XCircle className="w-3 h-3" />}
-                          {row.status}
+                          {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-3 h-3" />}
+                          {row.effectiveStatus === 'Pending' && <Clock className="w-3 h-3" />}
+                          {(row.effectiveStatus === 'Failed' || row.effectiveStatus === 'Expired') && <XCircle className="w-3 h-3" />}
+                          {row.effectiveStatus === 'Expired' && <Timer className="w-3 h-3" />}
+                          {row.effectiveStatus}
                         </Badge>
                       </td>
                     </tr>

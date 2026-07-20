@@ -18,7 +18,9 @@ import {
   Plus,
   RefreshCcw,
   Clock,
-  Terminal
+  Terminal,
+  XCircle,
+  Timer
 } from "lucide-react";
 import React, { useMemo } from "react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
@@ -47,7 +49,23 @@ export default function STSPayDashboard() {
     );
   }, [db, user?.uid]);
 
-  const { data: transactions, loading: txLoading } = useCollection(transactionsQuery);
+  const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
+
+  // Helper to determine effective status based on 15m rule
+  const getEffectiveStatus = (status: string, createdAt: any) => {
+    if (status !== 'Pending' && status !== 'PENDING') return status;
+    if (!createdAt) return status;
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
+    return diffInMinutes > 15 ? 'Expired' : status;
+  };
+
+  const transactions = useMemo(() => {
+    return rawTransactions.map(tx => ({
+      ...tx,
+      effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
+    }));
+  }, [rawTransactions]);
 
   const chartData = [
     { time: '00:00', amount: 400 },
@@ -195,11 +213,15 @@ export default function STSPayDashboard() {
                        </td>
                        <td className="px-6 py-4 text-right whitespace-nowrap">
                          <Badge className={`${
-                           row.status === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
-                           row.status === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
+                           row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                           row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
                            'bg-red-500/10 text-red-600'
-                         } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm`}>
-                           {row.status}
+                         } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center w-fit gap-1`}>
+                           {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                           {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                           {(row.effectiveStatus === 'Failed' || row.effectiveStatus === 'Expired') && <XCircle className="w-2.5 h-2.5" />}
+                           {row.effectiveStatus === 'Expired' && <Timer className="w-2.5 h-2.5" />}
+                           {row.effectiveStatus}
                          </Badge>
                        </td>
                      </tr>
