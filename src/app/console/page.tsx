@@ -14,21 +14,44 @@ import {
   Users,
   History,
   CheckCircle2,
-  MoreHorizontal,
   Activity,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Loader2,
+  QrCode,
+  Download,
+  Coins
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import React, { useState, useEffect, useMemo } from "react";
 import { Area, AreaChart, ResponsiveContainer, Area as RechartsArea } from "recharts";
 import { format, isToday, isYesterday, isSameYear, startOfDay, subDays } from "date-fns";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy, doc } from "firebase/firestore";
 import Link from "next/link";
+import { toast } from "@/hooks/use-toast";
+import { generateDynamicQrisAction } from "@/app/orkut/qris/actions";
 
 export default function OverviewPage() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const [isMounted, setIsMounted] = useState(false);
+
+  // Top Up State
+  const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [qrisData, setQrisData] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -61,6 +84,43 @@ export default function OverviewPage() {
     );
   }, [db, user?.uid]);
   const { data: transactions, loading: txLoading } = useCollection(transactionsQuery);
+
+  const handleGenerateTopUpQris = async () => {
+    const amount = parseInt(topUpAmount);
+    if (isNaN(amount) || amount < 1000) {
+      toast({ variant: "destructive", title: "Nominal Minimal", description: "Minimal top up adalah Rp 1.000" });
+      return;
+    }
+
+    // Menggunakan base QRIS sistem (sebagai contoh menggunakan baseQr user jika terhubung, 
+    // atau fallback ke base platform di lingkungan nyata)
+    const baseQr = "00020101021126670011ID.CO.QRIS.WWW011893600915302061073802159360091530206100303UME51440014ID.CO.QRIS.WWW02159360091530206100303UME5204123453033605802ID5911STS POINT6007JAKARTA61051234562070703A016304ABCD";
+
+    setIsGenerating(true);
+    try {
+      const res = await generateDynamicQrisAction(baseQr, topUpAmount);
+      if (res.success && res.dataUri) {
+        setQrisData(res.dataUri);
+        toast({ title: "QRIS Berhasil Dibuat", description: "Silakan pindai untuk melakukan pembayaran." });
+      } else {
+        throw new Error(res.message);
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Gagal", description: e.message });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownloadQris = () => {
+    if (!qrisData) return;
+    const link = document.createElement("a");
+    link.href = qrisData;
+    link.download = `TOPUP-STS-${topUpAmount}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const { stats, activityChartData, weeklyUsageTrend } = useMemo(() => {
     const counts = { success: 0, pending: 0, failed: 0 };
@@ -191,9 +251,76 @@ export default function OverviewPage() {
                   </h2>
                 </div>
                 <div className="flex gap-2 pt-2 border-t border-border">
-                  <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-8 md:h-9 flex-1 shadow-lg shadow-primary/10 transition-all text-[9px] md:text-[10px] uppercase">
-                    Top Up
-                  </Button>
+                  
+                  <Dialog open={isTopUpOpen} onOpenChange={(o) => {
+                    setIsTopUpOpen(o);
+                    if(!o) { setTopUpAmount(""); setQrisData(null); }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-8 md:h-9 flex-1 shadow-lg shadow-primary/10 transition-all text-[9px] md:text-[10px] uppercase">
+                        Top Up
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="font-headline font-bold flex items-center gap-2">
+                           <Coins className="w-5 h-5 text-primary" />
+                           Top Up Saldo
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                          Isi saldo akun STS Point Anda menggunakan QRIS otomatis.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-6 py-4">
+                         {!qrisData ? (
+                           <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Nominal (IDR)</Label>
+                                <div className="relative">
+                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
+                                  <Input 
+                                    type="number"
+                                    placeholder="Contoh: 10000"
+                                    value={topUpAmount}
+                                    onChange={(e) => setTopUpAmount(e.target.value)}
+                                    className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
+                                  />
+                                </div>
+                                <p className="text-[9px] text-muted-foreground ml-1">Saldo akan masuk secara otomatis setelah pembayaran terverifikasi.</p>
+                              </div>
+                              <Button 
+                                onClick={handleGenerateTopUpQris}
+                                disabled={isGenerating || !topUpAmount}
+                                className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                              >
+                                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <QrCode className="w-4 h-4 mr-2" />}
+                                Generate QRIS Pembayaran
+                              </Button>
+                           </div>
+                         ) : (
+                           <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-300">
+                              <div className="p-4 bg-white border border-border rounded-2xl shadow-xl">
+                                 <img src={qrisData} alt="Topup QRIS" className="w-56 h-56 object-contain" />
+                              </div>
+                              <div className="space-y-1">
+                                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Bayar</p>
+                                 <h3 className="text-2xl font-headline font-bold text-primary">Rp {parseInt(topUpAmount).toLocaleString('id-ID')}</h3>
+                              </div>
+                              <div className="flex gap-2 w-full">
+                                 <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
+                                    <Download className="w-4 h-4" /> Download
+                                 </Button>
+                                 <Button onClick={() => setQrisData(null)} variant="ghost" className="h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                                *Sistem akan memantau mutasi secara real-time. Jangan tutup halaman ini sampai saldo bertambah.
+                              </p>
+                           </div>
+                         )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
                   <Button variant="outline" className="bg-transparent border border-border font-bold rounded-lg px-4 h-8 md:h-9 flex-1 text-[9px] md:text-[10px] uppercase">
                     Withdraw
                   </Button>

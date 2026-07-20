@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -33,6 +32,7 @@ export function middleware(request: NextRequest) {
   };
 
   // 3. Logika Pembersihan Path Internal di Subdomain
+  // Cek apakah host saat ini adalah salah satu subdomain kita
   const subKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
   if (subKey) {
@@ -45,12 +45,12 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
-    // Biarkan halaman auth diproses oleh rewrite agar bisa mendeteksi subdomain
+    // Rewrite secara transparan
     url.pathname = `${config.internal}${pathname}`;
     return NextResponse.rewrite(url);
   }
 
-  // 4. Redirect dari domain utama ke subdomain jika mengakses path folder internal
+  // 4. Redirect dari domain utama ke subdomain jika mengakses path folder internal secara manual
   if (host === rootDomain) {
     for (const key in mappings) {
       const config = mappings[key];
