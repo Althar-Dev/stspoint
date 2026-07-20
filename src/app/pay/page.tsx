@@ -19,11 +19,12 @@ import {
   Clock,
   Terminal,
   XCircle,
-  Timer
+  Timer,
+  CheckCircle2
 } from "lucide-react";
 import React, { useMemo } from "react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, where, orderBy } from "firebase/firestore";
+import { doc, collection, query, where } from "firebase/firestore";
 import { Area, AreaChart, ResponsiveContainer, YAxis, XAxis, Tooltip } from "recharts";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -42,11 +43,11 @@ export default function STSPayDashboard() {
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
+    // Hapus orderBy untuk menghindari error index-required yang menyebabkan dashboard kosong
     return query(
       collection(db, "transactions"),
       where("userId", "==", user.uid),
-      where("gameId", "==", "STSPAY"), // Filter hanya transaksi gateway
-      orderBy("createdAt", "desc")
+      where("gameId", "==", "STSPAY")
     );
   }, [db, user?.uid]);
 
@@ -58,14 +59,22 @@ export default function STSPayDashboard() {
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
+    // Tampilkan sebagai Failed jika sudah lewat 15 menit
     return diffInMinutes > 15 ? 'Failed' : status;
   };
 
   const transactions = useMemo(() => {
-    return rawTransactions.map(tx => ({
+    // Mapping status efektif dan urutkan di sisi klien
+    const processed = rawTransactions.map(tx => ({
       ...tx,
       effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
     }));
+
+    return processed.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    }).slice(0, 10); // Ambil 10 terbaru untuk overview
   }, [rawTransactions]);
 
   const chartData = [
@@ -197,7 +206,7 @@ export default function STSPayDashboard() {
                  ) : transactions.length === 0 ? (
                    <tr><td colSpan={5} className="px-8 py-20 text-center text-muted-foreground italic">Belum ada aktivitas transaksi di gateway Anda.</td></tr>
                  ) : (
-                   transactions.slice(0, 10).map((row) => (
+                   transactions.map((row) => (
                      <tr key={row.id} className="hover:bg-muted/20 transition-colors">
                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{row.id?.substring(0, 12).toUpperCase()}</td>
                        <td className="px-6 py-4 whitespace-nowrap">

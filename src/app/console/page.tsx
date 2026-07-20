@@ -322,7 +322,7 @@ export default function OverviewPage() {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[9px] px-2 py-0.5 rounded-md hidden sm:flex">Verified</Badge>
+                  <Badge variant="outline" className="bg-green-50/5 text-green-600 border-green-500/20 font-bold text-[9px] px-2 py-0.5 rounded-md hidden sm:flex">Verified</Badge>
                 </div>
                 <div className="my-2 md:my-4">
                   <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tighter">
