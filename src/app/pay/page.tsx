@@ -43,7 +43,7 @@ export default function STSPayDashboard() {
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    // Hapus orderBy untuk menghindari error index-required yang menyebabkan dashboard kosong
+    // Query tanpa orderBy agar tidak perlu index komposit manual di awal
     return query(
       collection(db, "transactions"),
       where("userId", "==", user.uid),
@@ -222,7 +222,7 @@ export default function STSPayDashboard() {
                            row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
                            row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
                            'bg-red-500/10 text-red-600'
-                         } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-end w-full gap-1`}>
+                         } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
                            {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
                            {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
                            {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
