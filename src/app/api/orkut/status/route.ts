@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -17,7 +16,7 @@ import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 /**
  * API: Check Orderkuota Transaction Status
  * Method: POST
- * URL: /api/orkut/status
+ * URL: /orkut/status (via api subdomain)
  */
 export async function POST(request: Request) {
   try {
@@ -114,7 +113,7 @@ export async function POST(request: Request) {
 
     const transactionData = transactionSnap.data();
 
-    // Update RPM & Quota state (Setiap pengecekan status memotong kuota)
+    // Update RPM & Quota state
     await updateDoc(orkutRef, {
       quota: increment(-1),
       rpmRequestsCount: updatedRpmCount,
@@ -144,7 +143,6 @@ export async function POST(request: Request) {
 
       if (mutationRes.status && mutationRes.result) {
         const mutations = mutationRes.result;
-        // Cari mutasi IN dengan nominal yang tepat
         const match = mutations.find(m => 
           m.status === 'IN' && 
           Math.abs(parseFloat(m.kredit) - transactionData.amount) < 1
@@ -173,7 +171,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // 7. Kembalikan status saat ini jika belum terdeteksi bayar
     return NextResponse.json({
       success: true,
       data: {

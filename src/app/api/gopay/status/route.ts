@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -17,7 +16,7 @@ import { getGoMerchantMutations } from '@/lib/gomerchant/mutation';
 /**
  * API: Check GoPay Transaction Status with Strict Plan Validation
  * Method: POST
- * URL: /api/gopay/status
+ * URL: /gopay/status (via api subdomain)
  */
 export async function POST(request: Request) {
   try {

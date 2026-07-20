@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -18,7 +17,7 @@ import { createDynamicQrisString } from '@/lib/qris/dynamic';
 /**
  * API: Create GoPay QRIS Transaction with Strict Plan Validation
  * Method: POST
- * URL: /api/gopay/create
+ * URL: /gopay/create (via api subdomain)
  */
 export async function POST(request: Request) {
   try {

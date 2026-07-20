@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -12,7 +12,7 @@ import {
 /**
  * API: Check Payment Status (External Integration)
  * Method: POST
- * URL: /api/payments/status
+ * URL: /payments/status (via api subdomain)
  */
 export async function POST(request: Request) {
   try {

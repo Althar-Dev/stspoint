@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -18,7 +17,7 @@ import { createDynamicQrisString } from '@/lib/qris/dynamic';
 /**
  * API: Create Orderkuota QRIS Transaction with Strict Plan Validation
  * Method: POST
- * URL: /api/orkut/create
+ * URL: /orkut/create (via api subdomain)
  */
 export async function POST(request: Request) {
   try {
@@ -96,7 +95,6 @@ export async function POST(request: Request) {
     }
     
     // --- LOGIKA RPM (Requests Per Minute) ---
-    // Pro: 100, Premium: 300, Enterprise: Unlimited
     const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
     const lastReset = orkutData.rpmLastReset?.toMillis() || 0;

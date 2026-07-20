@@ -31,6 +31,7 @@ export function middleware(request: NextRequest) {
     'dev': { internal: '/dev', subdomain: 'dev' },
     'checkout': { internal: '/checkout', subdomain: 'checkout' },
     'docs': { internal: '/docs', subdomain: 'docs' },
+    'api': { internal: '/api', subdomain: 'api' },
   };
 
   // 3. Logika Jika Request Datang ke Subdomain (misal: console.stspoint.id)
@@ -40,14 +41,13 @@ export function middleware(request: NextRequest) {
     const config = mappings[currentSubKey];
 
     // Redirect jika path diawali dengan folder internal MILIK subdomain ini (Pembersihan URL)
-    // Contoh: console.stspoint.id/console/dashboard -> console.stspoint.id/dashboard
+    // Contoh: api.stspoint.id/api/payments -> api.stspoint.id/payments
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
     // CEK CROSS-SUBDOMAIN: Jika user di subdomain A mengakses path milik subdomain B
-    // Contoh: partner.stspoint.id/console -> REDIRECT KE console.stspoint.id/
     for (const key in mappings) {
       if (key !== currentSubKey && (pathname === mappings[key].internal || pathname.startsWith(`${mappings[key].internal}/`))) {
         const targetConfig = mappings[key];
@@ -80,12 +80,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - assets (public assets)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|assets|favicon.ico).*)',
+    '/((?!_next/static|_next/image|assets|favicon.ico).*)',
   ],
 };

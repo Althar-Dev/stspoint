@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -16,7 +16,7 @@ import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
  * API: PPOB Transaction Status Check (Live H2H)
- * URL: /api/ppob/status?secret_key=...&ref_id=...
+ * URL: /ppob/status?secret_key=...&ref_id=... (via api subdomain)
  */
 export async function GET(request: Request) {
   try {
@@ -68,7 +68,6 @@ export async function GET(request: Request) {
           updatedAt: serverTimestamp()
         });
 
-        // Trigger Webhook Merchant dengan callbackUrl dinamis jika ada
         await notifyMerchant(txData.userId, {
           event: 'ppob.status_update',
           data: {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -16,7 +16,7 @@ import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 
 /**
  * API: PPOB Order & Product List
- * URL: /api/ppob/order
+ * URL: /ppob/order (via api subdomain)
  */
 
 export async function GET(request: Request) {
@@ -62,7 +62,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { secret_key, sku, target, ref_id, qty } = body;
 
-    // Menangkap Callback URL dinamis dari header
     const callbackUrl = request.headers.get('x-callback-url');
 
     if (!secret_key || !sku || !target || !ref_id) {
@@ -144,7 +143,7 @@ export async function POST(request: Request) {
       priceAmount: price,
       userId: userId,
       status: finalStatus,
-      callbackUrl: callbackUrl || null, // Simpan URL dinamis untuk webhook nanti
+      callbackUrl: callbackUrl || null,
       createdAt: serverTimestamp(),
       paymentMethod: 'H2H_API',
       provider_msg: statusRes.message || h2hRes.message

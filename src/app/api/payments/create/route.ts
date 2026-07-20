@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import { initializeFirebase } from '@/firebase';
+import { initializeFirebase } from '@/firebase/core';
 import { 
   collection, 
   query, 
@@ -16,9 +15,7 @@ import { createXenditPaymentRequest } from '@/lib/xendit/payment-request';
 /**
  * API: Create Payment (Unified STSPay Entry Point)
  * Method: POST
- * URL: /api/payments/create
- * Supports: payment_link, qris
- * Header: x-callback-url (Optional dynamic webhook)
+ * URL: /payments/create (via api subdomain)
  */
 export async function POST(request: Request) {
   try {
@@ -85,7 +82,6 @@ export async function POST(request: Request) {
 
     // 4. Handle specific payment types
     if (type === 'qris') {
-      // Use Xendit V3 Payment Request for direct QRIS
       const qrisRes = await createXenditPaymentRequest({
         reference_id: external_id,
         amount: baseAmount,
@@ -115,7 +111,6 @@ export async function POST(request: Request) {
 
       responseData.qr_string = paymentInfo.qr_string;
     } else {
-      // Default: Payment Link (Xendit Invoice V2)
       const invoiceRes = await createStsPayment({
         external_id,
         amount: baseAmount,
@@ -149,7 +144,7 @@ export async function POST(request: Request) {
       userId: merchantUid,
       type: 'payment',
       mode: type,
-      callbackUrl: callbackUrl || null, // Store dynamic webhook URL
+      callbackUrl: callbackUrl || null,
       payment_info: paymentInfo,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
