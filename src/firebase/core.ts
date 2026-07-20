@@ -1,27 +1,17 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { firebaseConfig } from './config';
 
 /**
  * @fileOverview Core Firebase Initialization.
- * Safe for both Server (Actions/Routes) and Client use.
+ * Optimized for high-speed server and client performance.
  */
 
-let app: FirebaseApp;
-let firestore: Firestore;
-let auth: Auth;
-
 export function initializeFirebase() {
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-    firestore = getFirestore(app);
-    auth = getAuth(app);
-  } else {
-    app = getApp();
-    firestore = getFirestore(app);
-    auth = getAuth(app);
-  }
+  const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+  const firestore = getFirestore(firebaseApp);
+  const auth = getAuth(firebaseApp);
 
-  return { firebaseApp: app, firestore, auth };
+  return { firebaseApp, firestore, auth };
 }

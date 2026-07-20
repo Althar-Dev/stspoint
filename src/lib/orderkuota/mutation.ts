@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Library untuk mengambil data mutasi QR Orderkuota secara real-time.
- * Data ini tidak disimpan ke database internal sesuai instruksi.
+ * Dioptimalkan dengan timeout yang lebih cepat untuk mencegah UI hang.
  */
 
 import { STS_POINT_API_KEY } from './init';
@@ -35,7 +35,7 @@ export interface GetMutationInput {
 
 /**
  * Mengambil data mutasi QR dari API Orderkuota menggunakan Master Key STSPoint.
- * Digunakan untuk menampilkan log transaksi secara live di dashboard.
+ * Timeout dikurangi menjadi 8 detik agar sistem tetap responsif.
  */
 export async function getOrderkuotaMutation(input: GetMutationInput): Promise<OrderkuotaMutationResponse> {
   const { username, token } = input;
@@ -47,7 +47,8 @@ export async function getOrderkuotaMutation(input: GetMutationInput): Promise<Or
       headers: {
         'Accept': 'application/json',
       },
-      signal: AbortSignal.timeout(20000),
+      // Timeout dipercepat menjadi 8 detik agar tidak menunggu terlalu lama
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) {
@@ -58,10 +59,9 @@ export async function getOrderkuotaMutation(input: GetMutationInput): Promise<Or
     return data;
   } catch (error: any) {
     console.error('Error fetching Orderkuota mutation:', error);
-    // Return graceful error object instead of throwing TypeError
     return { 
       status: false, 
-      message: 'Endpoint Maintenance: Gagal mengambil mutasi dari Orderkuota.' 
+      message: 'Server Lambat: Gagal mengambil mutasi. Silakan coba lagi dalam beberapa saat.' 
     };
   }
 }
