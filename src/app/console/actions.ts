@@ -43,8 +43,7 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
       throw new Error(mutationRes.message || "Gagal mengambil data dari provider.");
     }
 
-    // 3. Cari mutasi 'IN' yang nominalnya cocok (tanpa filter tanggal yang kaku)
-    // Mencari mutasi yang nominalnya pas dan belum ada di ledger kita
+    // 3. Cari mutasi 'IN' yang nominalnya cocok
     let foundMatch = null;
 
     for (const m of mutationRes.result) {
@@ -52,13 +51,13 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
       const isNominalMatch = m.status === 'IN' && Math.abs(amount - expectedAmount) < 1;
 
       if (isNominalMatch) {
-        // Cek apakah ID mutasi ini sudah pernah diklaim di database kita
+        // Cek apakah ID mutasi ini sudah pernah diklaim
         const ledgerRef = doc(firestore, 'processed_topups', m.id.toString());
         const ledgerSnap = await getDoc(ledgerRef);
 
         if (!ledgerSnap.exists()) {
           foundMatch = m;
-          break; // Temukan yang terbaru dan belum terpakai
+          break;
         }
       }
     }
@@ -66,13 +65,15 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
     if (!foundMatch) {
       return { 
         success: false, 
-        message: `Pembayaran Rp ${expectedAmount.toLocaleString('id-ID')} belum masuk. Pastikan transfer nominal yang sesuai dan tunggu mutasi muncul di bank Anda.` 
+        message: `Pembayaran Rp ${expectedAmount.toLocaleString('id-ID')} belum masuk. Pastikan transfer nominal yang sesuai.` 
       };
     }
 
-    // 4. Eksekusi penambahan saldo
+    // 4. Eksekusi penambahan saldo & Pencatatan Transaksi
     const userRef = doc(firestore, 'users', userId);
     const ledgerRef = doc(firestore, 'processed_topups', foundMatch.id.toString());
+    const txId = `TOPUP-${foundMatch.id}`;
+    const txRef = doc(firestore, 'transactions', txId);
     
     await Promise.all([
       updateDoc(userRef, {
@@ -86,6 +87,19 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
         bank: foundMatch.brand?.name || 'Unknown',
         processedAt: serverTimestamp(),
         rawMutation: foundMatch
+      }),
+      // Menambahkan catatan ke tabel transaksi agar muncul di history
+      setDoc(txRef, {
+        id: txId,
+        gameId: "INTERNAL",
+        gameName: "Wallet",
+        itemName: `Top Up Saldo via ${foundMatch.brand?.name || 'QRIS'}`,
+        price: expectedAmount.toString(),
+        priceAmount: expectedAmount,
+        userId: userId,
+        status: "Success",
+        createdAt: serverTimestamp(),
+        paymentMethod: "QRIS_AUTO"
       })
     ]);
 

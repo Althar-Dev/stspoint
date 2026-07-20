@@ -532,7 +532,7 @@ export default function OverviewPage() {
                   <tr key={i}><td colSpan={6} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
               ) : transactions?.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium">No transactions found.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-medium">kenapa topup user ga di catat ke transaksi?</td></tr>
               ) : (
                 transactions?.slice(0, 8).map((row, i) => (
                   <tr key={i} className="hover:bg-slate-50/30 transition-colors">
