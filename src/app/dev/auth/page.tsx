@@ -7,7 +7,7 @@ import { useAuth } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { Terminal, ShieldAlert, Lock, Mail, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
