@@ -162,6 +162,11 @@ export function DocsPpob() {
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your system's unique transaction ID (External ID).</td>
                     </tr>
+                    <tr>
+                       <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">qty</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nominal pembayaran untuk tipe <strong>Pasca</strong> (Open Denom).</td>
+                    </tr>
                  </tbody>
               </table>
            </div>
@@ -179,6 +184,7 @@ export function DocsPpob() {
                   <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
                   <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
                   <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
+                  <TabsTrigger value="pasca" className="rounded-lg px-4 text-xs font-bold uppercase">Pasca Example</TabsTrigger>
                 </TabsList>
               </div>
               
@@ -270,6 +276,23 @@ echo $response;
 ?>`}
                 />
               </TabsContent>
+
+              <TabsContent value="pasca" className="w-full outline-none">
+                <CodeBlock 
+                  title="Postpaid (Pasca) JSON Example"
+                  type="json"
+                  code={`{
+  "secret_key": "STS-Key-XXXXXXXX",
+  "sku": "PLNPASCA",
+  "target": "51234567890",
+  "ref_id": "BILL-12345",
+  "qty": 150000
+}`}
+                />
+                <p className="mt-2 text-[11px] text-muted-foreground italic px-2">
+                  *Untuk tipe Pasca, gunakan parameter <strong>qty</strong> untuk mengirimkan nominal tagihan (Open Denom).
+                </p>
+              </TabsContent>
           </Tabs>
         </div>
 
@@ -295,7 +318,7 @@ echo $response;
         </div>
       </section>
 
-      {/* Check Status */}
+      {/* Check Order Status */}
       <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
