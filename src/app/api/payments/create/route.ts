@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const merchantData = authSnap.docs[0].data();
     const merchantUid = merchantData.uid;
 
-    // Verify Identity (Match against merchantId OR clientKey for Partners)
+    // Verify Identity
     const storedId = (merchantData.merchantId || merchantData.clientKey || "").toString();
     if (storedId !== merchant_id.toString()) {
       return NextResponse.json({ success: false, message: 'Authentication failed: Merchant ID mismatch.' }, { status: 401 });
@@ -73,15 +73,9 @@ export async function POST(request: Request) {
     // Determine Domain for Checkout
     const host = request.headers.get('host') || 'stspoint.id';
     const isDev = host.includes('localhost') || host.includes('cloudworkstations.dev') || host.includes('firebaseapp.com');
-    
-    // URL Format: https://checkout.stspoint.id/{id}
-    const checkout_domain = isDev ? host : 'checkout.stspoint.id';
-    const protocol = isDev ? (request.headers.get('x-forwarded-proto') || 'http') : 'https';
-    
-    // In Dev, we might need /checkout/ prefix, in Prod with subdomain rewrite we don't
     const checkout_url = isDev 
-      ? `${protocol}://${checkout_domain}/checkout/${external_id}`
-      : `${protocol}://${checkout_domain}/${external_id}`;
+      ? `http://${host}/checkout/${external_id}`
+      : `https://checkout.stspoint.id/${external_id}`;
 
     let responseData: any = {
       external_id,
@@ -92,8 +86,6 @@ export async function POST(request: Request) {
     let paymentInfo: any = null;
 
     // 4. Handle specific payment types
-    // If 'qris' is requested, we generate it immediately.
-    // If 'payment_link' is requested, we leave paymentInfo NULL so the user can CHOOSE on the checkout page.
     if (type === 'qris') {
       const qrisRes = await createXenditPaymentRequest({
         reference_id: external_id,
@@ -124,11 +116,10 @@ export async function POST(request: Request) {
 
       responseData.qr_string = paymentInfo.qr_string;
     } else {
-      // payment_link mode: Return the URL to pick method
       responseData.checkout_url = checkout_url;
     }
 
-    // 5. Simpan ke Firestore
+    // 5. Simpan ke Firestore (Tercatat di Dashboard)
     const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const globalHistoryRef = doc(firestore, 'transactions', external_id);
     const userHistoryRef = doc(firestore, 'users', merchantUid, 'transactions', external_id);
@@ -152,12 +143,12 @@ export async function POST(request: Request) {
       id: external_id,
       gameId: "STSPAY",
       gameName: "Gateway",
-      itemName: description || "Payment Transaction",
+      itemName: description || "Payment Request",
       price: `Rp ${baseAmount.toLocaleString('id-ID')}`,
       priceAmount: baseAmount,
       userId: merchantUid,
       status: "Pending",
-      paymentMethod: type === 'qris' ? "QRIS" : "Multi-Channel",
+      paymentMethod: type === 'qris' ? "QRIS" : "Checkout Link",
       createdAt: serverTimestamp()
     };
 
