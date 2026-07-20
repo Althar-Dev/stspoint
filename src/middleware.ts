@@ -29,23 +29,32 @@ export function middleware(request: NextRequest) {
     'partner': { internal: '/client', subdomain: 'partner' },
     'dev': { internal: '/dev', subdomain: 'dev' },
     'checkout': { internal: '/checkout', subdomain: 'checkout' },
+    'docs': { internal: '/docs', subdomain: 'docs' },
   };
 
   // 3. Logika Pembersihan Path Internal di Subdomain
   // Cek apakah host saat ini adalah salah satu subdomain kita
-  const subKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
+  const currentSubKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
 
-  if (subKey) {
-    const config = mappings[subKey];
+  if (currentSubKey) {
+    const config = mappings[currentSubKey];
 
     // Redirect jika path diawali dengan folder internal (membersihkan URL publik)
-    // Contoh: console.stspoint.id/console -> console.stspoint.id/
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
-    // Rewrite secara transparan
+    // CEK CROSS-SUBDOMAIN: Jika user di subdomain A mengakses path milik subdomain B
+    for (const key in mappings) {
+      if (key !== currentSubKey && pathname.startsWith(mappings[key].internal)) {
+        const targetConfig = mappings[key];
+        const cleanPath = pathname.replace(targetConfig.internal, '') || '/';
+        return NextResponse.redirect(new URL(`https://${targetConfig.subdomain}.${rootDomain}${cleanPath}`, request.url));
+      }
+    }
+
+    // Rewrite secara transparan untuk folder internal yang tepat
     url.pathname = `${config.internal}${pathname}`;
     return NextResponse.rewrite(url);
   }

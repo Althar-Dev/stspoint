@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -9,7 +8,18 @@ export default function DocsRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/docs");
+    // Check if we are in production to use the subdomain
+    const hostname = window.location.hostname;
+    const isDev = 
+      hostname.includes("localhost") || 
+      hostname.includes("cloudworkstations.dev") || 
+      hostname.includes("firebaseapp.com");
+
+    if (!isDev && hostname.includes("stspoint.id")) {
+      window.location.href = "https://docs.stspoint.id/";
+    } else {
+      router.replace("/docs");
+    }
   }, [router]);
 
   return (
