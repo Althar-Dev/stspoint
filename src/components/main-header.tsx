@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -62,12 +61,22 @@ export function MainHeader({
   const handleLogout = async () => {
     if (!auth) return;
     try {
-      await signOut(auth);
+      // Hapus sesi di server dulu
       await fetch("/api/auth/session", { method: "DELETE" });
-      toast({ title: "Logged out", description: "Sesi telah berakhir." });
-      window.location.href = "/signin";
+      // Baru logout di firebase
+      await signOut(auth);
+      
+      toast({ 
+        title: "Logged Out", 
+        description: "Your session has been terminated safely." 
+      });
+      
+      // Redirect ke signin setelah toast muncul (sedikit delay)
+      setTimeout(() => {
+        window.location.href = "/signin";
+      }, 500);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Gagal logout." });
+      toast({ variant: "destructive", title: "Logout Error", description: "Failed to clear session cleanly." });
     }
   };
 

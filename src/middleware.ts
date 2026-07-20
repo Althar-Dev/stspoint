@@ -34,7 +34,7 @@ export function middleware(request: NextRequest) {
     'api': { internal: '/api', subdomain: 'api' },
   };
 
-  // 3. Rute Publik Global (Jangan di-rewrite ke dalam folder subdomain)
+  // 3. Rute Publik & File Sistem Global (Jangan di-rewrite atau di-redirect)
   const PUBLIC_PATHS = [
     '/signin',
     '/signup',
@@ -44,10 +44,15 @@ export function middleware(request: NextRequest) {
     '/qris-string',
     '/terms-of-service',
     '/privacy-policy',
-    '/auth' // Untuk rute auth dev
+    '/auth',
+    '/manifest.json',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/favicon.ico'
   ];
 
   const isPublicPath = PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`));
+  const isApiRoute = pathname.startsWith('/api/');
 
   // 4. Logika Jika Request Datang ke Subdomain (misal: console.stspoint.id)
   const currentSubKey = Object.keys(mappings).find(key => host.startsWith(`${mappings[key].subdomain}.`));
@@ -55,8 +60,15 @@ export function middleware(request: NextRequest) {
   if (currentSubKey) {
     const config = mappings[currentSubKey];
 
-    // Jika ini adalah rute publik global, biarkan apa adanya (jangan di-rewrite ke /console/signin dsb)
-    if (isPublicPath && currentSubKey !== 'dev' && currentSubKey !== 'api') {
+    // Jika ini adalah rute publik global atau file sistem, biarkan apa adanya
+    if (isPublicPath) {
+      return NextResponse.next();
+    }
+
+    // PENTING: Jangan redirect panggilan API antar subdomain untuk menghindari CORS error
+    // Biarkan saja dia ter-rewrite ke folder internal API jika memang dia memanggil /api/
+    if (isApiRoute) {
+      // Jika kita berada di subdomain selain 'api', biarkan dia mengakses /api secara internal
       return NextResponse.next();
     }
 
@@ -66,7 +78,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
     }
 
-    // CEK CROSS-SUBDOMAIN: Jika user di subdomain A mengakses path milik subdomain B
+    // CEK CROSS-SUBDOMAIN: Jika user di subdomain A mengakses path milik subdomain B (BUKAN API)
     for (const key in mappings) {
       if (key !== currentSubKey && (pathname === mappings[key].internal || pathname.startsWith(`${mappings[key].internal}/`))) {
         const targetConfig = mappings[key];
@@ -82,10 +94,12 @@ export function middleware(request: NextRequest) {
 
   // 5. Redirect dari Domain Utama (stspoint.id atau www.stspoint.id) ke Subdomain
   if (host === rootDomain || host === wwwDomain) {
+    // Jangan ganggu file sistem di root
+    if (isPublicPath) return NextResponse.next();
+
     for (const key in mappings) {
       const config = mappings[key];
-      // Jika path dimulai dengan folder internal (dan bukan rute publik), redirect ke subdomain terkait
-      if (!isPublicPath && (pathname === config.internal || pathname.startsWith(`${config.internal}/`))) {
+      if (pathname === config.internal || pathname.startsWith(`${config.internal}/`)) {
         const cleanPath = pathname.replace(config.internal, '') || '/';
         return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}`, request.url));
       }

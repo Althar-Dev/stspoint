@@ -36,7 +36,7 @@ export default function SignInPage() {
   
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Auto-Redirect logic: If user is already logged in, send them to their dashboard
+  // Auto-Redirect logic
   useEffect(() => {
     if (!authLoading && user && !profileLoading && profile) {
       const hostname = window.location.hostname;
@@ -48,7 +48,7 @@ export default function SignInPage() {
       
       const targetSub = profile.role === 'client' ? 'partner' : 'console';
       
-      if (!isDev && hostname === 'stspoint.id') {
+      if (!isDev && (hostname === 'stspoint.id' || hostname === 'www.stspoint.id')) {
         window.location.href = `https://${targetSub}.stspoint.id/`;
       } else if (isDev) {
         router.push(profile.role === 'client' ? "/client" : "/console");
@@ -56,7 +56,6 @@ export default function SignInPage() {
     }
   }, [user, authLoading, profile, profileLoading, router]);
 
-  // Initial role detection based on subdomain
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
@@ -98,16 +97,18 @@ export default function SignInPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // Sync session to wildcard root domain
-      await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: idToken }),
-      });
+      // Gunakan URL relatif untuk menghindari CORS issues pada API session
+      try {
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: idToken }),
+        });
+      } catch (sessionErr) {
+        console.warn("Session sync warning:", sessionErr);
+      }
 
       toast({ title: "Welcome back!", description: "Successfully authenticated." });
-      
-      // Let the useEffect handle the redirect after profile loads
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' 

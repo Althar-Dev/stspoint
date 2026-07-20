@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -115,12 +114,15 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
   const handleLogout = async () => {
     if (!auth) return;
     try {
-      await signOut(auth);
       await fetch("/api/auth/session", { method: "DELETE" });
-      toast({ title: "Logged out" });
-      window.location.href = "/signin";
+      await signOut(auth);
+      toast({ title: "Logged out", description: "Successfully signed out." });
+      
+      setTimeout(() => {
+        window.location.href = "/signin";
+      }, 500);
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to logout." });
+      toast({ variant: "destructive", title: "Error", description: "Failed to logout cleanly." });
     }
   };
 

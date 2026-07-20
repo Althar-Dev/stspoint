@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -88,7 +87,10 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       await fetch("/api/auth/session", { method: "DELETE" });
       await signOut(auth);
       toast({ title: "Logged out", description: "You have been signed out successfully." });
-      router.push("/signin");
+      
+      setTimeout(() => {
+        window.location.href = "/signin";
+      }, 500);
     } catch (e) {
       toast({ variant: "destructive", title: "Logout Error", description: "Failed to clear session." });
     }
