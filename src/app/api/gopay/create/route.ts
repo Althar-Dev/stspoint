@@ -182,6 +182,7 @@ export async function POST(request: Request) {
       price: `Rp ${finalAmount.toLocaleString('id-ID')}`,
       priceAmount: finalAmount,
       userId: userId,
+      payerEmail: payer_email || 'guest@stspoint.id',
       status: "Pending",
       paymentMethod: "QRIS",
       createdAt: serverTimestamp()

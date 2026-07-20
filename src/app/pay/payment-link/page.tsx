@@ -97,6 +97,7 @@ export default function STSPayTestPage() {
           price: `Rp ${amtNum.toLocaleString('id-ID')}`,
           priceAmount: amtNum,
           userId: user.uid,
+          payerEmail: res.payerEmail,
           status: "Pending",
           paymentMethod: "Checkout Link",
           createdAt: serverTimestamp()

@@ -167,6 +167,7 @@ export async function POST(request: Request) {
       price: `Rp ${baseAmount.toLocaleString('id-ID')}`,
       priceAmount: baseAmount,
       userId: merchantUid,
+      payerEmail: payer_email,
       status: "Pending",
       paymentMethod: type === 'qris' ? "QRIS" : "Checkout Link",
       createdAt: serverTimestamp()
