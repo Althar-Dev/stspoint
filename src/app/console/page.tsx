@@ -23,7 +23,7 @@ import {
   Coins,
   RefreshCcw,
   AlertCircle
-} from "lucide-react";
+} from "lucide-material";
 import {
   Dialog,
   DialogContent,
@@ -68,7 +68,7 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: profile, loading: profileLoading } = useDoc(userProfileRef);
 
-  // Fetch Master Settings for Bridge Base QRIS
+  // Fetch Master Settings for Bridge Base QRIS & Digit Logic
   const masterOrkutRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, "settings", "orderkuota");
@@ -111,8 +111,18 @@ export default function OverviewPage() {
 
     setIsGenerating(true);
     try {
-      // Generate Nominal Unik (Base + 3 digit acak)
-      const randomSuffix = Math.floor(Math.random() * 900) + 100;
+      // Logika Kode Unik sesuai Setting (Default 3 digit)
+      const digitSetting = Number(masterConfig.randomDigit) || 3;
+      let randomSuffix = 0;
+      
+      if (digitSetting === 2) {
+        // Range 10-99
+        randomSuffix = Math.floor(Math.random() * 90) + 10;
+      } else {
+        // Range 100-999
+        randomSuffix = Math.floor(Math.random() * 900) + 100;
+      }
+
       const uniqueAmount = baseAmount + randomSuffix;
       
       const res = await generateDynamicQrisAction(masterConfig.baseQr, uniqueAmount.toString());
@@ -120,7 +130,7 @@ export default function OverviewPage() {
       if (res.success && res.dataUri) {
         setFinalAmount(uniqueAmount);
         setQrisData(res.dataUri);
-        toast({ title: "QRIS Berhasil Dibuat", description: "Silakan bayar sesuai nominal yang tertera (termasuk kode unik)." });
+        toast({ title: "QRIS Berhasil Dibuat", description: `Silakan bayar Rp ${uniqueAmount.toLocaleString('id-ID')} (termasuk kode unik ${randomSuffix}).` });
       } else {
         throw new Error(res.message);
       }
@@ -336,7 +346,7 @@ export default function OverviewPage() {
                                       className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
                                     />
                                   </div>
-                                  <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan 3 digit unik untuk mempercepat verifikasi otomatis.</p>
+                                  <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan kode unik untuk mempercepat verifikasi otomatis.</p>
                                 </div>
                                 <Button 
                                   onClick={handleGenerateTopUpQris}
@@ -377,7 +387,7 @@ export default function OverviewPage() {
                                    </div>
                                 </div>
                                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                                  *Sistem memverifikasi mutasi bank secara otomatis. Pastikan nominal transfer sama persis hingga 3 digit terakhir.
+                                  *Sistem memverifikasi mutasi bank secara otomatis. Pastikan nominal transfer sama persis hingga digit terakhir.
                                 </p>
                              </div>
                            )}
