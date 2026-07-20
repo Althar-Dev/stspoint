@@ -14,32 +14,63 @@ import {
   Calendar,
   History
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { format } from "date-fns";
 
 export default function STSPayTransactionsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [search, setSearch] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Removed orderBy to avoid index requirement, client-side sorting instead
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
       collection(db, "transactions"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      where("gameId", "==", "STSPAY") // Filter specific to gateway transactions
     );
   }, [db, user?.uid]);
 
-  const { data: transactions, loading } = useCollection(transactionsQuery);
+  const { data: rawTransactions, loading } = useCollection(transactionsQuery);
 
-  const filtered = transactions.filter(t => 
-    t.id?.toLowerCase().includes(search.toLowerCase()) ||
-    t.userId?.toLowerCase().includes(search.toLowerCase()) ||
-    t.itemName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const getEffectiveStatus = (status: string, createdAt: any) => {
+    const s = String(status).toUpperCase();
+    if (s !== 'PENDING') return status;
+    if (!createdAt) return status;
+    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
+    return diffInMinutes > 15 ? 'Failed' : status;
+  };
+
+  const transactions = useMemo(() => {
+    // 1. Map effective status (15m expiry)
+    const processed = rawTransactions.map(tx => ({
+      ...tx,
+      effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
+    }));
+
+    // 2. Sort by date descending
+    const sorted = processed.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    // 3. Filter by search
+    return sorted.filter(t => 
+      t.id?.toLowerCase().includes(search.toLowerCase()) ||
+      t.itemName?.toLowerCase().includes(search.toLowerCase()) ||
+      (t.payerEmail || "").toLowerCase().includes(search.toLowerCase())
+    );
+  }, [rawTransactions, search]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -75,13 +106,13 @@ export default function STSPayTransactionsPage() {
             </CardTitle>
           </CardHeader>
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-full text-xs text-left">
+            <table className="w-full min-w-[850px] text-xs text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
                   <th className="px-8 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Transaction ID</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Item / Product</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Amount</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Customer</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Customer (Email)</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Method</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Status</th>
                   <th className="px-8 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Created At</th>
@@ -92,29 +123,29 @@ export default function STSPayTransactionsPage() {
                   Array.from({ length: 10 }).map((_, i) => (
                     <tr key={i}><td colSpan={7} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                   ))
-                ) : filtered.length === 0 ? (
+                ) : transactions.length === 0 ? (
                   <tr><td colSpan={7} className="px-8 py-24 text-center text-muted-foreground italic">Tidak ada transaksi ditemukan.</td></tr>
                 ) : (
-                  filtered.map((item) => (
+                  transactions.map((item) => (
                     <tr key={item.id} className="hover:bg-muted/20 transition-colors">
                       <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{item.id?.substring(0, 10).toUpperCase()}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                          <p className="font-bold">{item.itemName || "Digital Product"}</p>
-                         <p className="text-[9px] text-muted-foreground uppercase">{item.gameName || item.gameId || "PPOB"}</p>
+                         <p className="text-[9px] text-muted-foreground uppercase">{item.gameName || "STSPAY"}</p>
                       </td>
                       <td className="px-6 py-4 font-bold whitespace-nowrap">Rp {(item.priceAmount || 0).toLocaleString('id-ID')}</td>
-                      <td className="px-6 py-4 font-medium text-foreground/80 whitespace-nowrap">{item.userId || "Guest"}</td>
+                      <td className="px-6 py-4 font-medium text-foreground/80 whitespace-nowrap">{item.payerEmail || "-"}</td>
                       <td className="px-6 py-4 uppercase text-[10px] text-muted-foreground font-bold whitespace-nowrap">{item.paymentMethod || "QRIS"}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                          <Badge className={`${
-                          item.status === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
-                          item.status === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
+                          item.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                          item.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
                           'bg-red-500/10 text-red-600'
                         } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center w-fit gap-1`}>
-                          {item.status === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                          {item.status === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                          {item.status === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
-                          {item.status}
+                          {item.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                          {item.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                          {item.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
+                          {item.effectiveStatus}
                         </Badge>
                       </td>
                       <td className="px-8 py-4 text-right text-muted-foreground text-[10px] whitespace-nowrap">
