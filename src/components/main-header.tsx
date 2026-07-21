@@ -131,10 +131,10 @@ export function MainHeader({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
-            align="end" 
-            className="w-[320px] rounded-2xl p-2 border-border"
+            align="center" 
+            className="w-[400px] rounded-2xl p-2 border-border"
           >
-            <DropdownMenuLabel className="font-headline font-bold text-xs uppercase tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
+            <DropdownMenuLabel className="font-headline font-bold text-xs tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
               Notifications
               {hasUnread && <Badge variant="secondary" className="bg-red-50 text-red-600 border-none text-[8px] px-1.5 h-4">New</Badge>}
             </DropdownMenuLabel>
@@ -147,7 +147,7 @@ export function MainHeader({
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
                     <Bell className="w-4 h-4 text-muted-foreground/30" />
                   </div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No notifications found.</p>
+                  <p className="text-[10px] font-bold text-muted-foreground tracking-widest">No notifications found.</p>
                 </div>
               ) : (
                 notifications.map((n) => (
