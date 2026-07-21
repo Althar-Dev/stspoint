@@ -6,13 +6,19 @@ import {
   where, 
   getDocs, 
   doc, 
-  getDoc 
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+  increment,
+  setDoc
 } from 'firebase/firestore';
+import { getXenditPaymentRequest } from '@/lib/xendit/payment-request';
 
 /**
  * API: Check Payment Status (External Integration)
  * Method: POST
  * URL: /payments/status (via api subdomain)
+ * Melakukan sinkronisasi live jika transaksi masih PENDING.
  */
 export async function POST(request: Request) {
   try {
@@ -41,13 +47,12 @@ export async function POST(request: Request) {
     const merchantData = authSnap.docs[0].data();
     const merchantUid = merchantData.uid;
 
-    // Verify Identity
     const storedId = (merchantData.merchantId || merchantData.clientKey || "").toString();
     if (storedId !== merchant_id.toString()) {
       return NextResponse.json({ success: false, message: 'Authentication failed: Merchant ID mismatch.' }, { status: 401 });
     }
 
-    // 3. Ambil Data Transaksi
+    // 3. Ambil Data Transaksi dari Firestore
     const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const txSnap = await getDoc(transactionRef);
 
@@ -55,11 +60,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Transaction not found.' }, { status: 404 });
     }
 
-    const txData = txSnap.data();
+    let txData = txSnap.data();
 
-    // Pastikan transaksi ini milik merchant yang merequest
     if (txData.userId !== merchantUid) {
       return NextResponse.json({ success: false, message: 'Access denied to this transaction.' }, { status: 403 });
+    }
+
+    // 4. Sinkronisasi Live jika masih PENDING
+    const paidStatuses = ['PAID', 'SETTLED', 'SUCCEEDED'];
+    if (!paidStatuses.includes(txData.status) && txData.payment_info?.pr_id) {
+      const xenditRes = await getXenditPaymentRequest(txData.payment_info.pr_id);
+      
+      if (xenditRes.success && xenditRes.data?.status === 'SUCCEEDED') {
+        const netAmount = (txData.amount || 0) - (txData.fee_amount || 0);
+        const merchantStsPayRef = doc(firestore, 'users', merchantUid, 'services', 'stspay');
+        const globalHistoryRef = doc(firestore, 'transactions', external_id);
+        const userHistoryRef = doc(firestore, 'users', merchantUid, 'transactions', external_id);
+
+        await Promise.all([
+          updateDoc(transactionRef, { 
+            status: 'PAID', 
+            updatedAt: serverTimestamp() 
+          }),
+          setDoc(globalHistoryRef, { 
+            status: 'Success', 
+            updatedAt: serverTimestamp() 
+          }, { merge: true }),
+          setDoc(userHistoryRef, { 
+            status: 'Success', 
+            updatedAt: serverTimestamp() 
+          }, { merge: true }),
+          updateDoc(merchantStsPayRef, {
+            balance: increment(netAmount),
+            updatedAt: serverTimestamp()
+          })
+        ]);
+
+        // Update local data for response
+        txData.status = 'PAID';
+        txData.updatedAt = new Date();
+      }
     }
 
     return NextResponse.json({

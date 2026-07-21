@@ -1,7 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
-import { doc, updateDoc, serverTimestamp, getDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, getDoc, increment, setDoc } from 'firebase/firestore';
 import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
@@ -57,8 +56,8 @@ export async function POST(request: Request) {
       const globalHistoryRef = doc(firestore, 'transactions', transactionId);
       
       await Promise.all([
-        updateDoc(userHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }),
-        updateDoc(globalHistoryRef, { status: 'Success', updatedAt: serverTimestamp() })
+        setDoc(userHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }, { merge: true }),
+        setDoc(globalHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }, { merge: true })
       ]);
     } else if ((internalStatus === 'EXPIRED' || internalStatus === 'FAILED') && txData.status === 'PENDING') {
       // Sync Failure to global ledgers
@@ -66,8 +65,8 @@ export async function POST(request: Request) {
       const globalHistoryRef = doc(firestore, 'transactions', transactionId);
       
       await Promise.all([
-        updateDoc(userHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() }),
-        updateDoc(globalHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() })
+        setDoc(userHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() }, { merge: true }),
+        setDoc(globalHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() }, { merge: true })
       ]);
     }
 

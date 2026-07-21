@@ -98,16 +98,15 @@ export async function POST(request: Request) {
 
     // 4. Handle direct QRIS (MDR Check)
     if (type === 'qris') {
-      // Ambil config fee QRIS dari DB
       const qrisChannelRef = doc(firestore, 'payment_channels', 'QRIS');
       const qrisSnap = await getDoc(qrisChannelRef);
-      const qrisConfig = qrisSnap.exists() ? qrisSnap.data() : { fee: '0.7%' }; // Default 0.7% if not set
+      const qrisConfig = qrisSnap.exists() ? qrisSnap.data() : { fee: '0.7%' }; 
       
       feeAmount = calculateFee(baseAmount, qrisConfig.fee);
 
       const qrisRes = await createXenditPaymentRequest({
         reference_id: external_id,
-        amount: baseAmount, // Pelanggan bayar harga dasar
+        amount: baseAmount,
         currency: 'IDR',
         description: description || 'STSPay QRIS Payment',
         payment_method: {
@@ -137,7 +136,7 @@ export async function POST(request: Request) {
       responseData.checkout_url = checkout_url;
     }
 
-    // 5. Simpan ke Firestore
+    // 5. Simpan ke Firestore (Record ke STSPay Transactions DAN Global Transactions Ledger)
     const transactionRef = doc(firestore, 'stspay_transactions', external_id);
     const globalHistoryRef = doc(firestore, 'transactions', external_id);
     const userHistoryRef = doc(firestore, 'users', merchantUid, 'transactions', external_id);
@@ -146,7 +145,7 @@ export async function POST(request: Request) {
       id: external_id,
       amount: baseAmount, 
       base_amount: baseAmount,
-      fee_amount: feeAmount, // Dicatat untuk dipotong saat webhook masuk
+      fee_amount: feeAmount,
       status: 'PENDING',
       payerEmail: payer_email,
       description: description || 'STSPay Payment',
@@ -168,7 +167,7 @@ export async function POST(request: Request) {
       priceAmount: baseAmount,
       userId: merchantUid,
       payerEmail: payer_email,
-      status: "Pending",
+      status: "Pending", // Consistent with Dashboard expectation
       paymentMethod: type === 'qris' ? "QRIS" : "Checkout Link",
       createdAt: serverTimestamp()
     };
