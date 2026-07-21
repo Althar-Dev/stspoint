@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,8 @@ import {
   Clock,
   ArrowUpRight,
   CheckCircle2,
-  Timer
+  Timer,
+  QrCode
 } from "lucide-react";
 import React, { useMemo, useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
@@ -311,4 +311,3 @@ export default function STSPayBalancesPage() {
     </div>
   );
 }
-
