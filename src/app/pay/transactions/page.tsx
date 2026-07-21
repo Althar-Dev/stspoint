@@ -14,16 +14,19 @@ import {
   Calendar,
   History,
   CreditCard,
-  Timer
+  Timer,
+  ChevronRight
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where } from "firebase/firestore";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 export default function STSPayTransactionsPage() {
   const { user } = useUser();
   const db = useFirestore();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [isMounted, setIsMounted] = useState(false);
 
@@ -33,7 +36,6 @@ export default function STSPayTransactionsPage() {
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    // Mengambil data secara eksklusif dari koleksi stspay_transactions
     return query(
       collection(db, "stspay_transactions"),
       where("userId", "==", user.uid)
@@ -44,8 +46,6 @@ export default function STSPayTransactionsPage() {
 
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
-    
-    // Normalisasi status sukses dari provider
     if (['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED', 'COMPLETED'].includes(s)) return 'Success';
     if (['FAILED', 'CANCELED', 'EXPIRED'].includes(s)) return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
@@ -54,8 +54,6 @@ export default function STSPayTransactionsPage() {
     
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
-    
-    // Anggap gagal jika sudah lewat 15 menit tanpa status PAID
     return diffInMinutes > 15 ? 'Failed' : 'Pending';
   };
 
@@ -65,14 +63,12 @@ export default function STSPayTransactionsPage() {
       effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
     }));
 
-    // Urutkan berdasarkan waktu terbaru
     const sorted = processed.sort((a, b) => {
       const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
       const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
     });
 
-    // Pencarian sederhana
     const filtered = sorted.filter(t => 
       t.id?.toLowerCase().includes(search.toLowerCase()) ||
       (t.description || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -157,8 +153,17 @@ export default function STSPayTransactionsPage() {
                     const isPayout = item.type === 'payout';
                     
                     return (
-                      <tr key={item.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{item.id?.substring(0, 10).toUpperCase()}</td>
+                      <tr 
+                        key={item.id} 
+                        className="hover:bg-muted/30 transition-colors cursor-pointer group"
+                        onClick={() => router.push(`/pay/transactions/${item.id}`)}
+                      >
+                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap flex items-center gap-2">
+                           <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                             <ChevronRight className="w-3 h-3" />
+                           </span>
+                           #{item.id?.substring(0, 10).toUpperCase()}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap max-w-[250px]">
                            <p className="font-bold truncate" title={item.description || "Digital Payment"}>
                              {item.description || "Digital Payment"}
