@@ -340,7 +340,7 @@ export default function STSPayBalancesPage() {
                     <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
                        <Clock className="w-5 h-5" />
                     </div>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[8px] font-bold uppercase">SETTLING</Badge>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[8px] font-bold uppercase">PROCESS</Badge>
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pending Balance</p>
@@ -418,7 +418,7 @@ export default function STSPayBalancesPage() {
                              tx.status === 'PENDING' ? 'bg-amber-500/10 text-amber-600' : 'bg-red-500/10 text-red-600'
                            }`}>
                              {tx.status === 'PAID' || tx.status === 'SUCCESS' ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Timer className="w-2.5 h-2.5 animate-pulse" />}
-                             {tx.isPayout ? (tx.status === 'PAID' ? 'Completed' : tx.status) : (tx.isSettled ? 'Available' : 'Settling')}
+                             {tx.isPayout ? (tx.status === 'PAID' ? 'Completed' : tx.status) : (tx.isSettled ? 'Available' : 'Process')}
                            </Badge>
                         </td>
                         <td className="px-6 py-4 text-right whitespace-nowrap">
