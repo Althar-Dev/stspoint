@@ -123,17 +123,17 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   };
 
   if (isAuthPage) {
-    return <div className="w-full min-h-screen bg-black">{children}</div>;
+    return <div className="w-full min-h-screen bg-background">{children}</div>;
   }
 
   if (authLoading || profileLoading || !mounted) {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black">
-        <div className="relative w-48 h-0.5 bg-zinc-800 rounded-full overflow-hidden">
-          <div className="absolute top-0 left-0 h-full bg-white animate-loading-bar" style={{ width: '40%' }}></div>
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background">
+        <div className="relative w-48 h-0.5 bg-muted rounded-full overflow-hidden">
+          <div className="absolute top-0 left-0 h-full bg-primary animate-loading-bar" style={{ width: '40%' }}></div>
         </div>
         <div className="mt-8 flex flex-col items-center gap-3">
-          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-500 animate-pulse">Initializing Terminal</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground animate-pulse">Initializing Terminal</span>
         </div>
       </div>
     );
@@ -141,21 +141,21 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
 
   if (user && profile && !profile.dev) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center space-y-8">
-        <div className="w-20 h-20 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center space-y-8">
+        <div className="w-20 h-20 rounded-3xl bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive">
            <Lock className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-           <h1 className="text-white text-2xl font-headline font-bold">Unauthorized Access</h1>
-           <p className="text-zinc-500 text-sm max-w-sm mx-auto">
-             Your account (UID: <code className="text-zinc-300">{user.uid.substring(0, 8)}...</code>) does not have developer privileges.
+           <h1 className="text-foreground text-2xl font-headline font-bold">Unauthorized Access</h1>
+           <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+             Your account (UID: <code className="text-foreground">{user.uid.substring(0, 8)}...</code>) does not have developer privileges.
            </p>
         </div>
         <div className="flex flex-col gap-3 w-full max-w-xs">
-           <Button asChild className="h-12 rounded-xl bg-white text-black font-bold uppercase tracking-widest text-[10px]">
+           <Button asChild className="h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[10px]">
              <Link href="/console">Go to Merchant Console</Link>
            </Button>
-           <Button variant="ghost" onClick={handleGlobalLogout} className="text-zinc-500 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[10px]">
+           <Button variant="ghost" onClick={handleGlobalLogout} className="text-muted-foreground hover:text-foreground hover:bg-accent font-bold uppercase tracking-widest text-[10px]">
              Switch Account
            </Button>
         </div>
@@ -174,12 +174,12 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
             tooltip={group.title}
             className={`h-10 transition-all rounded-md ${
               isActive 
-                ? "bg-white text-black font-bold" 
-                : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                ? "bg-accent text-accent-foreground font-bold" 
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
             <Link href={group.url}>
-              <group.icon className={`w-4.5 h-4.5 shrink-0 ${pathname === group.url ? "text-black" : "text-zinc-500"}`} />
+              <group.icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-accent-foreground" : "text-muted-foreground"}`} />
               <span className="text-sm group-data-[collapsible=icon]:hidden">{group.title}</span>
             </Link>
           </SidebarMenuButton>
@@ -202,7 +202,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
               tooltip={group.title}
               isActive={isGroupActive}
               className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${
-                isGroupActive ? "text-white font-bold" : "text-zinc-400"
+                isGroupActive ? "text-foreground font-bold" : "text-muted-foreground"
               }`}
             >
               <group.icon className="w-4 h-4 shrink-0" />
@@ -211,7 +211,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
-            <SidebarMenuSub className="border-zinc-800">
+            <SidebarMenuSub className="border-border">
               {group.items.map((subItem: any) => {
                 const currentView = searchParams.get('view') || 'gateway';
                 const isActive = pathname === subItem.url.split('?')[0] && (subItem.view ? currentView === subItem.view : true);
@@ -223,8 +223,8 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
                       isActive={isActive}
                       className={`rounded-lg transition-all duration-200 ${
                         isActive 
-                          ? "bg-white/10 text-white font-bold" 
-                          : "text-zinc-500 hover:text-zinc-200"
+                          ? "bg-accent/50 text-foreground font-bold" 
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       <Link href={subItem.url}>
@@ -242,18 +242,18 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-black selection:bg-white/10 selection:text-white">
+    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
       <Sidebar 
         collapsible="icon" 
-        className="border-r border-zinc-800 bg-zinc-950 z-40 transition-all duration-300 ease-in-out"
+        className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
         onMouseEnter={() => !isMobile && setOpen(true)}
         onMouseLeave={() => !isMobile && setOpen(false)}
       >
-        <SidebarHeader className="h-16 flex pt-4 items-center border-b border-zinc-800 px-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
+        <SidebarHeader className="h-16 flex pt-4 items-center border-b border-border px-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href="/dev" className="flex items-center gap-2 group shrink-0 overflow-hidden">
-            <Logo className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0 invert" />
-            <span className="font-headline font-bold text-lg tracking-tighter text-white truncate group-data-[collapsible=icon]:hidden">
-              Dev<span className="text-zinc-500">Root</span>
+            <Logo className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0" />
+            <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">
+              Dev<span className="text-primary/40">Root</span>
             </span>
           </Link>
         </SidebarHeader>
@@ -266,13 +266,13 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="px-2 py-4 border-t border-zinc-800 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+        <SidebarFooter className="px-2 py-4 border-t border-border group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
           <SidebarMenu className="group-data-[collapsible=icon]:items-center">
             <SidebarMenuItem className="w-full">
               <SidebarMenuButton 
                 onClick={handleGlobalLogout}
                 tooltip="Sign Out from Platform"
-                className="h-10 text-red-500 hover:bg-red-50/10 group-data-[collapsible=icon]:justify-center"
+                className="h-10 text-destructive hover:bg-destructive/10 group-data-[collapsible=icon]:justify-center"
               >
                 <LogOut className="w-4 h-4 shrink-0" />
                 <span className="text-sm group-data-[collapsible=icon]:hidden">Logout Terminal</span>
@@ -284,7 +284,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
 
       <SidebarInset className="flex flex-col flex-1 bg-transparent min-w-0">
         <MainHeader searchPlaceholder="Search Root Console..." showSidebarTrigger={false} />
-        <main className="flex-1 p-4 md:p-8 overflow-x-hidden dark">
+        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
           {children}
         </main>
       </SidebarInset>
