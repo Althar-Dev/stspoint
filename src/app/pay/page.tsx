@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,8 @@ import {
   Clock,
   XCircle,
   CheckCircle2,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  CreditCard
 } from "lucide-react";
 import React, { useMemo } from "react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
@@ -91,10 +93,16 @@ export default function STSPayDashboard() {
       .reduce((acc, curr) => acc + (curr.priceAmount || 0), 0);
   }, [transactions]);
 
-  const STATUS_COLORS: Record<string, string> = {
-    'Success': '#10b981',
-    'Expired': '#94a3b8',
-    'Failed': '#ef4444',
+  const getLogoSource = (methodId: string) => {
+    if (!methodId || methodId === "Checkout Link" || methodId === "Multi") return null;
+    const upperId = methodId.toUpperCase().replace(/\s/g, '');
+    if (upperId === 'BSI') return '/assets/bank/bsi-logo.svg';
+    if (upperId === 'SAHABAT_SAMPOERNA' || upperId === 'SAHABATSAMPOERNA') return '/assets/bank/bss-logo.svg';
+    const commonLogos = ['BRI', 'BNI', 'MANDIRI', 'PERMATA', 'BJB', 'CIMB', 'OVO', 'ALFAMART', 'INDOMARET', 'QRIS'];
+    if (commonLogos.includes(upperId)) {
+      return `/assets/bank/${upperId.toLowerCase()}.png`;
+    }
+    return null;
   };
 
   return (
@@ -228,31 +236,42 @@ export default function STSPayDashboard() {
                  ) : transactions.length === 0 ? (
                    <tr><td colSpan={5} className="px-8 py-20 text-center text-muted-foreground italic">Belum ada aktivitas transaksi di gateway Anda.</td></tr>
                  ) : (
-                   transactions.slice(0, 10).map((row) => (
-                     <tr key={row.id} className="hover:bg-muted/20 transition-colors">
-                       <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{row.id?.substring(0, 12).toUpperCase()}</td>
-                       <td className="px-6 py-4 whitespace-nowrap">
-                         <p className="font-bold">{row.itemName || "STSPay Trx"}</p>
-                         <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{row.id}</p>
-                       </td>
-                       <td className="px-6 py-4 font-bold whitespace-nowrap">Rp {(row.priceAmount || 0).toLocaleString('id-ID')}</td>
-                       <td className="px-6 py-4 font-medium uppercase text-[10px] text-muted-foreground whitespace-nowrap">
-                         {row.paymentMethod || "Multi"}
-                       </td>
-                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                         <Badge className={`${
-                           row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
-                           row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
-                           'bg-red-500/10 text-red-600'
-                         } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
-                           {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                           {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                           {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
-                           {row.effectiveStatus}
-                         </Badge>
-                       </td>
-                     </tr>
-                   ))
+                   transactions.slice(0, 10).map((row) => {
+                     const logo = getLogoSource(row.paymentMethod);
+                     return (
+                      <tr key={row.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{row.id?.substring(0, 12).toUpperCase()}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <p className="font-bold">{row.itemName || "STSPay Trx"}</p>
+                          <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{row.id}</p>
+                        </td>
+                        <td className="px-6 py-4 font-bold whitespace-nowrap">Rp {(row.priceAmount || 0).toLocaleString('id-ID')}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                             {logo ? (
+                               <img src={logo} alt={row.paymentMethod} className="h-4 md:h-5 object-contain" />
+                             ) : (
+                               <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-1.5 py-0 h-4 rounded-sm uppercase">
+                                 {row.paymentMethod || "Multi"}
+                               </Badge>
+                             )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          <Badge className={`${
+                            row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                            row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
+                            'bg-red-500/10 text-red-600'
+                          } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
+                            {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                            {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                            {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
+                            {row.effectiveStatus}
+                          </Badge>
+                        </td>
+                      </tr>
+                     );
+                   })
                  )}
                </tbody>
              </table>
