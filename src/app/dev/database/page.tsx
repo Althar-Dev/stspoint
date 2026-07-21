@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -26,12 +27,14 @@ import {
   CreditCard,
   Edit2,
   Trash2,
-  Image as ImageIcon,
+  ImageIcon,
   Coins,
   Scale,
   Landmark,
   Banknote,
-  Handshake
+  Handshake,
+  XCircle,
+  Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -336,7 +339,11 @@ function ManagementContent() {
     }
 
     if (view === "withdrawals") {
-      return stspayTransactions.filter(t => 
+      return [...stspayTransactions].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      }).filter(t => 
         t.id?.toLowerCase().includes(s) || 
         t.userId?.toLowerCase().includes(s)
       );
@@ -523,13 +530,11 @@ function ManagementContent() {
     if (!db) return;
     const userRef = doc(db, "users", userId);
     
-    // 1. Update user document
     updateDoc(userRef, {
       payoutAccountStatus: 'VERIFIED',
       updatedAt: serverTimestamp()
     })
     .then(async () => {
-      // 2. Kirim Notifikasi ke User sub-collection
       const notificationsRef = collection(db, "users", userId, "notifications");
       const notifData = {
         title: "Rekening Terverifikasi",
@@ -549,7 +554,7 @@ function ManagementContent() {
           errorEmitter.emit('permission-error', permissionError);
         });
 
-      toast({ title: "Confirmed", description: "Bank account has been verified and notification sent." });
+      toast({ title: "Confirmed", description: "Bank account has been verified." });
     })
     .catch(async (serverError) => {
       const permissionError = new FirestorePermissionError({
@@ -559,6 +564,52 @@ function ManagementContent() {
       } satisfies SecurityRuleContext);
       errorEmitter.emit('permission-error', permissionError);
     });
+  };
+
+  const handleUpdateWithdrawalStatus = async (txId: string, status: 'PAID' | 'FAILED', userId: string) => {
+    if (!db) return;
+    const txRef = doc(db, "stspay_transactions", txId);
+    const globalTxRef = doc(db, "transactions", txId);
+    const userHistoryRef = doc(db, "users", userId, "transactions", txId);
+
+    const updateData = {
+      status: status,
+      updatedAt: serverTimestamp()
+    };
+
+    updateDoc(txRef, updateData)
+      .then(async () => {
+        // Update both ledgers
+        const ledgerStatus = status === 'PAID' ? 'Success' : 'Failed';
+        await Promise.all([
+          updateDoc(globalTxRef, { status: ledgerStatus, updatedAt: serverTimestamp() }),
+          updateDoc(userHistoryRef, { status: ledgerStatus, updatedAt: serverTimestamp() })
+        ]);
+
+        // Kirim Notifikasi
+        const notificationsRef = collection(db, "users", userId, "notifications");
+        const notifData = {
+          title: status === 'PAID' ? "Penarikan Berhasil" : "Penarikan Gagal",
+          message: status === 'PAID' 
+            ? "Dana penarikan Anda telah dikirim ke rekening bank tujuan." 
+            : "Permintaan penarikan Anda ditolak. Silakan hubungi support.",
+          type: status === 'PAID' ? "success" : "error",
+          isRead: false,
+          createdAt: serverTimestamp()
+        };
+
+        addDoc(notificationsRef, notifData);
+
+        toast({ title: `Withdrawal ${status}`, description: `Status updated to ${status}.` });
+      })
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: txRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   const openAddChannel = () => {
@@ -1178,11 +1229,11 @@ function ManagementContent() {
              <table className="w-full min-w-full text-[10px] md:text-xs text-left">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">TXID</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">TXID / Time</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Amount</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">User ID</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Settlement</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Target Account</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Merchant ID</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Action / Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -1193,16 +1244,46 @@ function ManagementContent() {
                 ) : (
                   filteredData.map((tx, i) => (
                     <tr key={i} className="hover:bg-muted/10 transition-colors">
-                      <td className="px-6 py-4 font-mono text-muted-foreground whitespace-nowrap uppercase tracking-tighter">{tx.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                           <span className="font-mono text-foreground font-bold uppercase">{tx.id?.substring(0, 14)}</span>
+                           <span className="text-[9px] text-muted-foreground">{tx.createdAt ? format(tx.createdAt.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt), "dd MMM HH:mm") : '---'}</span>
+                        </div>
+                      </td>
                       <td className="px-6 py-4 font-bold text-emerald-600 whitespace-nowrap">Rp {tx.amount?.toLocaleString('id-ID')}</td>
-                      <td className="px-6 py-4 font-mono text-[9px] text-muted-foreground whitespace-nowrap">{tx.userId}</td>
-                      <td className="px-6 py-4 text-center whitespace-nowrap">
-                         <span className="text-[10px] font-bold text-foreground/60">{tx.updatedAt ? format(tx.updatedAt.toDate ? tx.updatedAt.toDate() : new Date(tx.updatedAt), "dd MMM HH:mm") : '---'}</span>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                           <span className="font-bold text-foreground/80">{tx.bankInfo?.name} • {tx.bankInfo?.accountNumber}</span>
+                           <span className="text-[10px] text-muted-foreground uppercase">{tx.bankInfo?.accountName}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap font-mono text-[9px] text-muted-foreground">
+                        {tx.userId}
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <Badge className={`${tx.status === 'PAID' || tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
-                           {tx.status}
-                        </Badge>
+                        {tx.status === 'PENDING' ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              size="sm" 
+                              className="h-8 px-3 text-[9px] font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                              onClick={() => handleUpdateWithdrawalStatus(tx.id, 'PAID', tx.userId)}
+                            >
+                              <Check className="w-3 h-3" /> Complete
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="h-8 px-3 text-[9px] font-bold uppercase text-red-500 hover:bg-red-50 gap-1"
+                              onClick={() => handleUpdateWithdrawalStatus(tx.id, 'FAILED', tx.userId)}
+                            >
+                              <XCircle className="w-3 h-3" /> Reject
+                            </Button>
+                          </div>
+                        ) : (
+                          <Badge className={`${tx.status === 'PAID' || tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
+                             {tx.status === 'PAID' ? 'Completed' : tx.status}
+                          </Badge>
+                        )}
                       </td>
                     </tr>
                   ))
