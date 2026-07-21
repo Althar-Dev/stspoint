@@ -14,7 +14,8 @@ import {
   XCircle,
   Calendar,
   History,
-  CreditCard
+  CreditCard,
+  Timer
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
@@ -44,11 +45,15 @@ export default function STSPayTransactionsPage() {
 
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
+    // Normalize Success States
+    if (['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED'].includes(s)) return 'Success';
+    if (['FAILED', 'CANCELED', 'EXPIRED'].includes(s)) return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+
     if (s !== 'PENDING') return status;
-    if (!createdAt) return status;
+    if (!createdAt) return 'Pending';
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
-    return diffInMinutes > 15 ? 'Failed' : status;
+    return diffInMinutes > 15 ? 'Failed' : 'Pending';
   };
 
   const transactions = useMemo(() => {
@@ -170,16 +175,24 @@ export default function STSPayTransactionsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                           <Badge className={`${
-                            item.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
-                            item.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
-                            'bg-red-500/10 text-red-600'
-                          } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center w-fit gap-1`}>
-                            {item.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                            {item.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                            {item.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
-                            {item.effectiveStatus}
-                          </Badge>
+                           <div className="flex flex-col items-start gap-1">
+                             <Badge className={`${
+                              item.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                              item.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
+                              'bg-red-500/10 text-red-600'
+                            } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center w-fit gap-1`}>
+                              {item.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                              {item.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                              {item.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
+                              {item.effectiveStatus}
+                            </Badge>
+                            {item.effectiveStatus === 'Success' && (
+                              <div className="flex items-center gap-1 opacity-40">
+                                <Timer className="w-2.5 h-2.5" />
+                                <span className="text-[7px] font-bold uppercase tracking-tighter">Settling</span>
+                              </div>
+                            )}
+                           </div>
                         </td>
                         <td className="px-8 py-4 text-right text-muted-foreground text-[10px] whitespace-nowrap">
                           {item.createdAt ? format(item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt), "dd/MM/yy HH:mm") : "-"}

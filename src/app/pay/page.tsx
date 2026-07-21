@@ -17,7 +17,8 @@ import {
   XCircle,
   CheckCircle2,
   PieChart as PieChartIcon,
-  CreditCard
+  CreditCard,
+  Timer
 } from "lucide-react";
 import React, { useMemo } from "react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
@@ -50,12 +51,17 @@ export default function STSPayDashboard() {
 
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
+    // Normalize Success States
+    if (['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED'].includes(s)) return 'Success';
+    if (['FAILED', 'CANCELED', 'EXPIRED'].includes(s)) return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    
     if (s !== 'PENDING') return status;
-    if (!createdAt) return status;
+    if (!createdAt) return 'Pending';
+    
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
     // Tampilkan sebagai Failed jika sudah lewat 15 menit
-    return diffInMinutes > 15 ? 'Failed' : status;
+    return diffInMinutes > 15 ? 'Failed' : 'Pending';
   };
 
   const transactions = useMemo(() => {
@@ -75,7 +81,7 @@ export default function STSPayDashboard() {
     const counts = { success: 0, expired: 0, failed: 0 };
     transactions.forEach(tx => {
       const s = String(tx.effectiveStatus).toUpperCase();
-      if (s === 'SUCCESS' || s === 'PAID' || s === 'SETTLED' || s === 'SUCCEEDED') counts.success++;
+      if (s === 'SUCCESS') counts.success++;
       else if (s === 'EXPIRED') counts.expired++;
       else if (s === 'FAILED' || s === 'CANCELED') counts.failed++;
     });
@@ -89,7 +95,7 @@ export default function STSPayDashboard() {
 
   const totalVolume = useMemo(() => {
     return transactions
-      .filter(t => ['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED'].includes(String(t.effectiveStatus).toUpperCase()))
+      .filter(t => t.effectiveStatus === 'Success')
       .reduce((acc, curr) => acc + (curr.priceAmount || 0), 0);
   }, [transactions]);
 
@@ -258,16 +264,24 @@ export default function STSPayDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <Badge className={`${
-                            row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
-                            row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
-                            'bg-red-500/10 text-red-600'
-                          } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
-                            {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                            {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                            {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
-                            {row.effectiveStatus}
-                          </Badge>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge className={`${
+                              row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                              row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
+                              'bg-red-500/10 text-red-600'
+                            } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
+                              {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                              {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                              {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
+                              {row.effectiveStatus}
+                            </Badge>
+                            {row.effectiveStatus === 'Success' && (
+                              <div className="flex items-center gap-1 opacity-40">
+                                <Timer className="w-2.5 h-2.5" />
+                                <span className="text-[7px] font-bold uppercase tracking-tighter">Settling</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </tr>
                      );
