@@ -153,7 +153,7 @@ export default function STSPayBalancesPage() {
                 </h2>
               )}
               <p className="text-white/50 text-[10px] font-medium max-w-sm leading-relaxed">
-                Dana ini telah melewati masa settlement {`T+n`} dan siap ditarik ke rekening bank Anda.
+                Dana ini telah melewati masa settlement yang ditentukan dan siap ditarik ke rekening bank Anda.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -266,47 +266,8 @@ export default function STSPayBalancesPage() {
           </div>
         </Card>
 
-        {/* Settlement Info Info */}
+        {/* Settlement Info Area */}
         <div className="lg:col-span-4 space-y-6">
-           <Card className="border-border shadow-sm rounded-2xl p-8 bg-card flex flex-col gap-6">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground border-b border-border pb-4">Settlement Cycle Info</h4>
-              <div className="space-y-6">
-                 <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 mt-1">
-                       <Banknote className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                       <h5 className="text-xs font-bold uppercase">Virtual Accounts</h5>
-                       <p className="text-[10px] text-muted-foreground leading-relaxed">Dana VA rata-rata tersedia dalam <span className="font-bold text-foreground">T+1</span> (hari kerja berikutnya).</p>
-                    </div>
-                 </div>
-                 <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0 mt-1">
-                       <QrCode className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                       <h5 className="text-xs font-bold uppercase">QRIS Payments</h5>
-                       <p className="text-[10px] text-muted-foreground leading-relaxed">Dana QRIS memerlukan waktu <span className="font-bold text-foreground">T+2</span> untuk verifikasi network GPN.</p>
-                    </div>
-                 </div>
-                 <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 mt-1">
-                       <Wallet className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                       <h5 className="text-xs font-bold uppercase">E-Wallet & Retail</h5>
-                       <p className="text-[10px] text-muted-foreground leading-relaxed">Dana dompet digital dan gerai retail biasanya cair dalam <span className="font-bold text-foreground">T+1</span>.</p>
-                    </div>
-                 </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-muted/50 border border-border mt-2">
-                 <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                    *Masa settlement dihitung sejak status transaksi berubah menjadi <span className="font-bold">PAID</span>. Hari Sabtu, Minggu, dan Libur Nasional tidak dihitung sebagai hari settlement provider.
-                 </p>
-              </div>
-           </Card>
-
            <Card className="border-border shadow-sm rounded-2xl bg-primary/5 p-6 border-dashed">
               <div className="flex items-center gap-3 mb-3">
                  <Info className="w-4 h-4 text-primary" />
@@ -316,6 +277,12 @@ export default function STSPayBalancesPage() {
                  Batas minimum penarikan dana adalah <span className="font-bold text-primary">Rp 50.000</span>. Permintaan penarikan diproses setiap hari pada jam operasional perbankan.
               </p>
            </Card>
+           
+           <div className="p-4 rounded-xl bg-muted/30 border border-border">
+              <p className="text-[10px] text-muted-foreground leading-relaxed italic">
+                 *Masa settlement dihitung sejak status transaksi berubah menjadi <span className="font-bold">PAID</span>. Hari Sabtu, Minggu, dan Libur Nasional tidak dihitung sebagai hari settlement provider.
+              </p>
+           </div>
         </div>
       </div>
     </div>
