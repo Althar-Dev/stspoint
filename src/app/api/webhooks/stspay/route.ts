@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase';
 import { doc, updateDoc, serverTimestamp, getDoc, increment } from 'firebase/firestore';
@@ -6,6 +7,7 @@ import { notifyMerchant } from '@/lib/webhook-sender';
 /**
  * HANDLER WEBHOOK STSPAY (Incoming from Provider like Xendit)
  * Dispatches to Merchant and Updates Net Balance (Merchant-Borne Fee logic).
+ * Ensures global transactions ledger is synchronized with stspay_transactions.
  */
 export async function POST(request: Request) {
   try {
@@ -50,13 +52,22 @@ export async function POST(request: Request) {
         updatedAt: serverTimestamp()
       });
 
-      // Update Ledger Record
+      // Update Ledger Record (Sync Success to global and user history)
       const userHistoryRef = doc(firestore, 'users', txData.userId, 'transactions', transactionId);
       const globalHistoryRef = doc(firestore, 'transactions', transactionId);
       
       await Promise.all([
         updateDoc(userHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }),
         updateDoc(globalHistoryRef, { status: 'Success', updatedAt: serverTimestamp() })
+      ]);
+    } else if ((internalStatus === 'EXPIRED' || internalStatus === 'FAILED') && txData.status === 'PENDING') {
+      // Sync Failure to global ledgers
+      const userHistoryRef = doc(firestore, 'users', txData.userId, 'transactions', transactionId);
+      const globalHistoryRef = doc(firestore, 'transactions', transactionId);
+      
+      await Promise.all([
+        updateDoc(userHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() }),
+        updateDoc(globalHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() })
       ]);
     }
 

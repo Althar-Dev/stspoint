@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, updateDoc, serverTimestamp, collection } from "firebase/firestore";
+import { doc, updateDoc, serverTimestamp, collection, increment } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -257,7 +258,6 @@ export default function CustomCheckoutPage() {
   const { data: transaction, loading, error } = useDoc(transactionRef);
   const { data: channelsData } = useCollection(channelsQuery);
 
-  // Fetch Merchant Profile for custom logo/brand
   const merchantRef = useMemoFirebase(() => {
     if (!db || !transaction?.userId) return null;
     return doc(db, "users", transaction.userId);
@@ -266,9 +266,7 @@ export default function CustomCheckoutPage() {
 
   const activePaymentGroups = useMemo(() => {
     if (!channelsData) return [];
-
     const activeChannels = channelsData.filter(c => c.status === 'active');
-    
     return GROUPS_UI.map(group => {
       const methodsInGroup = activeChannels
         .filter(c => {
@@ -286,20 +284,14 @@ export default function CustomCheckoutPage() {
           provider: c.provider || 'Xendit',
           logo: c.logo ? (c.logo.startsWith('http') ? c.logo : `/assets/bank/${c.logo}`) : `/assets/bank/${c.id.toLowerCase()}.png`
         }));
-
-      return {
-        ...group,
-        methods: methodsInGroup
-      };
+      return { ...group, methods: methodsInGroup };
     }).filter(g => g.methods.length > 0);
   }, [channelsData]);
 
   useEffect(() => {
     if (!transaction || transaction.status !== 'PENDING' || !transaction.createdAt) return;
-
     const createdAtDate = transaction.createdAt.toDate ? transaction.createdAt.toDate() : new Date(transaction.createdAt);
     const expiryDate = addMinutes(createdAtDate, 15);
-
     const timer = setInterval(() => {
       const now = new Date();
       if (isAfter(now, expiryDate)) {
@@ -312,7 +304,6 @@ export default function CustomCheckoutPage() {
       const seconds = Math.floor((diff % 60000) / 1000);
       setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     }, 1000);
-
     return () => clearInterval(timer);
   }, [transaction, transactionRef]);
 
@@ -323,14 +314,30 @@ export default function CustomCheckoutPage() {
   }, [transaction]);
 
   const handleStatusSync = async (silent = false) => {
-    if (!transaction || !transactionRef || transaction.status !== 'PENDING') return;
+    if (!transaction || !transactionRef || transaction.status !== 'PENDING' || !db) return;
     const prId = transaction.payment_info?.pr_id || transaction.payment_info?.charge_id || transaction.payment_info?.qr_id || transaction.payment_info?.va_id || transaction.payment_info?.fpc_id;
     if (!prId) return;
     if (!silent) setIsChecking(true);
     try {
       const res = await manualCheckPaymentStatus(prId, transaction.provider || 'Xendit');
       if (res.success && res.isPaid) {
-        await updateDoc(transactionRef, { status: 'PAID', updatedAt: serverTimestamp() });
+        // Status Synchronization: stspay_transactions AND global transactions ledger
+        const globalHistoryRef = doc(db, 'transactions', transaction.id);
+        const userHistoryRef = doc(db, 'users', transaction.userId, 'transactions', transaction.id);
+        const merchantStsPayRef = doc(db, 'users', transaction.userId, 'services', 'stspay');
+        
+        const netAmount = (transaction.amount || 0) - (transaction.fee_amount || 0);
+
+        await Promise.all([
+          updateDoc(transactionRef, { status: 'PAID', updatedAt: serverTimestamp() }),
+          updateDoc(globalHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }),
+          updateDoc(userHistoryRef, { status: 'Success', updatedAt: serverTimestamp() }),
+          updateDoc(merchantStsPayRef, { 
+            balance: increment(netAmount), 
+            updatedAt: serverTimestamp() 
+          })
+        ]);
+
         if (!silent) toast({ title: T[lang].syncSuccess, description: T[lang].syncSuccessDesc });
       } else if (!silent) {
         toast({ title: T[lang].syncFail, description: T[lang].syncFailDesc });
@@ -343,12 +350,20 @@ export default function CustomCheckoutPage() {
   };
 
   const handleCancel = async () => {
-    if (!transactionRef || !transaction) return;
+    if (!transactionRef || !transaction || !db) return;
     setIsCanceling(true);
     try {
       const prId = transaction.payment_info?.pr_id || transaction.payment_info?.charge_id || transaction.payment_info?.qr_id || transaction.payment_info?.va_id || transaction.payment_info?.fpc_id;
       if (prId) await cancelStsTransaction(prId, transaction.provider || 'Xendit');
-      await updateDoc(transactionRef, { status: 'CANCELED', updatedAt: serverTimestamp() });
+      
+      const globalHistoryRef = doc(db, 'transactions', transaction.id);
+      const userHistoryRef = doc(db, 'users', transaction.userId, 'transactions', transaction.id);
+
+      await Promise.all([
+        updateDoc(transactionRef, { status: 'CANCELED', updatedAt: serverTimestamp() }),
+        updateDoc(globalHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() }),
+        updateDoc(userHistoryRef, { status: 'Failed', updatedAt: serverTimestamp() })
+      ]);
     } finally {
       setIsCanceling(false);
     }
@@ -362,14 +377,12 @@ export default function CustomCheckoutPage() {
       if (prId) {
         await cancelStsTransaction(prId, transaction.provider || 'Xendit');
       }
-      
       const resetData: any = {
         payment_info: null,
         payment_method_id: null,
         fee_amount: 0,
         updatedAt: serverTimestamp()
       };
-
       await updateDoc(transactionRef, resetData);
       setSelectedMethod(null);
     } catch (e: any) {
@@ -390,30 +403,21 @@ export default function CustomCheckoutPage() {
 
   const handleSelectMethod = async (method: any, mobileNumber?: string) => {
     if (!transaction) return;
-
     const baseAmount = transaction.base_amount || transaction.amount;
     const minPay = Number(method.min);
-    
-    if (baseAmount < minPay) {
-      return; 
-    }
-    
+    if (baseAmount < minPay) return; 
     const methodId = (method.id || '').toUpperCase();
     const isOvo = methodId.includes('OVO');
-    
     if (isOvo && !mobileNumber && method.provider !== 'Midtrans') {
       setSelectedMethod(method);
       setIsOvoPromptOpen(true);
       return;
     }
-    
     setSelectedMethod(method);
     setIsGenerating(true);
     setIsOvoPromptOpen(false);
-
     try {
       const feeAmount = calculateFeeAmount(baseAmount, method.fee);
-
       const res = await requestPaymentInfo(method.type, {
         external_id: transaction.id, 
         amount: baseAmount, 
@@ -423,7 +427,6 @@ export default function CustomCheckoutPage() {
         provider: method.provider,
         payer_email: transaction.payerEmail
       });
-
       if (res.success && transactionRef) {
         await updateDoc(transactionRef, {
           payment_info: res,
@@ -448,10 +451,7 @@ export default function CustomCheckoutPage() {
   const handleDownloadQR = async () => {
     if (!transaction?.payment_info?.qr_string) return;
     const qrString = transaction.payment_info.qr_string;
-    const url = qrString.startsWith('http') 
-      ? qrString 
-      : `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrString)}`;
-    
+    const url = qrString.startsWith('http') ? qrString : `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrString)}`;
     try {
       const response = await fetch(url);
       const blob = await response.blob();
@@ -478,22 +478,12 @@ export default function CustomCheckoutPage() {
     return (
       <div className="light min-h-screen bg-[#F9FAFB] flex flex-col">
         <header className="w-full h-16 md:h-20 bg-white border-b border-slate-300 flex items-center justify-between px-4 md:px-12 sticky top-0 z-50">
-          <div className="flex items-center gap-2">
-            <Skeleton className="w-8 h-8 rounded-md" />
-            <Skeleton className="w-20 h-6 rounded-md" />
-          </div>
+          <div className="flex items-center gap-2"><Skeleton className="w-8 h-8 rounded-md" /><Skeleton className="w-20 h-6 rounded-md" /></div>
           <Skeleton className="w-24 h-8 rounded-md" />
         </header>
-
         <main className="max-w-7xl mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 w-full">
           <div className="lg:col-span-8 p-4 md:p-12 lg:p-16 space-y-12">
-            <div className="text-center space-y-4">
-              <Skeleton className="w-32 h-32 mx-auto rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="w-24 h-3 mx-auto" />
-                <Skeleton className="w-64 h-12 mx-auto" />
-              </div>
-            </div>
+            <div className="text-center space-y-4"><Skeleton className="w-32 h-32 mx-auto rounded-full" /><div className="space-y-2"><Skeleton className="w-24 h-3 mx-auto" /><Skeleton className="w-64 h-12 mx-auto" /></div></div>
           </div>
         </main>
       </div>
@@ -515,7 +505,6 @@ export default function CustomCheckoutPage() {
   const isCanceled = transaction.status === "CANCELED";
   const currentPaymentData = transaction.payment_info;
   const currentMethod = activePaymentGroups.flatMap(g => g.methods).find(m => m.id === transaction.payment_method_id) || selectedMethod;
-
   const displayAmount = transaction.amount;
 
   return (
