@@ -92,7 +92,7 @@ export default function STSPaySettingsPage() {
         payoutAccountName: bankAccountName,
         updatedAt: serverTimestamp()
       });
-      toast({ title: "Berhasil", description: "Rekening payout telah diperbarui." });
+      toast({ title: "Berhasil", description: "Rekening Bank telah diperbarui." });
     } catch (e) {
       toast({ variant: "destructive", title: "Gagal", description: "Gagal menyimpan rekening." });
     } finally {
@@ -195,7 +195,7 @@ export default function STSPaySettingsPage() {
           <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <Banknote className="w-4 h-4 text-primary" />
-              Rekening Payout
+              Rekening Bank
             </CardTitle>
             <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/60">Tempat dana hasil penjualan Anda dicairkan.</CardDescription>
           </CardHeader>

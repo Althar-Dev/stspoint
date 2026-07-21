@@ -583,7 +583,7 @@ function ManagementContent() {
        case 'gateway': return { title: 'Infrastructure Gateways', icon: Globe2, color: 'text-emerald-500' };
        case 'clients': return { title: 'Clients Registry', icon: UserCircle, color: 'text-blue-500' };
        case 'merchants': return { title: 'Merchants Registry', icon: Building2, color: 'text-primary' };
-       case 'bank-accounts': return { title: 'Bank Accounts Requester', icon: Landmark, color: 'text-emerald-500' };
+       case 'bank-accounts': return { title: 'Rekening Bank', icon: Landmark, color: 'text-emerald-500' };
        case 'withdrawals': return { title: 'Withdrawal Requester', icon: Banknote, color: 'text-amber-500' };
        case 'transactions': return { title: 'Transactions Registry', icon: History, color: 'text-amber-500' };
        case 'licenses': return { title: 'License Registry', icon: Ticket, color: 'text-purple-500' };
@@ -864,7 +864,7 @@ function ManagementContent() {
                 {view === 'withdrawals' && <Banknote className="w-4 h-4 text-amber-500" />}
                 {view === 'transactions' && <History className="w-4 h-4 text-amber-500" />}
                 {view === 'licenses' && <Ticket className="w-4 h-4 text-purple-500" />}
-                {view.charAt(0).toUpperCase() + view.slice(1)} Registry
+                {view === 'bank-accounts' ? 'Rekening Bank' : view.charAt(0).toUpperCase() + view.slice(1).replace('-', ' ')} Registry
               </>
             )}
           </CardTitle>
