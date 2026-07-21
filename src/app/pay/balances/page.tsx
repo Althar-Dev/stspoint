@@ -7,26 +7,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Wallet, 
   History,
-  AlertCircle,
-  Banknote,
   ShieldCheck,
   ChevronRight,
   Info,
   RefreshCcw,
   Clock,
-  ArrowUpRight,
   CheckCircle2,
-  Timer,
-  QrCode
+  Timer
 } from "lucide-react";
 import React, { useMemo, useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
-import { addDays, isAfter, format } from "date-fns";
+import { isAfter, format } from "date-fns";
 
 /**
  * STSPay Balances Page
- * Menghitung saldo tersedia dan tertahan berdasarkan masa settlement T+n.
+ * Menghitung saldo tersedia dan tertahan berdasarkan masa settlement T+n (Hari Kerja).
  */
 export default function STSPayBalancesPage() {
   const { user } = useUser();
@@ -65,7 +61,7 @@ export default function STSPayBalancesPage() {
 
   const { data: channels } = useCollection(channelsQuery);
 
-  // 4. FUNGSI INTI: Kalkulasi Saldo Berdasarkan Masa Settlement
+  // 4. FUNGSI INTI: Kalkulasi Saldo Berdasarkan Masa Settlement (Hanya Hari Kerja)
   const { availableBalance, pendingBalance, settledTransactions, pendingTransactions } = useMemo(() => {
     let available = 0;
     let pending = 0;
@@ -86,9 +82,20 @@ export default function STSPayBalancesPage() {
       // Parsing angka dari string "T+1", "T+2", dsb.
       const daysToAdd = parseInt(settlementStr.replace(/[^0-9]/g, '')) || 1;
 
-      // Hitung tanggal estimasi cair
+      // Hitung tanggal estimasi cair (SKIP SABTU & MINGGU)
       const createdAt = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt || 0);
-      const settlementDate = addDays(createdAt, daysToAdd);
+      
+      let settlementDate = new Date(createdAt);
+      let businessDaysAdded = 0;
+      
+      while (businessDaysAdded < daysToAdd) {
+        settlementDate.setDate(settlementDate.getDate() + 1);
+        const dayOfWeek = settlementDate.getDay();
+        // 0 = Sunday, 6 = Saturday. Hanya tambah jika hari kerja (1-5).
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          businessDaysAdded++;
+        }
+      }
 
       // Cek apakah sudah melewati waktu cair
       const isSettled = isAfter(now, settlementDate);
@@ -153,7 +160,7 @@ export default function STSPayBalancesPage() {
                 </h2>
               )}
               <p className="text-white/50 text-[10px] font-medium max-w-sm leading-relaxed">
-                Dana ini telah melewati masa settlement yang ditentukan dan siap ditarik ke rekening bank Anda.
+                Dana ini telah melewati masa settlement hari kerja yang ditentukan dan siap ditarik ke rekening bank Anda.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -183,7 +190,7 @@ export default function STSPayBalancesPage() {
                       <h3 className="text-2xl font-headline font-bold">Rp {pendingBalance.toLocaleString('id-ID')}</h3>
                     )}
                     <p className="text-[9px] text-muted-foreground leading-relaxed mt-1">
-                       Dana tertahan sementara dalam proses settlement provider (Xendit/Midtrans).
+                       Dana tertahan sementara menunggu hari kerja settlement provider (Xendit/Midtrans).
                     </p>
                  </div>
               </div>
@@ -268,19 +275,13 @@ export default function STSPayBalancesPage() {
 
         {/* Settlement Info Area */}
         <div className="lg:col-span-4 space-y-6">
-           <Card className="border-border shadow-sm rounded-2xl bg-primary/5 p-6 border-dashed">
-              <div className="flex items-center gap-3 mb-3">
-                 <Info className="w-4 h-4 text-primary" />
-                 <h4 className="text-[10px] font-bold uppercase tracking-widest">Payout Minimum</h4>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                 Batas minimum penarikan dana adalah <span className="font-bold text-primary">Rp 50.000</span>. Permintaan penarikan diproses setiap hari pada jam operasional perbankan.
-              </p>
-           </Card>
-           
            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                 <Info className="w-3.5 h-3.5 text-primary" />
+                 <span className="text-[10px] font-bold uppercase tracking-widest">Settlement Note</span>
+              </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                 *Masa settlement dihitung sejak status transaksi berubah menjadi <span className="font-bold">PAID</span>. Hari Sabtu, Minggu, dan Libur Nasional tidak dihitung sebagai hari settlement provider.
+                 *Masa settlement dihitung sejak status transaksi berubah menjadi <span className="font-bold">PAID</span>. Hari Sabtu, Minggu, dan Libur Nasional tidak dihitung sebagai hari proses dari provider.
               </p>
            </div>
         </div>
