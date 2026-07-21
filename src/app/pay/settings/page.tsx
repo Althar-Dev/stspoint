@@ -18,7 +18,9 @@ import {
   Lock,
   Info,
   Store,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Landmark,
+  User as UserIcon
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -29,12 +31,18 @@ export default function STSPaySettingsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
+  const [isSavingPayout, setIsSavingPayout] = useState(false);
 
-  // States
+  // Identitas States
   const [businessName, setBusinessName] = useState("");
   const [merchantName, setMerchantName] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+
+  // Payout Account States
+  const [bankName, setBankName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const [bankAccountName, setBankAccountName] = useState("");
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -49,6 +57,10 @@ export default function STSPaySettingsPage() {
       setMerchantName(profile.merchantName || "");
       setBusinessEmail(profile.email || "");
       setLogoUrl(profile.logoUrl || "");
+      
+      setBankName(profile.payoutBankName || "");
+      setBankAccountNumber(profile.payoutAccountNumber || "");
+      setBankAccountName(profile.payoutAccountName || "");
     }
   }, [profile]);
 
@@ -67,6 +79,24 @@ export default function STSPaySettingsPage() {
       toast({ variant: "destructive", title: "Gagal", description: "Gagal menyimpan perubahan." });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSavePayout = async () => {
+    if (!profileRef) return;
+    setIsSavingPayout(true);
+    try {
+      await updateDoc(profileRef, {
+        payoutBankName: bankName,
+        payoutAccountNumber: bankAccountNumber,
+        payoutAccountName: bankAccountName,
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Berhasil", description: "Rekening payout telah diperbarui." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Gagal", description: "Gagal menyimpan rekening." });
+    } finally {
+      setIsSavingPayout(false);
     }
   };
 
@@ -169,27 +199,61 @@ export default function STSPaySettingsPage() {
             </CardTitle>
             <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/60">Tempat dana hasil penjualan Anda dicairkan.</CardDescription>
           </CardHeader>
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-md bg-primary/5 border border-primary/10">
-               <div className="w-16 h-16 rounded-full bg-white border border-border flex items-center justify-center shadow-sm shrink-0">
-                  <span className="font-bold text-primary text-xs">BCA</span>
-               </div>
-               <div className="flex-1 space-y-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-2">
-                    <h4 className="font-bold text-lg">**** 1283</h4>
-                    <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] uppercase font-bold h-4">Verified</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight">a.n {profile?.name || "---"}</p>
-               </div>
-               <Button variant="outline" className="rounded-md h-10 px-6 font-bold uppercase tracking-widest text-[10px] bg-card">
-                 Ubah Rekening
-               </Button>
+          <CardContent className="p-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Bank</Label>
+                <div className="relative">
+                  <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    placeholder="e.g. BCA, Mandiri"
+                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor Rekening</Label>
+                <div className="relative">
+                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    value={bankAccountNumber}
+                    onChange={(e) => setBankAccountNumber(e.target.value)}
+                    placeholder="e.g. 1234567890"
+                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Pemilik Rekening</Label>
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    value={bankAccountName}
+                    onChange={(e) => setBankAccountName(e.target.value)}
+                    placeholder="e.g. John Doe"
+                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="mt-4 flex items-start gap-3 p-4 rounded-md bg-amber-500/5 border border-amber-500/10">
-               <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-               <p className="text-[10px] text-amber-800 leading-relaxed font-medium uppercase">
-                 Perubahan rekening memerlukan waktu verifikasi manual selama 1x24 jam untuk menjaga keamanan dana Anda.
-               </p>
+
+            <div className="pt-4 border-t border-border flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3 p-4 rounded-md bg-amber-500/5 border border-amber-500/10 flex-1">
+                <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-amber-800 leading-relaxed font-medium uppercase">
+                  Pastikan data rekening benar. Perubahan rekening memerlukan verifikasi manual 1x24 jam.
+                </p>
+              </div>
+              <Button 
+                onClick={handleSavePayout}
+                disabled={isSavingPayout}
+                className="rounded-md h-11 px-8 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10 shrink-0"
+              >
+                {isSavingPayout ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                Simpan Rekening
+              </Button>
             </div>
           </CardContent>
         </Card>
