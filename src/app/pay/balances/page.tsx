@@ -24,6 +24,10 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@
 import { doc, collection, query, where } from "firebase/firestore";
 import { addDays, isAfter, format } from "date-fns";
 
+/**
+ * STSPay Balances Page
+ * Menghitung saldo tersedia dan tertahan berdasarkan masa settlement T+n.
+ */
 export default function STSPayBalancesPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -33,7 +37,7 @@ export default function STSPayBalancesPage() {
     setMounted(true);
   }, []);
 
-  // 1. Ambil data layanan STSPay (Saldo mentah dari Firestore)
+  // 1. Ambil data layanan STSPay (Config)
   const stspayRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "stspay");
@@ -41,7 +45,7 @@ export default function STSPayBalancesPage() {
 
   const { data: stspaySvc, loading: svcLoading } = useDoc(stspayRef);
 
-  // 2. Ambil seluruh transaksi PAID milik merchant ini untuk kalkulasi settlement
+  // 2. Ambil seluruh transaksi sukses (PAID) milik merchant ini
   const txQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -61,7 +65,7 @@ export default function STSPayBalancesPage() {
 
   const { data: channels } = useCollection(channelsQuery);
 
-  // 4. Kalkulasi Saldo Berdasarkan Masa Settlement
+  // 4. FUNGSI INTI: Kalkulasi Saldo Berdasarkan Masa Settlement
   const { availableBalance, pendingBalance, settledTransactions, pendingTransactions } = useMemo(() => {
     let available = 0;
     let pending = 0;
@@ -71,17 +75,22 @@ export default function STSPayBalancesPage() {
     const now = new Date();
 
     paidTransactions.forEach((tx) => {
+      // Net Revenue = Amount - Fee
       const netAmount = (tx.amount || 0) - (tx.fee_amount || 0);
       
-      // Cari info settlement dari channel (Default T+1 jika tidak ditemukan)
+      // Cari info settlement dari channel (Default T+1 jika tidak ditemukan di registry)
       const methodId = tx.payment_method_id || "";
       const channelInfo = channels.find(c => c.id.toUpperCase() === methodId.toUpperCase());
       const settlementStr = channelInfo?.settlement || "T+1";
+      
+      // Parsing angka dari string "T+1", "T+2", dsb.
       const daysToAdd = parseInt(settlementStr.replace(/[^0-9]/g, '')) || 1;
 
+      // Hitung tanggal estimasi cair
       const createdAt = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt || 0);
       const settlementDate = addDays(createdAt, daysToAdd);
 
+      // Cek apakah sudah melewati waktu cair
       const isSettled = isAfter(now, settlementDate);
 
       if (isSettled) {
@@ -101,6 +110,7 @@ export default function STSPayBalancesPage() {
     };
   }, [paidTransactions, channels]);
 
+  // Gabungkan dan urutkan untuk tampilan aktivitas terbaru
   const recentActivity = useMemo(() => {
     return [...settledTransactions, ...pendingTransactions]
       .sort((a, b) => {
@@ -108,7 +118,7 @@ export default function STSPayBalancesPage() {
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
         return dateB.getTime() - dateA.getTime();
       })
-      .slice(0, 10);
+      .slice(0, 15);
   }, [settledTransactions, pendingTransactions]);
 
   const isLoading = svcLoading || txLoading || !mounted;
@@ -142,8 +152,8 @@ export default function STSPayBalancesPage() {
                   Rp {availableBalance.toLocaleString('id-ID')}
                 </h2>
               )}
-              <p className="text-white/50 text-[10px] font-medium max-w-sm">
-                Dana ini telah melewati masa settlement dan siap ditarik ke rekening bank Anda yang terverifikasi.
+              <p className="text-white/50 text-[10px] font-medium max-w-sm leading-relaxed">
+                Dana ini telah melewati masa settlement {`T+n`} dan siap ditarik ke rekening bank Anda.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -165,7 +175,7 @@ export default function STSPayBalancesPage() {
                     <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
                        <Clock className="w-5 h-5" />
                     </div>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[8px] font-bold">SETTLING</Badge>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[8px] font-bold uppercase">Settling</Badge>
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pending Balance</p>
@@ -173,7 +183,7 @@ export default function STSPayBalancesPage() {
                       <h3 className="text-2xl font-headline font-bold">Rp {pendingBalance.toLocaleString('id-ID')}</h3>
                     )}
                     <p className="text-[9px] text-muted-foreground leading-relaxed mt-1">
-                       Dana tertahan sementara dalam proses verifikasi & settlement provider.
+                       Dana tertahan sementara dalam proses settlement provider (Xendit/Midtrans).
                     </p>
                  </div>
               </div>
