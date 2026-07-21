@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Settings2,
-  CreditCard
+  CreditCard,
+  Clock
 } from "lucide-react";
 import React, { useMemo } from "react";
-import Image from "next/image";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { cn } from "@/lib/utils";
@@ -16,18 +16,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 // Initial preset of channels (we'll merge this with DB)
 const CHANNEL_PRESETS = [
-  { id: 'QRIS', name: 'QRIS', provider: 'Xendit', fee: '0.7%', type: 'QR' },
-  { id: 'BRI', name: 'BRI Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'BNI', name: 'BNI Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'MANDIRI', name: 'Mandiri Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'PERMATA', name: 'Permata Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'BSI', name: 'BSI Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'BJB', name: 'BJB Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'CIMB', name: 'CIMB Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA' },
-  { id: 'SAHABAT_SAMPOERNA', name: 'Sahabat Sampoerna VA', provider: 'Xendit', fee: 'Rp 3.000', type: 'VA' },
-  { id: 'OVO', name: 'OVO', provider: 'Xendit', fee: '2.0%', type: 'E-WALLET' },
-  { id: 'ALFAMART', name: 'Alfamart', provider: 'Xendit', fee: 'Rp 5.000', type: 'RETAIL' },
-  { id: 'INDOMARET', name: 'Indomaret', provider: 'Xendit', fee: 'Rp 5.000', type: 'RETAIL' },
+  { id: 'QRIS', name: 'QRIS', provider: 'Xendit', fee: '0.7%', type: 'QR', settlement: 'T+2' },
+  { id: 'BRI', name: 'BRI Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'BNI', name: 'BNI Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'MANDIRI', name: 'Mandiri Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'PERMATA', name: 'Permata Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'BSI', name: 'BSI Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'BJB', name: 'BJB Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'CIMB', name: 'CIMB Virtual Account', provider: 'Xendit', fee: 'Rp 4.000', type: 'VA', settlement: 'T+1' },
+  { id: 'SAHABAT_SAMPOERNA', name: 'Sahabat Sampoerna VA', provider: 'Xendit', fee: 'Rp 3.000', type: 'VA', settlement: 'T+1' },
+  { id: 'OVO', name: 'OVO', provider: 'Xendit', fee: '2.0%', type: 'E-WALLET', settlement: 'T+1' },
+  { id: 'ALFAMART', name: 'Alfamart', provider: 'Xendit', fee: 'Rp 5.000', type: 'RETAIL', settlement: 'T+1' },
+  { id: 'INDOMARET', name: 'Indomaret', provider: 'Xendit', fee: 'Rp 5.000', type: 'RETAIL', settlement: 'T+1' },
 ];
 
 export default function PaymentChannelsPage() {
@@ -59,7 +59,8 @@ export default function PaymentChannelsPage() {
         fee: dbc.fee,
         logo: dbc.logo,
         type: dbc.group || 'OTHER',
-        status: dbc.status === 'active' ? 'Active' : 'Inactive'
+        status: dbc.status === 'active' ? 'Active' : 'Inactive',
+        settlement: dbc.settlement || 'T+1'
       }));
 
     return [...processedPresets, ...customChannels].map(c => {
@@ -101,7 +102,11 @@ export default function PaymentChannelsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-headline font-bold tracking-tight">Kanal <span className="text-primary">Pembayaran</span></h1>
+          <p className="text-muted-foreground text-sm">Informasi biaya MDR dan waktu pencairan dana dari provider.</p>
+        </div>
         <Button variant="outline" size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2">
           <Settings2 className="w-3.5 h-3.5" /> Konfigurasi Global
         </Button>
@@ -175,8 +180,18 @@ export default function PaymentChannelsPage() {
                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Biaya / MDR</p>
                          <p className="text-xs font-bold text-foreground">{channel.fee || 'Free'}</p>
                       </div>
-                      <div className="text-[9px] font-mono font-bold text-muted-foreground/30 uppercase">
-                        {channel.id}
+                      <div className="space-y-0.5 text-right">
+                         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">Settlement</p>
+                         <div className="flex items-center gap-1 justify-end">
+                            <Clock className="w-3 h-3 text-primary" />
+                            <p className="text-xs font-bold text-primary">{channel.settlement || 'T+1'}</p>
+                         </div>
+                      </div>
+                   </div>
+                   
+                   <div className="pt-2 flex items-center justify-end opacity-20">
+                      <div className="text-[8px] font-mono font-bold uppercase">
+                        ID: {channel.id}
                       </div>
                    </div>
                 </CardContent>
