@@ -33,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useMemo, useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, collection, query, where, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, collection, query, where, setDoc, serverTimestamp, updateDoc, increment } from "firebase/firestore";
 import { isAfter, format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -41,8 +41,7 @@ import Link from "next/link";
 
 /**
  * STSPay Balances Page
- * Menghitung saldo tersedia dan tertahan berdasarkan masa settlement T+n (Hari Kerja).
- * Serta menangani proses penarikan dana (Withdrawal).
+ * Menampilkan saldo tersedia dari field balance di database dan saldo tertahan berdasarkan settlement T+n.
  */
 export default function STSPayBalancesPage() {
   const { user } = useUser();
@@ -59,7 +58,7 @@ export default function STSPayBalancesPage() {
     setMounted(true);
   }, []);
 
-  // 1. Ambil data profil pengguna untuk info rekening & status verifikasi
+  // 1. Profil pengguna (untuk verifikasi rekening bank)
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid);
@@ -67,7 +66,15 @@ export default function STSPayBalancesPage() {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // 2. Ambil seluruh transaksi milik merchant ini (Payment & Payout)
+  // 2. Saldo Utama STSPay (Source of Truth)
+  const stspaySvcRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "stspay");
+  }, [db, user?.uid]);
+
+  const { data: stspaySvc, loading: stspayLoading } = useDoc(stspaySvcRef);
+
+  // 3. Ambil seluruh transaksi milik merchant ini
   const txQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -78,7 +85,7 @@ export default function STSPayBalancesPage() {
 
   const { data: allTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // 3. Ambil kebijakan channel untuk menentukan masa settlement
+  // 4. Ambil kebijakan channel untuk menentukan masa settlement
   const channelsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "payment_channels");
@@ -86,13 +93,10 @@ export default function STSPayBalancesPage() {
 
   const { data: channels } = useCollection(channelsQuery);
 
-  // 4. FUNGSI INTI: Kalkulasi Saldo Tersedia & Tertahan
-  const { availableBalance, pendingBalance, recentActivity } = useMemo(() => {
-    let settledRevenue = 0;
+  // 5. Kalkulasi Saldo Tertahan & Aktivitas Terbaru
+  const { pendingBalance, recentActivity } = useMemo(() => {
     let pendingRevenue = 0;
-    let totalWithdrawals = 0;
     const processedList: any[] = [];
-
     const now = new Date();
 
     allTransactions.forEach((tx) => {
@@ -115,22 +119,17 @@ export default function STSPayBalancesPage() {
         }
 
         const isSettled = isAfter(now, settlementDate);
-        if (isSettled) {
-          settledRevenue += netAmount;
-        } else {
+        if (!isSettled) {
           pendingRevenue += netAmount;
         }
         processedList.push({ ...tx, netAmount, settlementDate, isSettled });
       } 
-      
       else if (tx.type === 'payout' && tx.status !== 'FAILED') {
-        totalWithdrawals += (tx.amount || 0);
         processedList.push({ ...tx, netAmount: tx.amount, isSettled: true, isPayout: true });
       }
     });
 
     return { 
-      availableBalance: Math.max(0, settledRevenue - totalWithdrawals), 
       pendingBalance: pendingRevenue,
       recentActivity: processedList.sort((a, b) => {
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
@@ -139,6 +138,8 @@ export default function STSPayBalancesPage() {
       }).slice(0, 15)
     };
   }, [allTransactions, channels]);
+
+  const availableBalance = stspaySvc?.balance || 0;
 
   const handleWithdraw = async () => {
     const amount = parseInt(withdrawAmount);
@@ -153,7 +154,7 @@ export default function STSPayBalancesPage() {
     }
 
     if (profile?.payoutAccountStatus !== 'VERIFIED') {
-      toast({ variant: "destructive", title: "Rekening Belum Diverifikasi", description: "Harap tunggu atau hubungi admin untuk verifikasi rekening bank." });
+      toast({ variant: "destructive", title: "Rekening Belum Diverifikasi", description: "Harap tunggu verifikasi rekening bank Anda di halaman Settings." });
       return;
     }
 
@@ -190,6 +191,14 @@ export default function STSPayBalancesPage() {
         createdAt: serverTimestamp()
       };
 
+      // Mutation: Potong saldo merchant seketika (Deduction flow)
+      if (stspaySvcRef) {
+        updateDoc(stspaySvcRef, {
+          balance: increment(-amount),
+          updatedAt: serverTimestamp()
+        });
+      }
+
       await Promise.all([
         setDoc(doc(db, "stspay_transactions", trxId), payoutData),
         setDoc(doc(db, "transactions", trxId), ledgerData)
@@ -205,30 +214,31 @@ export default function STSPayBalancesPage() {
     }
   };
 
-  const isLoading = profileLoading || txLoading || !mounted;
+  const isLoading = profileLoading || stspayLoading || txLoading || !mounted;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-headline font-bold tracking-tight">STSPay <span className="text-primary">Financials</span></h1>
-          <p className="text-muted-foreground text-sm">Monitor revenue, available funds, and settlement cycles.</p>
+          <h1 className="text-2xl font-headline font-bold tracking-tight">STSPay <span className="text-primary">Balances</span></h1>
+          <p className="text-muted-foreground text-sm">Monitor your available revenue and upcoming settlements.</p>
         </div>
         <div className="flex items-center gap-2">
            <Button variant="outline" size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2" onClick={() => window.location.reload()}>
-            <RefreshCcw className={`w-3.5 h-3.5 ${isLoading && 'animate-spin'}`} /> Sync Balances
+            <RefreshCcw className={`w-3.5 h-3.5 ${isLoading && 'animate-spin'}`} /> Refresh Data
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Balance Card */}
         <Card className="lg:col-span-2 border-none shadow-xl shadow-emerald-500/10 bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-2xl overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-8 md:p-12 relative z-10 space-y-8 h-full flex flex-col justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">Available Balance</p>
-                <Badge variant="outline" className="bg-white/10 border-white/20 text-white text-[8px] font-bold rounded-md">READY FOR PAYOUT</Badge>
+                <Badge variant="outline" className="bg-white/10 border-white/20 text-white text-[8px] font-bold rounded-md">SIAP DITARIK</Badge>
               </div>
               {isLoading ? <Skeleton className="h-14 w-64 bg-white/10" /> : (
                 <h2 className="text-5xl font-headline font-bold tracking-tighter">
@@ -236,14 +246,14 @@ export default function STSPayBalancesPage() {
                 </h2>
               )}
               <p className="text-white/50 text-[10px] font-medium max-w-sm leading-relaxed">
-                Dana ini telah melewati masa settlement hari kerja yang ditentukan dan siap ditarik ke rekening bank Anda.
+                Saldo ini berasal dari transaksi yang telah melewati masa settlement perbankan dan dapat dicairkan ke rekening Anda.
               </p>
             </div>
             
             <div className="flex flex-wrap gap-3">
               <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
                 <DialogTrigger asChild>
-                  <Button disabled={availableBalance < 1000 || isLoading} className="bg-white text-emerald-700 hover:bg-white/90 font-bold rounded-xl px-10 h-12 uppercase tracking-widest text-[10px] border-none shadow-lg">
+                  <Button disabled={availableBalance < 1000 || isLoading} className="bg-white text-emerald-700 hover:bg-white/90 font-bold rounded-xl px-10 h-12 uppercase tracking-widest text-[10px] border-none shadow-lg shadow-black/10 transition-all active:scale-95">
                     Withdraw Funds
                   </Button>
                 </DialogTrigger>
@@ -266,7 +276,7 @@ export default function STSPayBalancesPage() {
                         <div className="space-y-2">
                            <h4 className="font-bold">Verifikasi Diperlukan</h4>
                            <p className="text-xs text-muted-foreground leading-relaxed px-4">
-                             Anda belum memiliki rekening yang terverifikasi. Silakan lengkapi data rekening di menu Settings untuk mengaktifkan fitur ini.
+                             Rekening Anda belum terverifikasi oleh Admin. Silakan lengkapi data rekening di menu Settings untuk mengaktifkan penarikan.
                            </p>
                         </div>
                         <Button asChild variant="outline" className="rounded-xl font-bold h-11 w-full">
@@ -287,7 +297,7 @@ export default function STSPayBalancesPage() {
                         <div className="space-y-2">
                            <div className="flex items-center justify-between ml-1">
                               <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Nominal Penarikan</Label>
-                              <span className="text-[10px] font-bold text-emerald-600">Max: Rp {availableBalance.toLocaleString()}</span>
+                              <span className="text-[10px] font-bold text-emerald-600">Maks: Rp {availableBalance.toLocaleString()}</span>
                            </div>
                            <div className="relative">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
@@ -321,6 +331,7 @@ export default function STSPayBalancesPage() {
           </CardContent>
         </Card>
 
+        {/* Pending Balance Column */}
         <div className="space-y-6">
            <Card className="border-border shadow-sm rounded-2xl bg-card p-6 border-l-4 border-l-amber-500">
               <div className="space-y-4">
@@ -328,7 +339,7 @@ export default function STSPayBalancesPage() {
                     <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600">
                        <Clock className="w-5 h-5" />
                     </div>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[8px] font-bold uppercase">Settling</Badge>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[8px] font-bold uppercase">SETTLING</Badge>
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pending Balance</p>
@@ -336,26 +347,26 @@ export default function STSPayBalancesPage() {
                       <h3 className="text-2xl font-headline font-bold">Rp {pendingBalance.toLocaleString('id-ID')}</h3>
                     )}
                     <p className="text-[9px] text-muted-foreground leading-relaxed mt-1">
-                       Dana tertahan sementara menunggu hari kerja settlement provider (Xendit/Midtrans).
+                       Dana yang masih dalam proses kliring oleh jaringan perbankan (T+n hari kerja).
                     </p>
                  </div>
               </div>
            </Card>
 
-           <div className="p-4 rounded-xl bg-muted/30 border border-border">
-              <div className="flex items-center gap-2 mb-2">
-                 <Info className="w-3.5 h-3.5 text-primary" />
-                 <span className="text-[10px] font-bold uppercase tracking-widest">Settlement Note</span>
+           <div className="p-5 rounded-2xl bg-muted/30 border border-border">
+              <div className="flex items-center gap-2 mb-3">
+                 <Info className="w-4 h-4 text-primary" />
+                 <span className="text-[10px] font-bold uppercase tracking-widest">Settlement Guide</span>
               </div>
               <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                 *Masa settlement dihitung sejak status transaksi berubah menjadi <span className="font-bold">PAID</span>. Hari Sabtu, Minggu, dan Libur Nasional tidak dihitung sebagai hari proses dari provider.
+                Pencairan dana mengikuti jadwal hari kerja provider. Hari Sabtu, Minggu, dan Libur Nasional tidak dihitung dalam estimasi settlement.
               </p>
            </div>
         </div>
       </div>
 
+      {/* Transaction History Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Recent Settlements Activity */}
         <Card className="lg:col-span-12 border-border shadow-sm rounded-2xl bg-card overflow-hidden">
           <CardHeader className="px-6 py-5 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
@@ -367,10 +378,10 @@ export default function STSPayBalancesPage() {
             <table className="w-full text-xs text-left">
                <thead className="bg-muted/50 border-b border-border">
                   <tr>
-                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground">Transaction</th>
-                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center">Amount (Net)</th>
-                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center">Status</th>
-                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right">Reference Date</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Transaction</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center whitespace-nowrap">Net Amount</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center whitespace-nowrap">Fund Status</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Reference Date</th>
                   </tr>
                </thead>
                <tbody className="divide-y divide-border">
@@ -379,7 +390,7 @@ export default function STSPayBalancesPage() {
                       <tr key={i}><td colSpan={4} className="px-6 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                     ))
                   ) : recentActivity.length === 0 ? (
-                    <tr><td colSpan={4} className="px-6 py-20 text-center text-muted-foreground font-medium italic">Tidak ada aktivitas dana terbaru.</td></tr>
+                    <tr><td colSpan={4} className="px-6 py-24 text-center text-muted-foreground italic font-medium">Belum ada riwayat dana terbaru.</td></tr>
                   ) : (
                     recentActivity.map((tx) => (
                       <tr key={tx.id} className="hover:bg-muted/10 transition-colors">
@@ -388,19 +399,19 @@ export default function STSPayBalancesPage() {
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${tx.isPayout ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
                                  {tx.isPayout ? <ArrowUpRight className="w-4 h-4" /> : <QrCode className="w-4 h-4" />}
                               </div>
-                              <div className="flex flex-col">
-                                 <span className="font-bold text-foreground/80">{tx.isPayout ? 'Penarikan Dana' : (tx.description || "Gateway Payment")}</span>
+                              <div className="flex flex-col min-w-0">
+                                 <span className="font-bold text-foreground/80 truncate max-w-[200px]">{tx.isPayout ? 'Penarikan Dana' : (tx.description || "Gateway Payment")}</span>
                                  <span className="text-[10px] font-mono text-muted-foreground uppercase">#{tx.id?.substring(0, 14)}</span>
                               </div>
                            </div>
                         </td>
                         <td className="px-6 py-4 text-center whitespace-nowrap">
                            <p className={`font-bold ${tx.isPayout ? 'text-amber-600' : 'text-emerald-600'}`}>
-                             {tx.isPayout ? '-' : ''}Rp {tx.netAmount?.toLocaleString('id-ID')}
+                             {tx.isPayout ? '-' : '+'}Rp {tx.netAmount?.toLocaleString('id-ID')}
                            </p>
-                           {!tx.isPayout && <p className="text-[8px] text-muted-foreground uppercase font-bold">Fee: -Rp {tx.fee_amount?.toLocaleString()}</p>}
+                           {!tx.isPayout && <p className="text-[8px] text-muted-foreground uppercase font-bold">Biaya: -Rp {tx.fee_amount?.toLocaleString()}</p>}
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-4 text-center whitespace-nowrap">
                            <Badge className={`border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-md gap-1 ${
                              tx.status === 'PAID' || tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 
                              tx.status === 'PENDING' ? 'bg-amber-500/10 text-amber-600' : 'bg-red-500/10 text-red-600'
@@ -413,8 +424,8 @@ export default function STSPayBalancesPage() {
                            <p className="text-[10px] font-bold text-foreground/80">
                              {tx.isPayout ? (tx.createdAt ? format(tx.createdAt.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt), "dd MMM yyyy") : '---') : format(tx.settlementDate, "dd MMM yyyy")}
                            </p>
-                           <p className="text-[9px] text-muted-foreground uppercase">
-                             {tx.isPayout ? 'Withdrawal Date' : 'Estimated Arrival'}
+                           <p className="text-[9px] text-muted-foreground uppercase font-medium">
+                             {tx.isPayout ? 'Tanggal Pengajuan' : 'Estimasi Cair'}
                            </p>
                         </td>
                       </tr>
