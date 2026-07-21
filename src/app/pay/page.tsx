@@ -18,17 +18,23 @@ import {
   PieChart as PieChartIcon,
   Timer
 } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { format, isToday, isYesterday, isSameYear } from "date-fns";
 
 export default function STSPayDashboard() {
   const { user } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Membaca saldo khusus layanan STSPay
   const stspayRef = useMemoFirebase(() => {
@@ -76,6 +82,16 @@ export default function STSPayDashboard() {
       return dateB.getTime() - dateA.getTime();
     });
   }, [rawTransactions]);
+
+  const formatTransactionDate = (timestamp: any) => {
+    if (!isMounted || !timestamp) return "...";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    if (isToday(date)) return format(date, "HH:mm");
+    if (isYesterday(date)) return "Kemarin " + format(date, "HH:mm");
+    if (isSameYear(date, now)) return format(date, "dd MMM HH:mm");
+    return format(date, "yyyy MM dd HH:mm");
+  };
 
   const statusDistribution = useMemo(() => {
     const counts = { success: 0, expired: 0, failed: 0 };
@@ -231,16 +247,17 @@ export default function STSPayDashboard() {
                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Deskripsi</th>
                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Amount</th>
                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Method</th>
-                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Status</th>
+                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Status</th>
+                   <th className="px-8 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Waktu</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-border">
                  {txLoading ? (
                    Array.from({ length: 5 }).map((_, i) => (
-                     <tr key={i}><td colSpan={5} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
+                     <tr key={i}><td colSpan={6} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                    ))
                  ) : transactions.length === 0 ? (
-                   <tr><td colSpan={5} className="px-8 py-20 text-center text-muted-foreground italic">Belum ada aktivitas transaksi di gateway Anda.</td></tr>
+                   <tr><td colSpan={6} className="px-8 py-20 text-center text-muted-foreground italic">Belum ada aktivitas transaksi di gateway Anda.</td></tr>
                  ) : (
                    transactions.slice(0, 10).map((row) => {
                      const logo = getLogoSource(row.payment_method_id || row.paymentMethod);
@@ -261,7 +278,6 @@ export default function STSPayDashboard() {
                           <p className="font-bold truncate" title={row.description || "Digital Payment"}>
                             {row.description || (isPayout ? "Withdrawal Request" : "Digital Payment")}
                           </p>
-                          <p className="text-[10px] text-muted-foreground truncate">{row.id}</p>
                         </td>
                         <td className="px-6 py-4 font-bold whitespace-nowrap">
                           <span className={isPayout ? "text-amber-600" : "text-emerald-600"}>
@@ -279,17 +295,20 @@ export default function STSPayDashboard() {
                              )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <Badge className={`${
                             row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
                             row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
                             'bg-red-500/10 text-red-600'
-                          } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
+                          } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center w-fit gap-1`}>
                             {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
                             {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
                             {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
                             {row.effectiveStatus}
                           </Badge>
+                        </td>
+                        <td className="px-8 py-4 text-right text-muted-foreground text-[10px] whitespace-nowrap">
+                          {formatTransactionDate(row.createdAt)}
                         </td>
                       </tr>
                      );
