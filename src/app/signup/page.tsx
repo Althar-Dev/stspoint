@@ -77,7 +77,7 @@ export default function SignUpPage() {
   }, [existingUser, authLoading, profile, profileLoading, router]);
 
   const generateMerchantId = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -112,7 +112,7 @@ export default function SignUpPage() {
     try {
       if (role === 'client') {
         if (!licenseKey) {
-          throw new Error("License Key is required for Client registration.");
+          throw new Error("License Key is required for Partner registration.");
         }
         const keyRef = doc(db, 'license_keys', licenseKey);
         const keySnap = await getDoc(keyRef);
@@ -150,8 +150,8 @@ export default function SignUpPage() {
         uid: user.uid,
         name,
         email,
-        role,
-        clientKey: role === 'client' ? licenseKey : "",
+        role: role === 'partner' ? 'client' : 'merchant',
+        clientKey: role === 'partner' ? licenseKey : "",
         merchantId: role === 'merchant' ? merchantId : "",
         secretKey: secretKey,
         balance: 0,
@@ -160,7 +160,7 @@ export default function SignUpPage() {
 
       await setDoc(userRef, userData);
 
-      // Inisialisasi Layanan (Termasuk STSPay)
+      // Inisialisasi Layanan
       const providers = ['orderkuota', 'gomerchant', 'stspay'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
@@ -188,7 +188,7 @@ export default function SignUpPage() {
         updatedAt: serverTimestamp()
       });
 
-      if (role === 'client') {
+      if (role === 'partner') {
         const keyRef = doc(db, 'license_keys', licenseKey);
         await updateDoc(keyRef, {
           status: 'used',
@@ -271,7 +271,7 @@ export default function SignUpPage() {
                       >
                         <div className="space-y-3">
                           <div>
-                            <p className="text-[11px] font-bold text-primary uppercase tracking-tight mb-1">Client</p>
+                            <p className="text-[11px] font-bold text-primary uppercase tracking-tight mb-1">Partner</p>
                             <p className="text-[10px] text-muted-foreground leading-relaxed">
                               For specialized partners who purchased a website source. A valid License Key is required for registration.
                             </p>
@@ -295,13 +295,13 @@ export default function SignUpPage() {
                     </div>
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-border z-[100]">
-                    <SelectItem value="client" className="rounded-lg">Client (Business Integration)</SelectItem>
+                    <SelectItem value="partner" className="rounded-lg">Partner (Business Integration)</SelectItem>
                     <SelectItem value="merchant" className="rounded-lg">Merchant (Console Access)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {role === 'client' && (
+              {role === 'partner' && (
                 <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
                   <Label htmlFor="licenseKey" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">License Key</Label>
                   <div className="relative">

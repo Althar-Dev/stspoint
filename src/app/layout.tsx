@@ -44,13 +44,13 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'STSPoint | Digital Infrastructure by AltharDev',
+    title: 'STSPoint | Digital Infrastructure',
     description: 'Scale your business with robust payment and product distribution infrastructure by StarVale Technology Solution.',
     url: 'https://stspoint.id',
     siteName: 'STSPoint',
     images: [
       {
-        url: '/assets/img/og-image.png',
+        url: '/assets/img/logo.jpg',
         width: 1200,
         height: 630,
         alt: 'STSPoint Infrastructure by StarVale Technology Solution',
@@ -61,10 +61,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'STSPoint | Digital Infrastructure by AltharDev',
+    title: 'STSPoint | Digital Infrastructure',
     description: 'High-speed APIs for payments and digital goods by StarVale Technology Solution.',
     creator: '@StarValeID',
-    images: ['/assets/img/twitter-image.png'],
+    images: ['/assets/img/logo.jpg'],
   },
   robots: {
     index: true,
@@ -78,9 +78,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/assets/img/icon.png',
-    shortcut: '/assets/img/icon.png',
-    apple: '/assets/img/icon.png',
+    icon: '/assets/img/logo.jpg',
+    shortcut: '/assets/img/logo.jpg',
+    apple: '/assets/img/logo.jpg',
   },
   manifest: '/manifest.json',
   other: {

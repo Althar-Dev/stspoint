@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -17,14 +16,24 @@ import { Logo } from "@/components/logo";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isDev, setIsDev] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    window.addEventListener("scroll", handleScroll);
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      setIsDev(host.includes("localhost") || host.includes("cloudworkstations.dev") || host.includes("firebaseapp.com"));
+      window.addEventListener("scroll", handleScroll);
+    }
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const getAuthLink = (path: string) => {
+    if (isDev) return path;
+    return `https://console.stspoint.id${path}`;
+  };
 
   const navLinks = [
     { title: "Home", href: "/", icon: Home },
@@ -61,16 +70,16 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <Link href="/signin">
-            <Button variant="outline" size="sm" className={`hidden sm:flex h-9 px-4 text-xs rounded-lg font-bold transition-all ${
-              isScrolled 
-                ? 'border-primary/20 hover:border-primary/50 hover:bg-primary/5 text-foreground' 
-                : 'bg-white text-black hover:bg-white/90 border-transparent shadow-lg shadow-white/10'
-            }`}>
+          <Button asChild variant="outline" size="sm" className={`hidden sm:flex h-9 px-4 text-xs rounded-lg font-bold transition-all ${
+            isScrolled 
+              ? 'border-primary/20 hover:border-primary/50 hover:bg-primary/5 text-foreground' 
+              : 'bg-white text-black hover:bg-white/90 border-transparent shadow-lg shadow-white/10'
+          }`}>
+            <a href={getAuthLink("/signin")}>
               <User className="w-3.5 h-3.5 mr-2" />
               Masuk
-            </Button>
-          </Link>
+            </a>
+          </Button>
 
           {/* Mobile Menu Button */}
           <Sheet>
@@ -104,11 +113,9 @@ export function Navbar() {
                 </div>
                 
                 <div className="pt-6 border-t border-black/5">
-                  <Link href="/signin">
-                    <Button className="w-full bg-primary hover:bg-primary/90 h-11 font-bold rounded-xl shadow-lg shadow-primary/20 text-white">
-                      Masuk Akun
-                    </Button>
-                  </Link>
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 h-11 font-bold rounded-xl shadow-lg shadow-primary/20 text-white">
+                    <a href={getAuthLink("/signin")}>Masuk Akun</a>
+                  </Button>
                   <p className="text-[10px] text-center text-muted-foreground mt-4">© 2024 STSPoint. All rights reserved.</p>
                 </div>
               </div>
