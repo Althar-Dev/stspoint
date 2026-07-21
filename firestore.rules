@@ -23,6 +23,10 @@ service cloud.firestore {
       match /transactions/{transactionId} {
         allow read, write: if true;
       }
+
+      match /notifications/{notificationId} {
+        allow read, write: if true;
+      }
     }
 
     match /processed_topups/{topupId} {

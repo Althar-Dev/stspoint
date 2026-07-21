@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -423,7 +422,7 @@ function ManagementContent() {
         setGeneratedKey(key);
         toast({ title: "Key Generated", description: "The new license key has been saved." });
       })
-      .catch(async () => {
+      .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: keyRef.path,
           operation: 'create',
@@ -458,7 +457,7 @@ function ManagementContent() {
       .then(() => {
         toast({ title: "Updated", description: `${channelName} settings saved.` });
       })
-      .catch(async () => {
+      .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: channelRef.path,
           operation: 'write',
@@ -523,26 +522,43 @@ function ManagementContent() {
   const handleConfirmBankAccount = async (userId: string) => {
     if (!db) return;
     const userRef = doc(db, "users", userId);
-    try {
-      await updateDoc(userRef, {
-        payoutAccountStatus: 'VERIFIED',
-        updatedAt: serverTimestamp()
-      });
-
-      // Kirim Notifikasi ke User
+    
+    // 1. Update user document
+    updateDoc(userRef, {
+      payoutAccountStatus: 'VERIFIED',
+      updatedAt: serverTimestamp()
+    })
+    .then(async () => {
+      // 2. Kirim Notifikasi ke User sub-collection
       const notificationsRef = collection(db, "users", userId, "notifications");
-      await addDoc(notificationsRef, {
+      const notifData = {
         title: "Rekening Terverifikasi",
         message: "Rekening bank Anda telah berhasil dikonfirmasi oleh tim admin.",
         type: "success",
         isRead: false,
         createdAt: serverTimestamp()
-      });
+      };
+
+      addDoc(notificationsRef, notifData)
+        .catch(async (serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: notificationsRef.path,
+            operation: 'create',
+            requestResourceData: notifData,
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
       toast({ title: "Confirmed", description: "Bank account has been verified and notification sent." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to confirm account." });
-    }
+    })
+    .catch(async (serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: userRef.path,
+        operation: 'update',
+        requestResourceData: { payoutAccountStatus: 'VERIFIED' },
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
   const openAddChannel = () => {
