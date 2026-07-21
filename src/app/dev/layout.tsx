@@ -30,7 +30,10 @@ import {
   Settings,
   Zap,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Handshake,
+  Landmark,
+  Banknote
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -62,6 +65,14 @@ const devMenuItems = [
       { title: "License Keys", url: "/dev/database?view=licenses", view: "licenses" },
       { title: "Payment Channels", url: "/dev/database?view=channels", view: "channels" },
       { title: "Website Settings", url: "/dev/settings" },
+    ]
+  },
+  {
+    title: "Requester",
+    icon: Handshake,
+    items: [
+      { title: "Rekening Bank", url: "/dev/database?view=bank-accounts", view: "bank-accounts" },
+      { title: "Withdrawals", url: "/dev/database?view=withdrawals", view: "withdrawals" },
     ]
   },
   { 

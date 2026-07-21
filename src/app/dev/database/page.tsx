@@ -4,7 +4,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { 
@@ -29,7 +29,10 @@ import {
   Trash2,
   Image as ImageIcon,
   Coins,
-  Scale
+  Scale,
+  Landmark,
+  Banknote,
+  Handshake
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -68,7 +71,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 
-type ManagementView = "clients" | "merchants" | "transactions" | "gateway" | "licenses" | "channels";
+type ManagementView = "clients" | "merchants" | "transactions" | "gateway" | "licenses" | "channels" | "bank-accounts" | "withdrawals";
 
 interface GatewayItem {
   provider: string;
@@ -291,6 +294,11 @@ function ManagementContent() {
     return collection(db, "transactions");
   }, [db]);
 
+  const stspayTxsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "stspay_transactions"), where("type", "==", "payout"));
+  }, [db]);
+
   const keysQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "license_keys");
@@ -303,6 +311,7 @@ function ManagementContent() {
 
   const { data: users, loading: usersLoading } = useCollection(usersQuery);
   const { data: transactions, loading: txLoading } = useCollection(txsQuery);
+  const { data: stspayTransactions, loading: stsTxLoading } = useCollection(stspayTxsQuery);
   const { data: licenseKeys, loading: keysLoading } = useCollection(keysQuery);
   const { data: paymentChannels, loading: channelsLoading } = useCollection(channelsQuery);
 
@@ -319,6 +328,19 @@ function ManagementContent() {
       return users
         .filter(u => u.role === 'merchant')
         .filter(u => u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s));
+    }
+
+    if (view === "bank-accounts") {
+      return users
+        .filter(u => u.payoutAccountNumber)
+        .filter(u => u.name?.toLowerCase().includes(s) || u.payoutAccountNumber?.toLowerCase().includes(s));
+    }
+
+    if (view === "withdrawals") {
+      return stspayTransactions.filter(t => 
+        t.id?.toLowerCase().includes(s) || 
+        t.userId?.toLowerCase().includes(s)
+      );
     }
 
     if (view === "transactions") {
@@ -354,7 +376,7 @@ function ManagementContent() {
     }
 
     return [];
-  }, [users, transactions, licenseKeys, paymentChannels, view, search]);
+  }, [users, transactions, stspayTransactions, licenseKeys, paymentChannels, view, search]);
 
   const groupedGateways = useMemo(() => {
     return gateways.reduce((acc, curr) => {
@@ -379,7 +401,7 @@ function ManagementContent() {
     }
 
     setIsGenerating(true);
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let randomPart = '';
     for (let i = 0; i < 8; i++) {
       randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -561,6 +583,8 @@ function ManagementContent() {
        case 'gateway': return { title: 'Infrastructure Gateways', icon: Globe2, color: 'text-emerald-500' };
        case 'clients': return { title: 'Clients Registry', icon: UserCircle, color: 'text-blue-500' };
        case 'merchants': return { title: 'Merchants Registry', icon: Building2, color: 'text-primary' };
+       case 'bank-accounts': return { title: 'Bank Accounts Requester', icon: Landmark, color: 'text-emerald-500' };
+       case 'withdrawals': return { title: 'Withdrawal Requester', icon: Banknote, color: 'text-amber-500' };
        case 'transactions': return { title: 'Transactions Registry', icon: History, color: 'text-amber-500' };
        case 'licenses': return { title: 'License Registry', icon: Ticket, color: 'text-purple-500' };
        case 'channels': return { title: 'Payment Channels', icon: LayoutGrid, color: 'text-primary' };
@@ -836,6 +860,8 @@ function ManagementContent() {
               <>
                 {view === 'clients' && <UserCircle className="w-4 h-4 text-blue-500" />}
                 {view === 'merchants' && <Building2 className="w-4 h-4 text-primary" />}
+                {view === 'bank-accounts' && <Landmark className="w-4 h-4 text-emerald-500" />}
+                {view === 'withdrawals' && <Banknote className="w-4 h-4 text-amber-500" />}
                 {view === 'transactions' && <History className="w-4 h-4 text-amber-500" />}
                 {view === 'licenses' && <Ticket className="w-4 h-4 text-purple-500" />}
                 {view.charAt(0).toUpperCase() + view.slice(1)} Registry
@@ -1058,6 +1084,77 @@ function ManagementContent() {
                 )}
               </tbody>
             </table>
+          ) : view === "bank-accounts" ? (
+             <table className="w-full min-w-full text-[10px] md:text-xs text-left">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">User Context</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Bank Name</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Account Number</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Account Holder</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {usersLoading ? (
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing bank accounts...</td></tr>
+                ) : filteredData.length === 0 ? (
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">No bank accounts registered.</td></tr>
+                ) : (
+                  filteredData.map((user, i) => (
+                    <tr key={i} className="hover:bg-muted/10 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                           <span className="font-bold text-foreground/80">{user.name}</span>
+                           <span className="text-[10px] text-muted-foreground">{user.email}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-primary whitespace-nowrap uppercase">{user.payoutBankName}</td>
+                      <td className="px-6 py-4 font-mono font-bold text-foreground whitespace-nowrap">{user.payoutAccountNumber}</td>
+                      <td className="px-6 py-4 font-medium text-foreground/80 whitespace-nowrap">{user.payoutAccountName}</td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] uppercase font-bold py-0.5 px-2 rounded-sm">Verified</Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          ) : view === "withdrawals" ? (
+             <table className="w-full min-w-full text-[10px] md:text-xs text-left">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">TXID</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Amount</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">User ID</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Settlement</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {stsTxLoading ? (
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing withdrawals...</td></tr>
+                ) : filteredData.length === 0 ? (
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">No withdrawal requests found.</td></tr>
+                ) : (
+                  filteredData.map((tx, i) => (
+                    <tr key={i} className="hover:bg-muted/10 transition-colors">
+                      <td className="px-6 py-4 font-mono text-muted-foreground whitespace-nowrap uppercase tracking-tighter">{tx.id}</td>
+                      <td className="px-6 py-4 font-bold text-emerald-600 whitespace-nowrap">Rp {tx.amount?.toLocaleString('id-ID')}</td>
+                      <td className="px-6 py-4 font-mono text-[9px] text-muted-foreground whitespace-nowrap">{tx.userId}</td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap">
+                         <span className="text-[10px] font-bold text-foreground/60">{tx.updatedAt ? format(tx.updatedAt.toDate ? tx.updatedAt.toDate() : new Date(tx.updatedAt), "dd MMM HH:mm") : '---'}</span>
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <Badge className={`${tx.status === 'PAID' || tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
+                           {tx.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           ) : (
             <table className="w-full min-w-full text-[10px] md:text-xs text-left">
               <thead className="bg-muted/50 border-b border-border">
@@ -1154,7 +1251,7 @@ function ManagementContent() {
         </div>
       </Card>
 
-      {view === 'channels' && (
+      {(view === 'channels') && (
         <Card className="bg-card border-border rounded-md overflow-hidden shadow-sm">
           <CardHeader className="bg-muted/30 dark:bg-[#0A0A0A] px-6 py-4 border-b border-border">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
