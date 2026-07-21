@@ -195,22 +195,6 @@ export default function STSPayBalancesPage() {
                  </div>
               </div>
            </Card>
-
-           <Card className="border-border shadow-sm rounded-2xl bg-zinc-900 text-white p-6 relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[40px] -mr-16 -mt-16"></div>
-             <div className="relative z-10 space-y-4">
-               <div className="flex items-center gap-2">
-                 <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/70">Secure Disbursement</h4>
-               </div>
-               <p className="text-[11px] text-white/50 leading-relaxed">
-                 Semua penarikan dana diproses melalui infrastruktur STSPoint yang terenkripsi dan aman.
-               </p>
-               <Button variant="ghost" className="p-0 h-auto text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 hover:bg-transparent">
-                  Learn Policy <ChevronRight className="w-3 h-3 ml-1" />
-               </Button>
-             </div>
-           </Card>
         </div>
       </div>
 
