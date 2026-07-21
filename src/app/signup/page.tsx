@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -204,15 +203,6 @@ export default function SignUpPage() {
       setLoading(false);
     }
   };
-
-  if (authLoading || (existingUser && profileLoading)) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
-        <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Initializing Setup...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">

@@ -119,15 +119,6 @@ export default function SignInPage() {
     }
   };
 
-  if (authLoading || (user && profileLoading)) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
-        <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Checking Session...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 blur-[120px] -translate-y-1/2 opacity-50"></div>
