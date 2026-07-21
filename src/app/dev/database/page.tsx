@@ -1,10 +1,9 @@
-
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, updateDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { 
@@ -517,6 +516,20 @@ function ManagementContent() {
       toast({ variant: "destructive", title: "Error", description: "Failed to save channel." });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleConfirmBankAccount = async (userId: string) => {
+    if (!db) return;
+    const userRef = doc(db, "users", userId);
+    try {
+      await updateDoc(userRef, {
+        payoutAccountStatus: 'VERIFIED',
+        updatedAt: serverTimestamp()
+      });
+      toast({ title: "Confirmed", description: "Bank account has been verified." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to confirm account." });
     }
   };
 
@@ -1113,7 +1126,20 @@ function ManagementContent() {
                       <td className="px-6 py-4 font-mono font-bold text-foreground whitespace-nowrap">{user.payoutAccountNumber}</td>
                       <td className="px-6 py-4 font-medium text-foreground/80 whitespace-nowrap">{user.payoutAccountName}</td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] uppercase font-bold py-0.5 px-2 rounded-sm">Verified</Badge>
+                        {user.payoutAccountStatus === 'VERIFIED' ? (
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] uppercase font-bold py-0.5 px-2 rounded-sm">Verified</Badge>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2">
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-none text-[8px] uppercase font-bold py-0.5 px-2 rounded-sm">Pending</Badge>
+                            <Button 
+                              size="sm" 
+                              className="h-7 px-3 text-[9px] font-bold uppercase rounded-md bg-emerald-600 hover:bg-emerald-700 text-white"
+                              onClick={() => handleConfirmBankAccount(user.id)}
+                            >
+                              Confirm
+                            </Button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))

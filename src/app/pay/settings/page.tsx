@@ -20,7 +20,9 @@ import {
   Store,
   Image as ImageIcon,
   Landmark,
-  User as UserIcon
+  User as UserIcon,
+  Clock,
+  CheckCircle2
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -90,9 +92,10 @@ export default function STSPaySettingsPage() {
         payoutBankName: bankName,
         payoutAccountNumber: bankAccountNumber,
         payoutAccountName: bankAccountName,
+        payoutAccountStatus: 'PENDING',
         updatedAt: serverTimestamp()
       });
-      toast({ title: "Berhasil", description: "Rekening Bank telah diperbarui." });
+      toast({ title: "Berhasil", description: "Rekening Bank telah diajukan untuk verifikasi." });
     } catch (e) {
       toast({ variant: "destructive", title: "Gagal", description: "Gagal menyimpan rekening." });
     } finally {
@@ -193,11 +196,23 @@ export default function STSPaySettingsPage() {
         {/* Rekening Penarikan */}
         <Card className="border-border shadow-sm rounded-md bg-card overflow-hidden">
           <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-              <Banknote className="w-4 h-4 text-primary" />
-              Rekening Bank
-            </CardTitle>
-            <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/60">Tempat dana hasil penjualan Anda dicairkan.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                  <Banknote className="w-4 h-4 text-primary" />
+                  Rekening Bank
+                </CardTitle>
+                <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/60">Tempat dana hasil penjualan Anda dicairkan.</CardDescription>
+              </div>
+              {profile?.payoutAccountStatus && (
+                <Badge className={`border-none text-[8px] font-bold uppercase rounded-md gap-1 px-3 py-1 ${
+                  profile.payoutAccountStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
+                }`}>
+                  {profile.payoutAccountStatus === 'VERIFIED' ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
+                  {profile.payoutAccountStatus === 'VERIFIED' ? 'Verified' : 'Pending Verification'}
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -252,7 +267,7 @@ export default function STSPaySettingsPage() {
                 className="rounded-md h-11 px-8 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10 shrink-0"
               >
                 {isSavingPayout ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Simpan Rekening
+                Ajukan Verifikasi
               </Button>
             </div>
           </CardContent>
