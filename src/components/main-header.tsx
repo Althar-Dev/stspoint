@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -15,7 +16,8 @@ import {
   LogOut,
   Info,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  XCircle
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -101,6 +103,7 @@ export function MainHeader({
     switch(type) {
       case 'success': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
       case 'warning': return <AlertCircle className="w-3.5 h-3.5 text-amber-500" />;
+      case 'error': return <XCircle className="w-3.5 h-3.5 text-red-500" />;
       default: return <Info className="w-3.5 h-3.5 text-blue-500" />;
     }
   };
@@ -134,7 +137,7 @@ export function MainHeader({
             align="center" 
             className="w-[400px] rounded-2xl p-2 border-border"
           >
-            <DropdownMenuLabel className="font-headline font-bold text-xs tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
+            <DropdownMenuLabel className="font-headline font-bold text-xs uppercase tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
               Notifications
               {hasUnread && <Badge variant="secondary" className="bg-red-50 text-red-600 border-none text-[8px] px-1.5 h-4">New</Badge>}
             </DropdownMenuLabel>

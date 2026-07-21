@@ -34,7 +34,8 @@ import {
   Banknote,
   Handshake,
   XCircle,
-  Check
+  Check,
+  increment
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -566,7 +567,7 @@ function ManagementContent() {
     });
   };
 
-  const handleUpdateWithdrawalStatus = async (txId: string, status: 'PAID' | 'FAILED', userId: string) => {
+  const handleUpdateWithdrawalStatus = async (txId: string, status: 'PAID' | 'FAILED', userId: string, amount: number) => {
     if (!db) return;
     const txRef = doc(db, "stspay_transactions", txId);
     const globalTxRef = doc(db, "transactions", txId);
@@ -579,6 +580,22 @@ function ManagementContent() {
 
     updateDoc(txRef, updateData)
       .then(async () => {
+        // Handle Refund if Reject
+        if (status === 'FAILED') {
+          const stspaySvcRef = doc(db, "users", userId, "services", "stspay");
+          updateDoc(stspaySvcRef, {
+            balance: increment(amount),
+            updatedAt: serverTimestamp()
+          }).catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: stspaySvcRef.path,
+              operation: 'update',
+              requestResourceData: { balance: increment(amount) },
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+          });
+        }
+
         // Update both ledgers
         const ledgerStatus = status === 'PAID' ? 'Success' : 'Failed';
         await Promise.all([
@@ -591,16 +608,23 @@ function ManagementContent() {
         const notifData = {
           title: status === 'PAID' ? "Penarikan Berhasil" : "Penarikan Gagal",
           message: status === 'PAID' 
-            ? "Dana penarikan Anda telah dikirim ke rekening bank tujuan." 
-            : "Permintaan penarikan Anda ditolak. Silakan hubungi support.",
+            ? `Dana penarikan sebesar Rp ${amount.toLocaleString()} telah dikirim ke rekening bank Anda.` 
+            : `Permintaan penarikan Rp ${amount.toLocaleString()} ditolak. Saldo Anda telah dikembalikan.`,
           type: status === 'PAID' ? "success" : "error",
           isRead: false,
           createdAt: serverTimestamp()
         };
 
-        addDoc(notificationsRef, notifData);
+        addDoc(notificationsRef, notifData).catch(async (serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: notificationsRef.path,
+            operation: 'create',
+            requestResourceData: notifData,
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
-        toast({ title: `Withdrawal ${status}`, description: `Status updated to ${status}.` });
+        toast({ title: `Withdrawal ${status}`, description: `Status updated and notified.` });
       })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -1266,7 +1290,7 @@ function ManagementContent() {
                             <Button 
                               size="sm" 
                               className="h-8 px-3 text-[9px] font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                              onClick={() => handleUpdateWithdrawalStatus(tx.id, 'PAID', tx.userId)}
+                              onClick={() => handleUpdateWithdrawalStatus(tx.id, 'PAID', tx.userId, tx.amount)}
                             >
                               <Check className="w-3 h-3" /> Complete
                             </Button>
@@ -1274,7 +1298,7 @@ function ManagementContent() {
                               size="sm" 
                               variant="ghost"
                               className="h-8 px-3 text-[9px] font-bold uppercase text-red-500 hover:bg-red-50 gap-1"
-                              onClick={() => handleUpdateWithdrawalStatus(tx.id, 'FAILED', tx.userId)}
+                              onClick={() => handleUpdateWithdrawalStatus(tx.id, 'FAILED', tx.userId, tx.amount)}
                             >
                               <XCircle className="w-3 h-3" /> Reject
                             </Button>
