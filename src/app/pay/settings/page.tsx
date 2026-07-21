@@ -231,12 +231,14 @@ export default function STSPaySettingsPage() {
                     <SelectValue placeholder="Pilih Bank / E-Wallet" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-border">
-                    <SelectItem value="Bank Jago">Bank Jago</SelectItem>
+                    {/* Banks Alphabetical */}
                     <SelectItem value="Bank BCA">Bank BCA</SelectItem>
-                    <SelectItem value="Bank Mandiri">Bank Mandiri</SelectItem>
-                    <SelectItem value="Bank BRI">Bank BRI</SelectItem>
                     <SelectItem value="Bank BNI">Bank BNI</SelectItem>
+                    <SelectItem value="Bank BRI">Bank BRI</SelectItem>
                     <SelectItem value="Bank BSI">Bank BSI</SelectItem>
+                    <SelectItem value="Bank Jago">Bank Jago</SelectItem>
+                    <SelectItem value="Bank Mandiri">Bank Mandiri</SelectItem>
+                    {/* E-Wallets Alphabetical */}
                     <SelectItem value="Dana">Dana</SelectItem>
                     <SelectItem value="Gopay">Gopay</SelectItem>
                     <SelectItem value="Ovo">Ovo</SelectItem>
