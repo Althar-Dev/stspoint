@@ -33,7 +33,7 @@ export default function STSPayTransactionsPage() {
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    // Mengambil data dari koleksi khusus stspay_transactions
+    // Mengambil data secara eksklusif dari koleksi stspay_transactions
     return query(
       collection(db, "stspay_transactions"),
       where("userId", "==", user.uid)
@@ -75,7 +75,7 @@ export default function STSPayTransactionsPage() {
     // Pencarian sederhana
     const filtered = sorted.filter(t => 
       t.id?.toLowerCase().includes(search.toLowerCase()) ||
-      t.description?.toLowerCase().includes(search.toLowerCase()) ||
+      (t.description || "").toLowerCase().includes(search.toLowerCase()) ||
       (t.payerEmail || "").toLowerCase().includes(search.toLowerCase())
     );
 
@@ -159,8 +159,10 @@ export default function STSPayTransactionsPage() {
                     return (
                       <tr key={item.id} className="hover:bg-muted/20 transition-colors">
                         <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{item.id?.substring(0, 10).toUpperCase()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                           <p className="font-bold">{item.description || "Digital Payment"}</p>
+                        <td className="px-6 py-4 whitespace-nowrap max-w-[250px]">
+                           <p className="font-bold truncate" title={item.description || "Digital Payment"}>
+                             {item.description || "Digital Payment"}
+                           </p>
                         </td>
                         <td className="px-6 py-4 font-bold whitespace-nowrap">
                           <span className={isPayout ? "text-amber-600" : "text-emerald-600"}>
