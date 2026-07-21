@@ -98,15 +98,16 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
-  // Helper to determine effective status based on 15m rule
+  // Helper to determine effective status based on normalized success states
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
+    if (['PAID', 'SUCCESS', 'SETTLED', 'SUCCEEDED', 'COMPLETED'].includes(s)) return 'Success';
     if (s !== 'PENDING') return status;
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
     // Set to Failed if more than 15 minutes
-    return diffInMinutes > 15 ? 'Failed' : status;
+    return diffInMinutes > 15 ? 'Failed' : 'Pending';
   };
 
   const transactions = useMemo(() => {

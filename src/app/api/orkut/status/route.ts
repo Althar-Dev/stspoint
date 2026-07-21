@@ -146,8 +146,9 @@ export async function POST(request: Request) {
         );
 
         if (match) {
-          // Update both records
+          // Update technical record and ledgers
           const userHistoryRef = doc(firestore, 'users', userId, 'transactions', external_id);
+          const globalHistoryRef = doc(firestore, 'transactions', external_id);
           
           await Promise.all([
             updateDoc(transactionRef, {
@@ -157,6 +158,10 @@ export async function POST(request: Request) {
               orkut_trx_id: match.id
             }),
             updateDoc(userHistoryRef, {
+              status: 'Success',
+              updatedAt: serverTimestamp()
+            }),
+            updateDoc(globalHistoryRef, {
               status: 'Success',
               updatedAt: serverTimestamp()
             })

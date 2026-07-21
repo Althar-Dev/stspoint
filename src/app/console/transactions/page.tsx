@@ -43,14 +43,15 @@ export default function AllTransactionsPage() {
 
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
-  // Helper to determine effective status based on 15m rule
+  // Helper to determine effective status based on normalized success states
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
+    if (['PAID', 'SUCCESS', 'SETTLED', 'SUCCEEDED', 'COMPLETED'].includes(s)) return 'Success';
     if (s !== 'PENDING') return status;
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
-    return diffInMinutes > 15 ? 'Failed' : status;
+    return diffInMinutes > 15 ? 'Failed' : 'Pending';
   };
 
   const transactions = useMemo(() => {
@@ -153,7 +154,7 @@ export default function AllTransactionsPage() {
                     <tr key={i}><td colSpan={6} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
                   ))
                 ) : transactions.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-24 text-center text-muted-foreground italic font-medium">Belum ada riwayat transaksi ditemukan.</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-24 text-center text-muted-foreground italic font-medium text-xs">Belum ada riwayat transaksi ditemukan.</td></tr>
                 ) : (
                   transactions.map((row, i) => (
                     <tr key={i} className="hover:bg-slate-50/30 transition-colors group">
