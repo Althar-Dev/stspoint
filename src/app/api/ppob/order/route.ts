@@ -109,8 +109,8 @@ export async function POST(request: Request) {
     // 4. Calculate Final Selling Price
     const sellPrice = calculateSellPrice(product, markupRes.data || [], isPasca ? Number(qty) : undefined); 
     
-    // 5. Check Balance for Prepaid orders
-    if (!isPasca && userBalance < sellPrice) {
+    // 5. Check Balance (Diterapkan untuk semua transaksi, termasuk Pasca)
+    if (userBalance < sellPrice) {
       return NextResponse.json({ 
         success: false, 
         error: 'Insufficient account balance',
@@ -151,13 +151,11 @@ export async function POST(request: Request) {
 
     const finalStatus = statusRes.success ? statusRes.status : 'Pending';
 
-    // 8. Atomic Balance Deduction (Only for Prepaid)
-    if (!isPasca) {
-      await updateDoc(doc(firestore, 'users', userId), {
-        balance: increment(-sellPrice),
-        updatedAt: serverTimestamp()
-      });
-    }
+    // 8. Atomic Balance Deduction (Diterapkan untuk Prepaid DAN Pasca)
+    await updateDoc(doc(firestore, 'users', userId), {
+      balance: increment(-sellPrice),
+      updatedAt: serverTimestamp()
+    });
 
     // 9. Record to Global Transaction Ledger
     const txData = {
@@ -198,7 +196,7 @@ export async function POST(request: Request) {
         target: target,
         status: finalStatus,
         price: sellPrice,
-        remaining_balance: !isPasca ? userBalance - sellPrice : userBalance
+        remaining_balance: userBalance - sellPrice
       }
     });
 

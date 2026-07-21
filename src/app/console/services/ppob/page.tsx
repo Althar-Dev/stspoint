@@ -311,7 +311,7 @@ export default function PPOBConsolePage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
                 <Smartphone className="w-4 h-4 text-primary" />
-                Daftar Produk PPOB
+                Daftar Produk
               </CardTitle>
               <div className="flex items-center gap-4">
                 <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(parseInt(v))}>
