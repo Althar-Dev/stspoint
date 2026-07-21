@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Building2, 
   Banknote, 
@@ -218,15 +225,23 @@ export default function STSPaySettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Bank</Label>
-                <div className="relative">
-                  <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                    placeholder="e.g. BCA, Mandiri"
-                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
-                  />
-                </div>
+                <Select value={bankName} onValueChange={setBankName}>
+                  <SelectTrigger className="h-11 rounded-md border-border bg-muted/30 focus:bg-background transition-all pl-10 relative">
+                    <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <SelectValue placeholder="Pilih Bank / E-Wallet" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border">
+                    <SelectItem value="Bank Jago">Bank Jago</SelectItem>
+                    <SelectItem value="Bank BCA">Bank BCA</SelectItem>
+                    <SelectItem value="Bank Mandiri">Bank Mandiri</SelectItem>
+                    <SelectItem value="Bank BRI">Bank BRI</SelectItem>
+                    <SelectItem value="Bank BNI">Bank BNI</SelectItem>
+                    <SelectItem value="Bank BSI">Bank BSI</SelectItem>
+                    <SelectItem value="Dana">Dana</SelectItem>
+                    <SelectItem value="Gopay">Gopay</SelectItem>
+                    <SelectItem value="Ovo">Ovo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor Rekening</Label>
