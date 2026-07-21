@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +37,7 @@ import { doc, collection, query, where, setDoc, serverTimestamp, updateDoc } fro
 import { isAfter, format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 /**
  * STSPay Balances Page
@@ -110,6 +110,7 @@ export default function STSPayBalancesPage() {
         while (businessDaysAdded < daysToAdd) {
           settlementDate.setDate(settlementDate.getDate() + 1);
           const dayOfWeek = settlementDate.getDay();
+          // Skip Sabtu (6) dan Minggu (0)
           if (dayOfWeek !== 0 && dayOfWeek !== 6) businessDaysAdded++;
         }
 
