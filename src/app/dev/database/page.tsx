@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -27,7 +28,8 @@ import {
   Edit2,
   Trash2,
   Image as ImageIcon,
-  Coins
+  Coins,
+  Scale
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -65,7 +67,6 @@ import { checkEndpointHealth } from "./actions";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
-import Image from "next/image";
 
 type ManagementView = "clients" | "merchants" | "transactions" | "gateway" | "licenses" | "channels";
 
@@ -82,35 +83,32 @@ interface GatewayItem {
 }
 
 const STATIC_CHANNELS = [
-  { id: 'QRIS', name: 'QRIS', group: 'QR', fee: '0.7%', min: '1000', provider: 'Xendit' },
-  { id: 'BRI', name: 'BRI Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'BNI', name: 'BNI Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'MANDIRI', name: 'Mandiri Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'PERMATA', name: 'Permata Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'BSI', name: 'BSI Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'BJB', name: 'BJB Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'CIMB', name: 'CIMB Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit' },
-  { id: 'SAHABAT_SAMPOERNA', name: 'Sahabat Sampoerna VA', group: 'VA', fee: '3000', min: '10000', provider: 'Xendit' },
-  { id: 'OVO', name: 'OVO', group: 'E-Wallet', fee: '2.0%', min: '1000', provider: 'Xendit' },
-  { id: 'ALFAMART', name: 'Alfamart', group: 'Retail', fee: '5000', min: '10000', provider: 'Xendit' },
-  { id: 'INDOMARET', name: 'Indomaret', group: 'Retail', fee: '5000', min: '10000', provider: 'Xendit' },
+  { id: 'QRIS', name: 'QRIS', group: 'QR', fee: '0.7%', min: '1000', provider: 'Xendit', settlement: 'T+2' },
+  { id: 'BRI', name: 'BRI Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'BNI', name: 'BNI Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'MANDIRI', name: 'Mandiri Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'PERMATA', name: 'Permata Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'BSI', name: 'BSI Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'BJB', name: 'BJB Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'CIMB', name: 'CIMB Virtual Account', group: 'VA', fee: '4000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'SAHABAT_SAMPOERNA', name: 'Sahabat Sampoerna VA', group: 'VA', fee: '3000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'OVO', name: 'OVO', group: 'E-Wallet', fee: '2.0%', min: '1000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'ALFAMART', name: 'Alfamart', group: 'Retail', fee: '5000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
+  { id: 'INDOMARET', name: 'Indomaret', group: 'Retail', fee: '5000', min: '10000', provider: 'Xendit', settlement: 'T+1' },
 ];
 
 function ManagementContent() {
   const db = useFirestore();
   const searchParams = useSearchParams();
   
-  // View states
   const view = (searchParams.get("view") as ManagementView) || "gateway";
   const [search, setSearch] = useState("");
   
-  // Dialog states for Client Key Generation
   const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Dialog states for Channel Management
   const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -122,6 +120,7 @@ function ManagementContent() {
     fee: "",
     minPay: "",
     logo: "",
+    settlement: "T+1",
     status: true
   });
 
@@ -415,7 +414,7 @@ function ManagementContent() {
       });
   };
 
-  const handleUpdateChannelStatus = async (channelId: string, channelName: string, channelGroup: string, status: boolean, feeValue: string, minPay: string, provider: string, logoUrl?: string) => {
+  const handleUpdateChannelStatus = async (channelId: string, channelName: string, channelGroup: string, status: boolean, feeValue: string, minPay: string, provider: string, settlement: string, logoUrl?: string) => {
     if (!db) return;
     const channelRef = doc(db, "payment_channels", channelId);
     const newStatus = status ? 'active' : 'inactive';
@@ -427,6 +426,7 @@ function ManagementContent() {
       fee: feeValue,
       min: minPay,
       provider: provider,
+      settlement: settlement,
       updatedAt: serverTimestamp()
     };
 
@@ -461,7 +461,7 @@ function ManagementContent() {
 
   const handleSaveChannel = async () => {
     if (!db) return;
-    const { id, name, group, fee, minPay, status, logo, provider } = channelForm;
+    const { id, name, group, fee, minPay, status, logo, provider, settlement } = channelForm;
     if (!id || !name) {
       toast({ variant: "destructive", title: "Error", description: "Channel ID and Name are required." });
       return;
@@ -477,6 +477,7 @@ function ManagementContent() {
       min: minPay,
       logo,
       provider,
+      settlement,
       status: status ? 'active' : 'inactive',
       updatedAt: serverTimestamp()
     };
@@ -499,7 +500,7 @@ function ManagementContent() {
 
   const openAddChannel = () => {
     setEditingChannel(null);
-    setChannelForm({ id: "", name: "", provider: "Xendit", group: "VA", fee: "", minPay: "", status: true, logo: "" });
+    setChannelForm({ id: "", name: "", provider: "Xendit", group: "VA", fee: "", minPay: "", status: true, logo: "", settlement: "T+1" });
     setIsChannelDialogOpen(true);
   };
 
@@ -514,6 +515,7 @@ function ManagementContent() {
       fee: dbEntry?.fee || channel.fee || "",
       minPay: dbEntry?.min || channel.min || "",
       logo: dbEntry?.logo || channel.logo || "",
+      settlement: dbEntry?.settlement || channel.settlement || "T+1",
       status: dbEntry?.status !== 'inactive'
     });
     setIsChannelDialogOpen(true);
@@ -567,6 +569,21 @@ function ManagementContent() {
   };
 
   const header = getViewHeader();
+
+  const settlementSummary = useMemo(() => {
+    if (view !== 'channels') return [];
+    
+    const groups = ['QR', 'VA', 'E-Wallet', 'Retail'];
+    return groups.map(group => {
+      const related = filteredData.filter(c => c.group === group);
+      const settlements = Array.from(new Set(related.map(c => c.settlement || 'T+1')));
+      return {
+        group,
+        count: related.length,
+        durations: settlements.join(', ') || 'N/A'
+      };
+    });
+  }, [view, filteredData]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
@@ -739,14 +756,25 @@ function ManagementContent() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Minimal Payment (IDR)</Label>
-                    <Input 
-                      placeholder="e.g. 1000" 
-                      value={channelForm.minPay} 
-                      onChange={(e) => setChannelForm({ ...channelForm, minPay: e.target.value })}
-                      className="rounded-md h-12 font-mono"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Minimal Payment (IDR)</Label>
+                      <Input 
+                        placeholder="e.g. 1000" 
+                        value={channelForm.minPay} 
+                        onChange={(e) => setChannelForm({ ...channelForm, minPay: e.target.value })}
+                        className="rounded-md h-12 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Settlement Time</Label>
+                      <Input 
+                        placeholder="e.g. T+1" 
+                        value={channelForm.settlement} 
+                        onChange={(e) => setChannelForm({ ...channelForm, settlement: e.target.value })}
+                        className="rounded-md h-12 font-bold"
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-muted/30 rounded-md border border-border">
                     <div className="space-y-0.5">
@@ -895,28 +923,29 @@ function ManagementContent() {
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Group</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Fee / MDR</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Min Pay</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Settlement</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Status</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {channelsLoading ? (
-                  <tr><td colSpan={9} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing channel registry...</td></tr>
+                  <tr><td colSpan={10} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing channel registry...</td></tr>
                 ) : filteredData.length === 0 ? (
-                  <tr><td colSpan={9} className="px-6 py-12 text-center text-muted-foreground/30 italic">No channels found.</td></tr>
+                  <tr><td colSpan={10} className="px-6 py-12 text-center text-muted-foreground/30 italic">No channels found.</td></tr>
                 ) : (
                   filteredData.map((channel, i) => {
                     const dbChannel = paymentChannels?.find(pc => pc.id.toUpperCase() === channel.id.toUpperCase());
                     const isActive = dbChannel?.status === 'active' || (channel.status === 'active' && !dbChannel);
-                    const channelId = channel.id.toUpperCase();
                     const providerName = dbChannel?.provider || channel.provider || "Xendit";
+                    const settlement = dbChannel?.settlement || channel.settlement || "T+1";
                     
                     return (
                       <tr key={i} className="hover:bg-muted/10 transition-colors group">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Select 
                             value={providerName} 
-                            onValueChange={(val) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, val, dbChannel?.logo || channel.logo)}
+                            onValueChange={(val) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, val, settlement, dbChannel?.logo || channel.logo)}
                           >
                             <SelectTrigger className="h-8 w-28 text-[10px] font-bold border-transparent bg-transparent hover:bg-muted transition-all">
                               <SelectValue placeholder="Provider" />
@@ -947,7 +976,7 @@ function ManagementContent() {
                                 value={dbChannel?.fee || channel.fee || ""}
                                 placeholder="e.g. 0.7%"
                                 className="h-8 text-[10px] font-mono px-2 bg-muted/30 border-transparent focus:bg-background transition-all"
-                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, e.target.value, dbChannel?.min || channel.min, providerName, dbChannel?.logo || channel.logo)}
+                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, e.target.value, dbChannel?.min || channel.min, providerName, settlement, dbChannel?.logo || channel.logo)}
                               />
                            </div>
                         </td>
@@ -957,7 +986,17 @@ function ManagementContent() {
                                 value={dbChannel?.min || channel.min || ""}
                                 placeholder="1000"
                                 className="h-8 text-[10px] font-mono px-2 bg-muted/30 border-transparent focus:bg-background transition-all text-center"
-                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, e.target.value, providerName, dbChannel?.logo || channel.logo)}
+                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, e.target.value, providerName, settlement, dbChannel?.logo || channel.logo)}
+                              />
+                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                           <div className="max-w-[80px] mx-auto">
+                              <Input 
+                                value={settlement}
+                                placeholder="T+1"
+                                className="h-8 text-[10px] font-bold px-2 bg-muted/30 border-transparent focus:bg-background transition-all text-center"
+                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, providerName, e.target.value, dbChannel?.logo || channel.logo)}
                               />
                            </div>
                         </td>
@@ -1009,7 +1048,7 @@ function ManagementContent() {
 
                              <Switch 
                               checked={isActive} 
-                              onCheckedChange={() => handleUpdateChannelStatus(channel.id, channel.name, channel.group, !isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, providerName, dbChannel?.logo || channel.logo)}
+                              onCheckedChange={() => handleUpdateChannelStatus(channel.id, channel.name, channel.group, !isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, providerName, settlement, dbChannel?.logo || channel.logo)}
                              />
                            </div>
                         </td>
@@ -1114,6 +1153,39 @@ function ManagementContent() {
           )}
         </div>
       </Card>
+
+      {view === 'channels' && (
+        <Card className="bg-card border-border rounded-md overflow-hidden shadow-sm">
+          <CardHeader className="bg-muted/30 dark:bg-[#0A0A0A] px-6 py-4 border-b border-border">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Scale className="w-4 h-4 text-primary" />
+              Settlement Matrix Summary
+            </CardTitle>
+          </CardHeader>
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-full text-[10px] md:text-xs text-left">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Method Group</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Active Channels</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-right">Settlement Duration</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {settlementSummary.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-muted/10 transition-colors">
+                    <td className="px-6 py-4 font-bold text-foreground/80">{item.group}</td>
+                    <td className="px-6 py-4 text-center">
+                       <Badge variant="outline" className="font-mono">{item.count}</Badge>
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-primary">{item.durations}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-6 rounded-md bg-muted/30 border border-border space-y-4 shadow-sm">
