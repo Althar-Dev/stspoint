@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -81,8 +80,9 @@ const devMenuItems = [
     items: [
       { title: "Orderkuota Bridge", url: "/dev/services/orderkuota" },
       { title: "PPOB Engine", url: "/dev/services/ppob" },
-      { title: "SMM Bridge", url: "/dev/services/smm" },
-      { title: "OTP Gateway", url: "/dev/services/otp" },
+      // Hidden for now
+      // { title: "SMM Bridge", url: "/dev/services/smm" },
+      // { title: "OTP Gateway", url: "/dev/services/otp" },
     ]
   },
   { title: "Live Traffic", icon: Activity, url: "/dev/traffic" },

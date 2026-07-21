@@ -52,8 +52,9 @@ const mainMenuItems = [
     icon: Package,
     items: [
       { title: "PPOB", url: "/console/services/ppob" },
-      { title: "SMM Panel", url: "/console/services/smm" },
-      { title: "OTP", url: "/console/services/nokos" },
+      // Hidden for now
+      // { title: "SMM Panel", url: "/console/services/smm" },
+      // { title: "OTP", url: "/console/services/nokos" },
     ]
   },
   {

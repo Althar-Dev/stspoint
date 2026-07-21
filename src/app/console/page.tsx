@@ -427,12 +427,12 @@ export default function OverviewPage() {
           <CardHeader className="p-0 mb-6 bg-transparent">
             <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest text-muted-foreground">Quick Access</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 flex-1">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 md:gap-4 flex-1">
             {[
               { label: "API Key", icon: Key, color: "text-orange-500", bg: "bg-orange-500/10", href: "/console/developer/api-keys" },
               { label: "PPOB", icon: Smartphone, color: "text-blue-500", bg: "bg-blue-500/10", href: "/console/services/ppob" },
-              { label: "SMM", icon: Users, color: "text-indigo-500", bg: "bg-indigo-500/10", href: "/console/services/smm" },
-              { label: "OTP", icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10", href: "/console/services/nokos" },
+              // { label: "SMM", icon: Users, color: "text-indigo-500", bg: "bg-indigo-500/10", href: "/console/services/smm" },
+              // { label: "OTP", icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10", href: "/console/services/nokos" },
             ].map((item, i) => (
               <Link href={item.href} key={i} className="block min-w-0">
                 <Button variant="ghost" className="w-full h-auto py-4 px-1 flex flex-col gap-2 rounded-xl border border-border/50 hover:bg-primary/5 transition-all group overflow-hidden">
