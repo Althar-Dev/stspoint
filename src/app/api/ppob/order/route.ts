@@ -6,13 +6,13 @@ import {
   where, 
   getDocs,
   doc,
+  getDoc,
   updateDoc,
   increment,
   serverTimestamp,
   setDoc
 } from 'firebase/firestore';
 import { getOrderkuotaPPOBPricelist, getMarkupRules, forwardOrderToOkeConnect, checkStatusOkeConnect, type OrkutPPOBProduct, type MarkupRule } from '@/service/orderkuota';
-import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 
 /**
  * Helper: Kalkulasi Harga Jual berdasarkan Aturan Markup
@@ -80,7 +80,20 @@ export async function POST(request: Request) {
     const userId = userData.uid || userDoc.id;
     const userBalance = userData.balance || 0;
 
-    // 2. Load Product & Markup Rules
+    // 2. Fetch Master Bridge Credentials for H2H
+    const masterRef = doc(firestore, 'settings', 'orderkuota');
+    const masterSnap = await getDoc(masterRef);
+    
+    if (!masterSnap.exists() || !masterSnap.data().h2hMemberId) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'System Error: Platform Master Bridge not configured.' 
+      }, { status: 500 });
+    }
+    
+    const master = masterSnap.data();
+
+    // 3. Load Product & Markup Rules
     const [productsRes, markupRes] = await Promise.all([
       getOrderkuotaPPOBPricelist(),
       getMarkupRules()
@@ -93,11 +106,10 @@ export async function POST(request: Request) {
 
     const isPasca = product.type === 'Pasca';
     
-    // 3. Calculate Final Selling Price
-    // Jika Pasca, gunakan qty sebagai nominal pembayaran dasar
+    // 4. Calculate Final Selling Price
     const sellPrice = calculateSellPrice(product, markupRes.data || [], isPasca ? Number(qty) : undefined); 
     
-    // 4. Check Balance for Prepaid orders
+    // 5. Check Balance for Prepaid orders
     if (!isPasca && userBalance < sellPrice) {
       return NextResponse.json({ 
         success: false, 
@@ -107,15 +119,15 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    // 5. Execute Bridge Order with strict Type discrimination
+    // 6. Execute Bridge Order with Firestore Master Credentials
     const h2hRes = await forwardOrderToOkeConnect({
       type: isPasca ? 'Pasca' : 'Prepaid',
       product: sku,
       dest: target,
       refID: ref_id,
-      memberID: OKE_MEMBER_ID,
-      pin: OKE_PIN,
-      password: OKE_PASSWORD,
+      memberID: master.h2hMemberId,
+      pin: master.h2hPin,
+      password: master.h2hPassword,
       qty: isPasca ? Number(qty) : undefined
     });
 
@@ -126,20 +138,20 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // 6. Initial Status Sync
+    // 7. Initial Status Sync
     const statusRes = await checkStatusOkeConnect({
       product: sku,
       dest: target,
       refID: ref_id,
-      memberID: OKE_MEMBER_ID,
-      pin: OKE_PIN,
-      password: OKE_PASSWORD,
+      memberID: master.h2hMemberId,
+      pin: master.h2hPin,
+      password: master.h2hPassword,
       qty: isPasca ? Number(qty) : undefined
     });
 
     const finalStatus = statusRes.success ? statusRes.status : 'Pending';
 
-    // 7. Atomic Balance Deduction (Only for Prepaid)
+    // 8. Atomic Balance Deduction (Only for Prepaid)
     if (!isPasca) {
       await updateDoc(doc(firestore, 'users', userId), {
         balance: increment(-sellPrice),
@@ -147,7 +159,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 8. Record to Global Transaction Ledger
+    // 9. Record to Global Transaction Ledger
     const txData = {
       id: ref_id,
       gameId: product.brand,

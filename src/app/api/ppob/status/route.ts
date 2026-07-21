@@ -12,7 +12,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { checkStatusOkeConnect } from '@/service/orderkuota';
-import { OKE_MEMBER_ID, OKE_PIN, OKE_PASSWORD } from '@/lib/orderkuota/init';
 import { notifyMerchant } from '@/lib/webhook-sender';
 
 /**
@@ -42,6 +41,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid secret_key' }, { status: 401 });
     }
 
+    // Fetch Master Credentials for H2H Check
+    const masterRef = doc(firestore, 'settings', 'orderkuota');
+    const masterSnap = await getDoc(masterRef);
+    
+    if (!masterSnap.exists() || !masterSnap.data().h2hMemberId) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'System Error: Platform Master Bridge not configured.' 
+      }, { status: 500 });
+    }
+    
+    const master = masterSnap.data();
+
     const txRef = doc(firestore, 'transactions', ref_id);
     const txSnap = await getDoc(txRef);
     
@@ -51,14 +63,14 @@ export async function GET(request: Request) {
 
     const txData = txSnap.data();
 
-    // Live sync with upstream
+    // Live sync with upstream using Master Credentials
     const statusRes = await checkStatusOkeConnect({
       product: txData.sku,
       dest: txData.target,
       refID: ref_id,
-      memberID: OKE_MEMBER_ID,
-      pin: OKE_PIN,
-      password: OKE_PASSWORD,
+      memberID: master.h2hMemberId,
+      pin: master.h2hPin,
+      password: master.h2hPassword,
       qty: txData.qty ? Number(txData.qty) : undefined
     });
 

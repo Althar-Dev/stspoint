@@ -39,7 +39,6 @@ import {
   Clock,
   Link as LinkIcon,
   ShieldAlert,
-  Lock,
   PowerOff,
   User as UserIcon,
   Save,
@@ -48,14 +47,14 @@ import {
   Copy,
   Hash,
   Settings as SettingsIcon,
-  Globe
+  Globe,
+  Key
 } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, updateDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { requestOrderkuotaOtp, getOrderkuotaToken } from "@/lib/orderkuota/connect";
-import { getOrderkuotaProfile } from "@/lib/orderkuota/profile";
 
 export default function OrderkuotaBridgePage() {
   const { user, loading: authLoading } = useUser();
@@ -73,6 +72,11 @@ export default function OrderkuotaBridgePage() {
   // Settings Info
   const [baseQrInput, setBaseQrInput] = useState("");
   const [digitSetting, setDigitSetting] = useState<string>("3");
+  
+  // H2H Credentials
+  const [h2hMemberId, setH2hMemberId] = useState("");
+  const [h2hPin, setH2hPin] = useState("");
+  const [h2hPassword, setH2hPassword] = useState("");
 
   const settingsRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -87,6 +91,9 @@ export default function OrderkuotaBridgePage() {
     if (config) {
       setBaseQrInput(config.baseQr || "");
       setDigitSetting(config.randomDigit?.toString() || "3");
+      setH2hMemberId(config.h2hMemberId || "");
+      setH2hPin(config.h2hPin || "");
+      setH2hPassword(config.h2hPassword || "");
     }
   }, [config]);
 
@@ -152,9 +159,12 @@ export default function OrderkuotaBridgePage() {
       await updateDoc(settingsRef, {
         baseQr: baseQrInput,
         randomDigit: parseInt(digitSetting),
+        h2hMemberId: h2hMemberId.trim(),
+        h2hPin: h2hPin.trim(),
+        h2hPassword: h2hPassword.trim(),
         updatedAt: serverTimestamp()
       });
-      toast({ title: "Settings Updated", description: "Platform bridge configuration saved." });
+      toast({ title: "Settings Updated", description: "Platform bridge and H2H configuration saved." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Save Failed", description: "Could not update global settings." });
     } finally {
@@ -177,12 +187,6 @@ export default function OrderkuotaBridgePage() {
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const copyToClipboard = (text: string, label: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: `${label} copied.` });
   };
 
   const isLoading = authLoading || configLoading;
@@ -297,49 +301,91 @@ export default function OrderkuotaBridgePage() {
         </Card>
 
         {/* Global Settings Card */}
-        <Card className="md:col-span-7 border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-           <CardHeader className="bg-muted/30 p-8 border-b border-border">
-              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                 <SettingsIcon className="w-4 h-4 text-primary" />
-                 Global Distribution Settings
-              </CardTitle>
-           </CardHeader>
-           <CardContent className="p-8 space-y-6">
-              <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Platform Base QRIS</Label>
-                 <Textarea 
-                  value={baseQrInput} 
-                  onChange={(e) => setBaseQrInput(e.target.value)}
-                  placeholder="Paste the master QRIS string here..."
-                  className="min-h-[150px] rounded-2xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono text-[10px] break-all leading-relaxed"
-                 />
-                 <p className="text-[9px] text-muted-foreground ml-1">Used globally for internal wallet top-ups across all subdomains.</p>
-              </div>
+        <div className="md:col-span-7 space-y-6">
+          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
+            <CardHeader className="bg-muted/30 p-8 border-b border-border">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <SettingsIcon className="w-4 h-4 text-primary" />
+                  Global Distribution Settings
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Platform Base QRIS</Label>
+                  <Textarea 
+                    value={baseQrInput} 
+                    onChange={(e) => setBaseQrInput(e.target.value)}
+                    placeholder="Paste the master QRIS string here..."
+                    className="min-h-[100px] rounded-2xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono text-[10px] break-all leading-relaxed"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
-                    <Hash className="w-3 h-3" />
-                    Random Digit Strategy
-                 </Label>
-                 <Select value={digitSetting} onValueChange={setDigitSetting}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-transparent">
-                       <SelectValue placeholder="Select digits" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border">
-                       <SelectItem value="2" className="text-xs">2 Digits (10-99)</SelectItem>
-                       <SelectItem value="3" className="text-xs">3 Digits (100-999)</SelectItem>
-                    </SelectContent>
-                 </Select>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Random Digit</Label>
+                    <Select value={digitSetting} onValueChange={setDigitSetting}>
+                      <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-transparent">
+                          <SelectValue placeholder="Select digits" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-border">
+                          <SelectItem value="2" className="text-xs">2 Digits (10-99)</SelectItem>
+                          <SelectItem value="3" className="text-xs">3 Digits (100-999)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+            </CardContent>
+          </Card>
 
-              <div className="pt-4 border-t border-border flex justify-end">
-                 <Button onClick={handleSaveSettings} disabled={isProcessing || !isConnected} className="h-12 px-10 rounded-xl font-bold uppercase tracking-widest text-[11px] gap-2 shadow-lg shadow-primary/10">
-                    {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save Bridge Config
-                 </Button>
-              </div>
-           </CardContent>
-        </Card>
+          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
+            <CardHeader className="bg-muted/30 p-8 border-b border-border">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  <Key className="w-4 h-4 text-primary" />
+                  H2H OkeConnect Credentials
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Member ID (OKxxxxx)</Label>
+                    <Input 
+                      placeholder="e.g. OK12345" 
+                      value={h2hMemberId}
+                      onChange={(e) => setH2hMemberId(e.target.value)}
+                      className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all font-bold uppercase"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">H2H PIN</Label>
+                    <Input 
+                      type="password"
+                      placeholder="6 Digit PIN" 
+                      value={h2hPin}
+                      onChange={(e) => setH2hPin(e.target.value)}
+                      className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all font-mono"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">H2H IP Password</Label>
+                    <Input 
+                      type="password"
+                      placeholder="H2H Password" 
+                      value={h2hPassword}
+                      onChange={(e) => setH2hPassword(e.target.value)}
+                      className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border flex justify-end">
+                  <Button onClick={handleSaveSettings} disabled={isProcessing || !isConnected} className="h-12 px-10 rounded-xl font-bold uppercase tracking-widest text-[11px] gap-2 shadow-lg shadow-primary/10">
+                      {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save Bridge Config
+                  </Button>
+                </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-4">
@@ -347,7 +393,7 @@ export default function OrderkuotaBridgePage() {
          <div className="space-y-1">
             <h4 className="text-sm font-bold text-amber-900 uppercase tracking-tight">Security Protocol</h4>
             <p className="text-xs text-amber-800 leading-relaxed">
-               Updating the Master Bridge settings will affect all automatic payment reconciliation logic for the entire STSPoint infrastructure. Ensure the Base QRIS provided matches the Master Account connected.
+               Updating the Master Bridge settings will affect all automatic payment reconciliation logic for the entire STSPoint infrastructure. Ensure the Base QRIS and H2H credentials provided are valid to prevent "User Not Found" errors.
             </p>
          </div>
       </div>
