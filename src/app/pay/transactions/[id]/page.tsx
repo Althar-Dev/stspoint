@@ -86,7 +86,7 @@ export default function STSPayTransactionDetailPage() {
 
   if (txLoading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 p-4">
+      <div className="max-w-7xl mx-auto space-y-6 p-4">
         <Skeleton className="h-10 w-32 rounded-xl" />
         <Card className="rounded-3xl border-border">
           <CardContent className="p-10 space-y-8">
@@ -117,7 +117,7 @@ export default function STSPayTransactionDetailPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
