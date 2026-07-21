@@ -136,7 +136,7 @@ export default function STSPayTransactionsPage() {
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
                   <th className="px-8 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Transaksi</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Tipe / Deskripsi</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Deskripsi</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Nominal</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Customer</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Metode</th>
@@ -150,7 +150,7 @@ export default function STSPayTransactionsPage() {
                     <tr key={i}><td colSpan={7} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                   ))
                 ) : transactions.length === 0 ? (
-                  <tr><td colSpan={7} className="px-8 py-24 text-center text-muted-foreground italic">Tidak ada transaksi ditemukan di koleksi stspay_transactions.</td></tr>
+                  <tr><td colSpan={7} className="px-8 py-24 text-center text-muted-foreground italic">Tidak ada transaksi ditemukan.</td></tr>
                 ) : (
                   transactions.map((item) => {
                     const logo = getLogoSource(item.payment_method_id || item.paymentMethod);
@@ -161,9 +161,6 @@ export default function STSPayTransactionsPage() {
                         <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{item.id?.substring(0, 10).toUpperCase()}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                            <p className="font-bold">{item.description || "Digital Payment"}</p>
-                           <Badge variant="secondary" className="text-[8px] uppercase font-bold px-1.5 h-4 border-none bg-muted/50">
-                             {item.type || "payment"}
-                           </Badge>
                         </td>
                         <td className="px-6 py-4 font-bold whitespace-nowrap">
                           <span className={isPayout ? "text-amber-600" : "text-emerald-600"}>
