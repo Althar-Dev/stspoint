@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,6 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Logo } from "@/components/logo";
 import { Mail, Lock, User, ArrowRight, AlertCircle, ChevronLeft, ShieldCheck, HelpCircle, Key, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -41,6 +43,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("merchant");
   const [licenseKey, setLicenseKey] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -96,6 +99,11 @@ export default function SignUpPage() {
     e.preventDefault();
     if (!auth || !db) {
       setError("System authentication or database not available.");
+      return;
+    }
+
+    if (!agreed) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
       return;
     }
 
@@ -353,7 +361,25 @@ export default function SignUpPage() {
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/10 transition-all active:scale-95" disabled={loading}>
+
+              <div className="flex items-start space-x-2 px-1 pt-2">
+                <Checkbox 
+                  id="terms" 
+                  checked={agreed} 
+                  onCheckedChange={(checked) => setAgreed(checked as boolean)}
+                  className="mt-1"
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="terms"
+                    className="text-[11px] font-medium leading-relaxed text-muted-foreground cursor-pointer"
+                  >
+                    I agree to the <Link href="/terms-of-service" className="text-primary font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy-policy" className="text-primary font-bold hover:underline">Privacy Policy</Link>.
+                  </label>
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/10 transition-all active:scale-95" disabled={loading || !agreed}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {loading ? "Creating Account..." : "Create Account"}
                 {!loading && <ArrowRight className="w-4 h-4 ml-2" />}

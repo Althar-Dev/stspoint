@@ -15,6 +15,7 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "STSPoint",
+    "alternateName":"stspoint.id",
     "url": "https://stspoint.id",
     "potentialAction": {
       "@type": "SearchAction",
@@ -46,11 +47,6 @@ export default function Home() {
       "priceCurrency": "IDR"
     },
     "description": "Integrated digital infrastructure platform for modern business by StarVale Technology Solution. Expertly engineered by Alhadi Adriano (AltharDev) to support API payments, AI, and digital goods distribution.",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.9",
-      "reviewCount": "1240"
-    }
   };
 
   const personData = {
@@ -73,8 +69,8 @@ export default function Home() {
   const organizationData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "StarVale Technology Solution",
-    "alternateName": "STSPoint",
+    "name": "STSPoint",
+    "alternateName": "StarVale Technology Solution",
     "url": "https://stspoint.id",
     "logo": "https://stspoint.id/assets/img/icon.png",
     "founder": {

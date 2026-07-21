@@ -4,9 +4,10 @@ import {Toaster} from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
+  applicationName: 'STSPoint',
   title: {
-    default: 'STSPoint | StarVale Digital Infrastructure & Payment Bridge',
-    template: '%s | STSPoint by StarVale'
+    default: 'STSPoint',
+    template: '%s | STSPoint'
   },
   description: 'The ultimate digital gateway platform by StarVale Technology Solution. Providing enterprise-grade API solutions for PPOB, OTP, and STSPay payment bridges with 99.9% uptime. Developed and engineered by Alhadi Adriano (AltharDev) for high-scale business automation.',
   keywords: [
@@ -41,10 +42,6 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://stspoint.id'),
   alternates: {
     canonical: '/',
-    languages: {
-      'id-ID': '/id',
-      'en-US': '/en',
-    },
   },
   openGraph: {
     title: 'STSPoint | Digital Infrastructure by AltharDev',

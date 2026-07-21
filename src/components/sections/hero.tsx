@@ -28,9 +28,12 @@ export function HeroSection() {
               <div className="lg:col-span-6 space-y-4 md:space-y-8 text-left">
                 <div className="space-y-2 md:space-y-6">
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-headline font-bold leading-[1] tracking-tighter text-white mt-2 sm:-mt-8">
+                    STSPoint
+                  </h1>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-headline font-bold leading-[1] tracking-tighter text-white mt-2 sm:-mt-8">
                     The Digital <br />
                     Infrastructure <span className="text-white/30">Platform</span>
-                  </h1>
+                  </h2>
                   
                   <p className="text-gray-400 text-sm sm:text-base md:text-lg lg:text-xl max-w-xl font-medium leading-relaxed">
                     Integrated Digital Infrastructure for Modern Business. Supports APIs, payments, AI, and cloud services through a single Platform.

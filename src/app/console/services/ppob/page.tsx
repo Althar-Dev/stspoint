@@ -309,8 +309,7 @@ export default function PPOBConsolePage() {
         <Card className="flex flex-col w-full border border-border/50 shadow-sm rounded-xl overflow-hidden bg-card min-h-[500px]">
           <CardHeader className="px-4 md:px-8 py-5 border-b border-border/50 bg-slate-50/50 dark:bg-[#0A0A0A] shrink-0">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
-                <Smartphone className="w-4 h-4 text-primary" />
+              <CardTitle className="text-sm font-bold flex items-center gap-2 tracking-wider">
                 Daftar Produk
               </CardTitle>
               <div className="flex items-center gap-4">
@@ -324,7 +323,7 @@ export default function PPOBConsolePage() {
                   </SelectContent>
                 </Select>
                 <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
-                  {filteredProducts.length.toLocaleString()} Produk
+                  {filteredProducts.length.toLocaleString()}
                 </Badge>
               </div>
             </div>

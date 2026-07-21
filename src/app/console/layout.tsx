@@ -48,7 +48,7 @@ const mainMenuItems = [
     url: "/console",
   },
   {
-    title: "Service",
+    title: "Product",
     icon: Package,
     items: [
       { title: "PPOB", url: "/console/services/ppob" },
