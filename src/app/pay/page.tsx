@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +16,6 @@ import {
   XCircle,
   CheckCircle2,
   PieChart as PieChartIcon,
-  CreditCard,
   Timer
 } from "lucide-react";
 import React, { useMemo } from "react";
@@ -25,12 +23,14 @@ import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from "@
 import { doc, collection, query, where } from "firebase/firestore";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function STSPayDashboard() {
   const { user } = useUser();
   const db = useFirestore();
+  const router = useRouter();
 
-  // Membaca saldo khusus layanan STSPay (Berbeda dengan saldo Console)
+  // Membaca saldo khusus layanan STSPay
   const stspayRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "stspay");
@@ -38,12 +38,12 @@ export default function STSPayDashboard() {
 
   const { data: stspaySvc, loading: stspayLoading } = useDoc(stspayRef);
 
+  // Mengambil data langsung dari stspay_transactions
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
-      collection(db, "transactions"),
-      where("userId", "==", user.uid),
-      where("gameId", "==", "STSPAY")
+      collection(db, "stspay_transactions"),
+      where("userId", "==", user.uid)
     );
   }, [db, user?.uid]);
 
@@ -52,7 +52,7 @@ export default function STSPayDashboard() {
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
     // Normalize Success States
-    if (['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED'].includes(s)) return 'Success';
+    if (['SUCCESS', 'PAID', 'SETTLED', 'SUCCEEDED', 'COMPLETED'].includes(s)) return 'Success';
     if (['FAILED', 'CANCELED', 'EXPIRED'].includes(s)) return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
     
     if (s !== 'PENDING') return status;
@@ -96,7 +96,7 @@ export default function STSPayDashboard() {
   const totalVolume = useMemo(() => {
     return transactions
       .filter(t => t.effectiveStatus === 'Success')
-      .reduce((acc, curr) => acc + (curr.priceAmount || 0), 0);
+      .reduce((acc, curr) => acc + (curr.amount || 0), 0);
   }, [transactions]);
 
   const getLogoSource = (methodId: string) => {
@@ -115,7 +115,7 @@ export default function STSPayDashboard() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2">
+          <Button variant="outline" size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2" onClick={() => window.location.reload()}>
             <RefreshCcw className="w-3 h-3" /> Sync Data
           </Button>
           <Button asChild size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 bg-primary">
@@ -228,7 +228,7 @@ export default function STSPayDashboard() {
                <thead>
                  <tr className="bg-muted/50 border-b border-border">
                    <th className="px-8 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Transaksi</th>
-                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Item / Ref</th>
+                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Deskripsi</th>
                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Amount</th>
                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Method</th>
                    <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Status</th>
@@ -243,45 +243,53 @@ export default function STSPayDashboard() {
                    <tr><td colSpan={5} className="px-8 py-20 text-center text-muted-foreground italic">Belum ada aktivitas transaksi di gateway Anda.</td></tr>
                  ) : (
                    transactions.slice(0, 10).map((row) => {
-                     const logo = getLogoSource(row.paymentMethod);
+                     const logo = getLogoSource(row.payment_method_id || row.paymentMethod);
+                     const isPayout = row.type === 'payout';
                      return (
-                      <tr key={row.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap">#{row.id?.substring(0, 12).toUpperCase()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <p className="font-bold">{row.itemName || "STSPay Trx"}</p>
-                          <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{row.id}</p>
+                      <tr 
+                        key={row.id} 
+                        className="hover:bg-muted/20 transition-colors cursor-pointer group"
+                        onClick={() => router.push(`/pay/transactions/${row.id}`)}
+                      >
+                        <td className="px-8 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap flex items-center gap-2">
+                           <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                             <ChevronRight className="w-3 h-3" />
+                           </span>
+                           #{row.id?.substring(0, 12).toUpperCase()}
                         </td>
-                        <td className="px-6 py-4 font-bold whitespace-nowrap">Rp {(row.priceAmount || 0).toLocaleString('id-ID')}</td>
+                        <td className="px-6 py-4 whitespace-nowrap max-w-[250px]">
+                          <p className="font-bold truncate" title={row.description || "Digital Payment"}>
+                            {row.description || (isPayout ? "Withdrawal Request" : "Digital Payment")}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">{row.id}</p>
+                        </td>
+                        <td className="px-6 py-4 font-bold whitespace-nowrap">
+                          <span className={isPayout ? "text-amber-600" : "text-emerald-600"}>
+                            {isPayout ? "-" : "+"}Rp {(row.amount || 0).toLocaleString('id-ID')}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                              {logo ? (
-                               <img src={logo} alt={row.paymentMethod} className="h-4 md:h-5 object-contain" />
+                               <img src={logo} alt="Method" className="h-4 md:h-5 object-contain" />
                              ) : (
                                <Badge variant="outline" className="bg-muted/50 border-none text-[8px] font-bold px-1.5 py-0 h-4 rounded-sm uppercase">
-                                 {row.paymentMethod || "Multi"}
+                                 {row.payment_method_id || row.paymentMethod || "Direct"}
                                </Badge>
                              )}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <div className="flex flex-col items-end gap-1">
-                            <Badge className={`${
-                              row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
-                              row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
-                              'bg-red-500/10 text-red-600'
-                            } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
-                              {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                              {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
-                              {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
-                              {row.effectiveStatus}
-                            </Badge>
-                            {row.effectiveStatus === 'Success' && (
-                              <div className="flex items-center gap-1 opacity-40">
-                                <Timer className="w-2.5 h-2.5" />
-                                <span className="text-[7px] font-bold uppercase tracking-tighter">Settling</span>
-                              </div>
-                            )}
-                          </div>
+                          <Badge className={`${
+                            row.effectiveStatus === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : 
+                            row.effectiveStatus === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
+                            'bg-red-500/10 text-red-600'
+                          } border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm flex items-center justify-center w-fit ml-auto gap-1`}>
+                            {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-2.5 h-2.5" />}
+                            {row.effectiveStatus === 'Pending' && <Clock className="w-2.5 h-2.5" />}
+                            {row.effectiveStatus === 'Failed' && <XCircle className="w-2.5 h-2.5" />}
+                            {row.effectiveStatus}
+                          </Badge>
                         </td>
                       </tr>
                      );
