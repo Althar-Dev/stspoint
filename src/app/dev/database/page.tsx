@@ -1,10 +1,9 @@
-
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, updateDoc, addDoc } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, updateDoc, addDoc, increment } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { 
@@ -34,8 +33,7 @@ import {
   Banknote,
   Handshake,
   XCircle,
-  Check,
-  increment
+  Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -598,10 +596,8 @@ function ManagementContent() {
 
         // Update both ledgers
         const ledgerStatus = status === 'PAID' ? 'Success' : 'Failed';
-        await Promise.all([
-          updateDoc(globalTxRef, { status: ledgerStatus, updatedAt: serverTimestamp() }),
-          updateDoc(userHistoryRef, { status: ledgerStatus, updatedAt: serverTimestamp() })
-        ]);
+        updateDoc(globalTxRef, { status: ledgerStatus, updatedAt: serverTimestamp() });
+        updateDoc(userHistoryRef, { status: ledgerStatus, updatedAt: serverTimestamp() });
 
         // Kirim Notifikasi
         const notificationsRef = collection(db, "users", userId, "notifications");
@@ -688,8 +684,8 @@ function ManagementContent() {
         </div>
       );
     }
-    if (id === 'BSI') return <img src="/assets/bank/bsi-logo.svg" className="w-14 object-contain" />;
-    if (id === 'SAHABAT_SAMPOERNA') return <img src="/assets/bank/bss-logo.svg" className="w-14 object-contain" />;
+    if (id === 'BSI') return <img src="/assets/bank/bsi-logo.svg" alt="BSI" className="w-14 object-contain" />;
+    if (id === 'SAHABAT_SAMPOERNA') return <img src="/assets/bank/bss-logo.svg" alt="BSS" className="w-14 object-contain" />;
 
     return <div className="w-14 flex items-center justify-center text-muted-foreground"><ImageIcon className="w-10 h-10" /></div>;
   };
@@ -735,10 +731,7 @@ function ManagementContent() {
           </div>
 
           {view === 'licenses' && (
-            <Dialog open={isKeyDialogOpen} onOpenChange={(open) => {
-              setIsKeyDialogOpen(open);
-              if (!open) { setNewClientName(""); setGeneratedKey(""); }
-            }}>
+            <Dialog open={isKeyDialogOpen} onOpenChange={setIsKeyDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   className="w-full sm:w-auto h-11 bg-primary text-primary-foreground font-bold text-[10px] uppercase tracking-widest rounded-md px-6 gap-2"
@@ -1320,27 +1313,27 @@ function ManagementContent() {
                 <tr>
                   {view === "transactions" ? (
                     <>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">TXID</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Product Item</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">User Context</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Price</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">TXID</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Product Item</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">User Context</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Price</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Status</th>
                     </>
                   ) : view === "licenses" ? (
                     <>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">License Key</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Client Name</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Status</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Generated At</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Action</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">License Key</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Client Name</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Status</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Generated At</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Action</th>
                     </>
                   ) : (
                     <>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Full Name</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Email Address</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">{view === 'clients' ? 'Client Key' : 'Merchant ID'}</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Role</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">System Balance</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Full Name</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Email Address</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{view === 'clients' ? 'Client Key' : 'Merchant ID'}</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Role</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">System Balance</th>
                     </>
                   )}
                 </tr>
