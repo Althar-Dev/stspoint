@@ -246,7 +246,7 @@ export default function STSPayBalancesPage() {
                   Rp {availableBalance.toLocaleString('id-ID')}
                 </h2>
               )}
-              <p className="text-white/50 text-[10px] font-medium max-w-sm leading-relaxed">
+              <p className="text-white/50 text-[10px] font-medium max-sm:max-w-full max-w-sm leading-relaxed">
                 Saldo ini berasal dari transaksi yang telah melewati masa settlement perbankan dan dapat dicairkan ke rekening Anda.
               </p>
             </div>
@@ -414,8 +414,9 @@ export default function STSPayBalancesPage() {
                         </td>
                         <td className="px-6 py-4 text-center whitespace-nowrap">
                            <Badge className={`border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-md gap-1 ${
-                             tx.status === 'PAID' || tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 
-                             tx.status === 'PENDING' ? 'bg-amber-500/10 text-amber-600' : 'bg-red-500/10 text-red-600'
+                             tx.status === 'PAID' || tx.status === 'SUCCESS' 
+                                ? (tx.isSettled ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600')
+                                : (tx.status === 'PENDING' ? 'bg-amber-500/10 text-amber-600' : 'bg-red-500/10 text-red-600')
                            }`}>
                              {tx.status === 'PAID' || tx.status === 'SUCCESS' ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Timer className="w-2.5 h-2.5 animate-pulse" />}
                              {tx.isPayout ? (tx.status === 'PAID' ? 'Completed' : tx.status) : (tx.isSettled ? 'Available' : 'Process')}
