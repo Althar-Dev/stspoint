@@ -1,9 +1,10 @@
+
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, updateDoc } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, updateDoc, addDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { 
@@ -527,7 +528,18 @@ function ManagementContent() {
         payoutAccountStatus: 'VERIFIED',
         updatedAt: serverTimestamp()
       });
-      toast({ title: "Confirmed", description: "Bank account has been verified." });
+
+      // Kirim Notifikasi ke User
+      const notificationsRef = collection(db, "users", userId, "notifications");
+      await addDoc(notificationsRef, {
+        title: "Rekening Terverifikasi",
+        message: "Rekening bank Anda telah berhasil dikonfirmasi oleh tim admin.",
+        type: "success",
+        isRead: false,
+        createdAt: serverTimestamp()
+      });
+
+      toast({ title: "Confirmed", description: "Bank account has been verified and notification sent." });
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "Failed to confirm account." });
     }

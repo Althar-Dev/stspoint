@@ -15,9 +15,27 @@
         "secretKey": { "type": "string" },
         "balance": { "type": "number" },
         "dev": { "type": "boolean", "description": "Flag for developer/admin access." },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "payoutBankName": { "type": "string" },
+        "payoutAccountNumber": { "type": "string" },
+        "payoutAccountName": { "type": "string" },
+        "payoutAccountStatus": { "type": "string", "enum": ["PENDING", "VERIFIED"] }
       },
       "required": ["uid", "name", "email", "role", "createdAt", "secretKey"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Pesan sistem untuk pengguna.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "message", "type", "createdAt"]
     },
     "AiConfig": {
       "title": "AI Config",
@@ -123,6 +141,10 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "Koleksi data profil pengguna."
+    },
+    "/users/{userId}/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Sub-koleksi notifikasi masuk untuk pengguna."
     },
     "/users/{userId}/services/{serviceId}": {
       "schema": "ServiceConfig",
