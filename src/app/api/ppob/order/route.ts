@@ -18,6 +18,7 @@ import { getOrderkuotaPPOBPricelist, getMarkupRules, forwardOrderToOkeConnect, c
  * Helper: Kalkulasi Harga Jual berdasarkan Aturan Markup
  */
 function calculateSellPrice(product: OrkutPPOBProduct, rules: MarkupRule[], customAmount?: number) {
+  // Untuk Pasca, basePrice adalah nominal tagihan (qty), untuk Prepaid adalah harga katalog
   const basePrice = customAmount !== undefined && customAmount > 0 ? customAmount : product.price;
   
   const specificProviderRules = rules.filter(r => r.targetProvider === product.provider);
@@ -106,10 +107,10 @@ export async function POST(request: Request) {
 
     const isPasca = product.type === 'Pasca';
     
-    // 4. Calculate Final Selling Price
+    // 4. Calculate Final Selling Price (Use qty as base for Pasca)
     const sellPrice = calculateSellPrice(product, markupRes.data || [], isPasca ? Number(qty) : undefined); 
     
-    // 5. Check Balance (Diterapkan untuk semua transaksi, termasuk Pasca)
+    // 5. Check Balance
     if (userBalance < sellPrice) {
       return NextResponse.json({ 
         success: false, 
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    // 6. Execute Bridge Order with Firestore Master Credentials
+    // 6. Execute Bridge Order
     const h2hRes = await forwardOrderToOkeConnect({
       type: isPasca ? 'Pasca' : 'Prepaid',
       product: sku,
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
 
     const finalStatus = statusRes.success ? statusRes.status : 'Pending';
 
-    // 8. Atomic Balance Deduction (Diterapkan untuk Prepaid DAN Pasca)
+    // 8. Atomic Balance Deduction
     await updateDoc(doc(firestore, 'users', userId), {
       balance: increment(-sellPrice),
       updatedAt: serverTimestamp()

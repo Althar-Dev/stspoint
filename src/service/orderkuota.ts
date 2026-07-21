@@ -67,7 +67,6 @@ export async function addProduct(params: {
         updated_at=CURRENT_TIMESTAMP
     `);
 
-    // Standardisasi: SKU dan Brand ke Uppercase
     stmt.run(
       params.sku.toUpperCase().trim(), 
       params.provider, 
@@ -219,64 +218,6 @@ export async function deleteProducts(filters: {
 }
 
 /**
- * Eksekusi transaksi PPOB (Pulsa, Data, Token, dll) melalui API Bridge.
- */
-export async function createOrderkuotaPPOBTransaction(params: {
-  username: string;
-  token: string;
-  sku: string;
-  target: string;
-  ref_id: string;
-}) {
-  const { username, token, sku, target, ref_id } = params;
-  const url = `https://api.qrispay.biz.id/orderkuota/transaksi?apikey=${STS_POINT_API_KEY}&username=${encodeURIComponent(username)}&token=${encodeURIComponent(token)}&sku=${encodeURIComponent(sku)}&target=${encodeURIComponent(target)}&ref_id=${encodeURIComponent(ref_id)}`;
-
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(45000) });
-    const data = await response.json();
-    return { 
-      success: data.status, 
-      message: data.message, 
-      data: data.result 
-    };
-  } catch (error: any) {
-    console.error("Orderkuota Transaction Error:", error);
-    return { 
-      success: false, 
-      message: "Terjadi kesalahan saat memproses transaksi ke provider." 
-    };
-  }
-}
-
-/**
- * Cek status transaksi PPOB secara spesifik.
- */
-export async function checkOrderkuotaPPOBStatus(params: {
-  username: string;
-  token: string;
-  ref_id: string;
-}) {
-  const { username, token, ref_id } = params;
-  const url = `https://api.qrispay.biz.id/orderkuota/status?apikey=${STS_POINT_API_KEY}&username=${encodeURIComponent(username)}&token=${encodeURIComponent(token)}&ref_id=${encodeURIComponent(ref_id)}`;
-
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-    const data = await response.json();
-    return { 
-      success: data.status, 
-      message: data.message, 
-      data: data.result 
-    };
-  } catch (error: any) {
-    console.error("Orderkuota Status Error:", error);
-    return { 
-      success: false, 
-      message: "Gagal mendapatkan status transaksi terbaru." 
-    };
-  }
-}
-
-/**
  * Meneruskan pesanan langsung ke H2H OkeConnect (H2H Engine).
  * Mendukung format Prepaid (Global) dan Pasca (Open Denom).
  */
@@ -292,10 +233,8 @@ export async function forwardOrderToOkeConnect(params: {
 }) {
   const { type, product, dest, refID, memberID, pin, password, qty } = params;
   
-  // Format dasar URL sesuai spesifikasi OkeConnect H2H
   let url = `https://h2h.okeconnect.com/trx?product=${encodeURIComponent(product)}&dest=${encodeURIComponent(dest)}&refID=${encodeURIComponent(refID)}&memberID=${encodeURIComponent(memberID)}&pin=${encodeURIComponent(pin)}&password=${encodeURIComponent(password)}`;
   
-  // Jika tipe Pasca (Open Denom), tambahkan parameter qty (Nominal Pengisian)
   if (type === 'Pasca' && qty !== undefined) {
     url = `https://h2h.okeconnect.com/trx?product=${encodeURIComponent(product)}&dest=${encodeURIComponent(dest)}&qty=${qty}&refID=${encodeURIComponent(refID)}&memberID=${encodeURIComponent(memberID)}&pin=${encodeURIComponent(pin)}&password=${encodeURIComponent(password)}`;
   }
@@ -304,7 +243,6 @@ export async function forwardOrderToOkeConnect(params: {
     const response = await fetch(url, { signal: AbortSignal.timeout(60000) });
     const text = await response.text(); 
     
-    // OkeConnect mengembalikan respon teks. Cek keberadaan kata kunci sukses/proses.
     const isSuccess = text.toUpperCase().includes("SUKSES") || text.toUpperCase().includes("PROSES");
     
     return { 
