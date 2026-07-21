@@ -201,7 +201,8 @@ export default function STSPayBalancesPage() {
 
       await Promise.all([
         setDoc(doc(db, "stspay_transactions", trxId), payoutData),
-        setDoc(doc(db, "transactions", trxId), ledgerData)
+        setDoc(doc(db, "transactions", trxId), ledgerData),
+        setDoc(doc(db, "users", user!.uid, "transactions", trxId), ledgerData)
       ]);
 
       toast({ title: "Berhasil Diajukan", description: "Permintaan penarikan dana Anda sedang diproses." });
@@ -238,7 +239,7 @@ export default function STSPayBalancesPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <p className="text-white/70 text-xs font-bold uppercase tracking-[0.2em]">Available Balance</p>
-                <Badge variant="outline" className="bg-white/10 border-white/20 text-white text-[8px] font-bold rounded-md">SIAP DITARIK</Badge>
+                <Badge variant="outline" className="bg-white/10 border-white/20 text-white text-[8px] font-bold rounded-md">READY FOR PAYOUT</Badge>
               </div>
               {isLoading ? <Skeleton className="h-14 w-64 bg-white/10" /> : (
                 <h2 className="text-5xl font-headline font-bold tracking-tighter">
@@ -316,7 +317,7 @@ export default function STSPayBalancesPage() {
                           disabled={isProcessing || !withdrawAmount || parseInt(withdrawAmount) > availableBalance}
                           className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold uppercase tracking-widest text-[11px] shadow-xl shadow-emerald-600/20"
                         >
-                           {isProcessing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ArrowUpRight className="w-5 h-5 mr-2" />}
+                           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ArrowUpRight className="w-5 h-5 mr-2" />}
                            Konfirmasi Penarikan
                         </Button>
                      </div>

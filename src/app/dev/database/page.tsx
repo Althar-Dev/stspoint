@@ -594,10 +594,12 @@ function ManagementContent() {
           });
         }
 
-        // Update both ledgers
+        // Update both ledgers using setDoc with merge to avoid "No document to update"
         const ledgerStatus = status === 'PAID' ? 'Success' : 'Failed';
-        updateDoc(globalTxRef, { status: ledgerStatus, updatedAt: serverTimestamp() });
-        updateDoc(userHistoryRef, { status: ledgerStatus, updatedAt: serverTimestamp() });
+        const ledgerUpdate = { status: ledgerStatus, updatedAt: serverTimestamp() };
+        
+        setDoc(globalTxRef, ledgerUpdate, { merge: true });
+        setDoc(userHistoryRef, ledgerUpdate, { merge: true });
 
         // Kirim Notifikasi
         const notificationsRef = collection(db, "users", userId, "notifications");
