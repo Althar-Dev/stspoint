@@ -110,19 +110,22 @@ export default function SignUpPage() {
     setError("");
     
     try {
-      if (role === 'client') {
-        if (!licenseKey) {
-          throw new Error("License Key is required for Partner registration.");
+      // PERBAIKAN: Gunakan 'partner' sesuai state, bukan 'client'
+      if (role === 'partner') {
+        const cleanKey = licenseKey.trim();
+        if (!cleanKey) {
+          throw new Error("License Key wajib diisi untuk pendaftaran Partner.");
         }
-        const keyRef = doc(db, 'license_keys', licenseKey);
+        
+        const keyRef = doc(db, 'license_keys', cleanKey);
         const keySnap = await getDoc(keyRef);
 
         if (!keySnap.exists()) {
-          throw new Error("Invalid License Key. Please contact support.");
+          throw new Error("Kunci Lisensi tidak valid. Silakan hubungi pengembang.");
         }
 
         if (keySnap.data().status === 'used') {
-          throw new Error("This License Key has already been used.");
+          throw new Error("Kunci Lisensi ini sudah pernah digunakan.");
         }
       }
 
@@ -151,7 +154,7 @@ export default function SignUpPage() {
         name,
         email,
         role: role === 'partner' ? 'client' : 'merchant',
-        clientKey: role === 'partner' ? licenseKey : "",
+        clientKey: role === 'partner' ? licenseKey.trim() : "",
         merchantId: role === 'merchant' ? merchantId : "",
         secretKey: secretKey,
         balance: 0,
@@ -189,7 +192,7 @@ export default function SignUpPage() {
       });
 
       if (role === 'partner') {
-        const keyRef = doc(db, 'license_keys', licenseKey);
+        const keyRef = doc(db, 'license_keys', licenseKey.trim());
         await updateDoc(keyRef, {
           status: 'used',
           usedBy: user.uid,
