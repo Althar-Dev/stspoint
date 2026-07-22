@@ -30,10 +30,10 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-headline font-bold tracking-tight">
-            Ringkasan <span className="text-primary">Aplikasi</span>
+            Ringkasan <span className="text-primary">Toko</span>
           </h1>
           <p className="text-muted-foreground text-sm">
-            Pantau performa dan aktivitas operasional layanan premium Anda.
+            Pantau performa penjualan dan pendapatan website top-up Anda.
           </p>
         </div>
       </div>
@@ -45,7 +45,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
              <div className="p-2.5 rounded-xl bg-primary/5 text-primary">
                 <ShoppingCart className="w-5 h-5" />
              </div>
-             <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
+             <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
           </div>
           <h4 className="text-2xl font-headline font-bold">124</h4>
           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
@@ -112,7 +112,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
             <div className="space-y-4">
                {[
-                 { label: 'Panduan Aplikasi', icon: Package },
+                 { label: 'Panduan Merchant', icon: Package },
                  { label: 'Hubungi Support', icon: TrendingUp },
                ].map((item, i) => (
                  <button key={i} className="w-full flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left">
@@ -127,9 +127,9 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
             <div className="mt-8 p-5 rounded-2xl bg-primary/5 border border-primary/10">
                <p className="text-[10px] text-primary font-bold uppercase mb-1.5 flex items-center gap-2">
                  <ShieldCheck className="w-3.5 h-3.5" />
-                 Layanan Premium
+                 Sistem Terverifikasi
                </p>
-               <p className="text-[10px] text-muted-foreground leading-relaxed">Aplikasi ini berjalan di atas infrastruktur premium dengan akses penuh ke fitur eksklusif.</p>
+               <p className="text-[10px] text-muted-foreground leading-relaxed">Website Anda menggunakan infrastruktur STS v2.0 yang stabil dan aman.</p>
             </div>
           </Card>
         </div>
