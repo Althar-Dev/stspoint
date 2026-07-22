@@ -5,11 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { ClientKeyManagement } from "@/components/partner/clientkey";
 import { AppKeyManagement } from "@/components/partner/appkey";
 import { 
-  Key, 
-  ChevronRight, 
   ShieldCheck, 
-  Info,
-  Layout
+  Info
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -17,53 +14,8 @@ function KeyManagementContent() {
   const searchParams = useSearchParams();
   const view = searchParams.get("view") || "client";
 
-  const getHeaderInfo = () => {
-    switch(view) {
-      case 'client':
-        return {
-          title: "Partner Licenses",
-          description: "Manage one-time registration keys for business partners.",
-          icon: Key,
-          color: "text-primary"
-        };
-      case 'application':
-        return {
-          title: "Application Activation Keys",
-          description: "Generate license keys for partners to activate their app/website instances.",
-          icon: Layout,
-          color: "text-blue-500"
-        };
-      default:
-        return {
-          title: "Key Management",
-          description: "Select a key type to manage from the sidebar.",
-          icon: ShieldCheck,
-          color: "text-muted-foreground"
-        };
-    }
-  };
-
-  const header = getHeaderInfo();
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-            console 
-            <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-            security
-            <ChevronRight className="w-3 h-3 text-muted-foreground/30" />
-            <span className="text-foreground">key management</span>
-          </h1>
-          <h2 className="text-2xl font-headline font-bold tracking-tight flex items-center gap-3">
-             <header.icon className={`w-6 h-6 ${header.color}`} />
-             {header.title}
-          </h2>
-          <p className="text-muted-foreground text-sm">{header.description}</p>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-8">
         {view === 'client' ? (
           <ClientKeyManagement />
