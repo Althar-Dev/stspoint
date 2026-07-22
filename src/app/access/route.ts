@@ -14,8 +14,8 @@ export async function GET(request: Request) {
 
     if (!key) {
       return NextResponse.json({ 
-        success: false, 
-        message: 'Missing activation key parameter.' 
+        access: false, 
+        message: 'Missing key parameter.' 
       }, { status: 400 });
     }
 
@@ -27,8 +27,8 @@ export async function GET(request: Request) {
 
     if (!keySnap.exists()) {
       return NextResponse.json({ 
-        success: false, 
-        message: 'Invalid key. Application not found in registry.' 
+        access: false, 
+        message: 'Invalid key. Application not found.' 
       }, { status: 404 });
     }
 
@@ -37,8 +37,8 @@ export async function GET(request: Request) {
     // 1. Check if the key has been activated by a partner
     if (data.status !== 'used') {
       return NextResponse.json({ 
-        success: false, 
-        message: 'Application key exists but has not been activated yet.' 
+        access: false, 
+        message: 'Application not activated.' 
       }, { status: 403 });
     }
 
@@ -46,35 +46,34 @@ export async function GET(request: Request) {
     if (data.type === 'bot') {
       if (!token) {
         return NextResponse.json({ 
-          success: false, 
-          message: 'Access denied: Token is required for Bot type applications.' 
+          access: false, 
+          message: 'Token required for bot.' 
         }, { status: 400 });
       }
 
       if (data.token !== token) {
         return NextResponse.json({ 
-          success: false, 
-          message: 'Access denied: Invalid token for this Bot application.' 
+          access: false, 
+          message: 'Invalid token.' 
         }, { status: 401 });
       }
     }
 
-    // 3. Success Response
+    // 3. Success Response as requested
     return NextResponse.json({
-      success: true,
-      message: 'Access Authorized',
+      access: true,
+      message: 'Access Granted',
       data: {
         id: data.key,
         name: data.name,
-        type: data.type,
-        activated_at: data.updatedAt || data.createdAt
+        type: data.type
       }
     });
 
   } catch (error: any) {
     console.error('Access API Error:', error);
     return NextResponse.json({ 
-      success: false, 
+      access: false, 
       message: 'Internal Server Error.' 
     }, { status: 500 });
   }
