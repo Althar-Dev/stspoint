@@ -17,6 +17,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import React from "react";
+import Link from "next/link";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 
@@ -65,7 +66,7 @@ export default function ClientFinancePage() {
                   Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}
                 </h2>
               )}
-              <p className="text-white/60 text-[10px] font-medium max-w-sm">
+              <p className="text-white/60 text-[10px] font-medium max-sm:max-w-full max-w-sm leading-relaxed">
                 This revenue originates from all successful transactions processed on your application.
               </p>
             </div>
