@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -34,7 +34,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
             Ringkasan <span className="text-primary">Toko</span>
           </h1>
           <p className="text-muted-foreground text-xs md:text-sm">
-            Pantau performa penjualan dan pendapatan website top-up Anda.
+            Pantau performa penjualan dan aktivitas website Anda.
           </p>
         </div>
       </div>
@@ -43,7 +43,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
         {/* Quick Stats Grid */}
         <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center group hover:border-primary/20 transition-all">
           <div className="flex items-center justify-between mb-4">
-             <div className="p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+             <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
                 <ShoppingCart className="w-5 h-5" />
              </div>
              <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
@@ -53,7 +53,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
         </Card>
         <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center group hover:border-primary/20 transition-all">
           <div className="flex items-center justify-between mb-4">
-             <div className="p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+             <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
                 <TrendingUp className="w-5 h-5" />
              </div>
              <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
