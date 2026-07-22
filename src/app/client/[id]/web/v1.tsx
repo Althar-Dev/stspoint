@@ -28,7 +28,7 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
   const { id: appId } = useParams();
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 w-full min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">
@@ -89,9 +89,9 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        <div className="lg:col-span-8 space-y-6">
-          <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 w-full min-w-0">
+        <div className="lg:col-span-8 space-y-6 min-w-0">
+          <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card w-full">
             <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
@@ -105,8 +105,8 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                   </Button>
                </div>
             </CardHeader>
-            <div className="w-full overflow-x-auto">
-               <div className="divide-y divide-border min-w-[500px]">
+            <div className="w-full overflow-x-auto block">
+               <div className="divide-y divide-border min-w-[600px]">
                   {[
                     { item: 'Diamond MLBB 86', status: 'Success', time: '2 menit lalu', amount: 'Rp 19.500' },
                     { item: 'Pulsa Telkomsel 10k', status: 'Success', time: '15 menit lalu', amount: 'Rp 10.250' },

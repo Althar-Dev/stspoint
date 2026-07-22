@@ -82,11 +82,9 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 1. Detect APP ID from URL segments
       const pathSegments = pathname.split('/');
       const idFromPath = pathSegments.length > 2 ? pathSegments[2] : null;
 
-      // 2. Synchronize Session
       if (idFromPath && !['orders', 'finance', 'settings'].includes(idFromPath)) {
         localStorage.setItem("sts_selected_app_id", idFromPath);
         setAppSelected(idFromPath);
@@ -94,7 +92,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         const storedId = localStorage.getItem("sts_selected_app_id");
         setAppSelected(storedId);
 
-        // 3. Kick to Hub only if no app context exists and we're trying to view nested app pages
         if (!storedId && !isSelectAppPage) {
           router.push("/client");
         }
@@ -129,7 +126,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   }
 
   if (isSelectAppPage) {
-    return <>{children}</>;
+    return <div className="w-full min-w-0">{children}</div>;
   }
 
   const selectedId = appSelected || "";
@@ -139,7 +136,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   }));
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
+    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       <Sidebar collapsible="icon" className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out">
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href={`/client/${selectedId}`} className="flex items-center gap-2 group shrink-0">
@@ -203,9 +200,9 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1 bg-background">
+      <SidebarInset className="flex flex-col flex-1 bg-background min-w-0">
         <MainHeader searchPlaceholder="Search order data..." />
-        <main className="flex-1 p-6 md:p-10">
+        <main className="flex-1 p-4 md:p-10 min-w-0 overflow-x-hidden">
           {children}
         </main>
       </SidebarInset>

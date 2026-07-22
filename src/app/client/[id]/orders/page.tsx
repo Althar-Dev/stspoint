@@ -41,7 +41,7 @@ export default function ClientOrdersPage() {
   );
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 w-full min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Riwayat <span className="text-primary">Pesanan</span></h1>
@@ -69,7 +69,7 @@ export default function ClientOrdersPage() {
         </Button>
       </div>
 
-      <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card">
+      <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card w-full">
         <CardHeader className="px-6 py-4 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
           <CardTitle className="text-[10px] font-bold flex items-center gap-2 uppercase tracking-[0.2em] text-muted-foreground">
             <History className="w-4 h-4 text-primary" />
@@ -77,9 +77,9 @@ export default function ClientOrdersPage() {
           </CardTitle>
         </CardHeader>
         
-        {/* Kontainer Utama Tabel Responsif */}
-        <div className="w-full overflow-x-auto relative">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+        {/* Kontainer Utama Tabel Responsif - Strict Horizontal Scroll */}
+        <div className="w-full overflow-x-auto block">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Pesanan</th>
