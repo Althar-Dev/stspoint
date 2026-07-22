@@ -38,8 +38,8 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Stats - Same style as V1 but spans more */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Quick Stats - Identik dengan V1 */}
         <Card className="border-border shadow-sm rounded-xl bg-card p-6 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-4">
              <div className="p-2.5 rounded-xl bg-primary/5 text-primary">
@@ -47,8 +47,8 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
              </div>
              <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
           </div>
-          <h4 className="text-2xl font-headline font-bold">842</h4>
-          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Total Aktivitas</p>
+          <h4 className="text-2xl font-headline font-bold">124</h4>
+          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
         </Card>
         <Card className="border-border shadow-sm rounded-xl bg-card p-6 flex flex-col justify-center">
           <div className="flex items-center justify-between mb-4">
@@ -57,13 +57,13 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
              </div>
              <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
           </div>
-          <h4 className="text-2xl font-headline font-bold">100%</h4>
-          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Status Layanan</p>
+          <h4 className="text-2xl font-headline font-bold">Rp 1.250.000</h4>
+          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Recent Activity Table - Identical to V1 */}
+        {/* Recent Activity Table - SEKARANG SAMA DENGAN V1 */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
             <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
@@ -74,7 +74,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
                   </CardTitle>
                   <Button asChild variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest hover:text-primary cursor-pointer h-8">
                     <Link href={`/client/${appId}/orders`}>
-                      Lihat Semua <ChevronRight className="w-3 h-3 ml-1" />
+                      Semua Pesanan <ChevronRight className="w-3 h-3 ml-1" />
                     </Link>
                   </Button>
                </div>
@@ -82,10 +82,10 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
             <CardContent className="p-0">
                <div className="divide-y divide-border">
                   {[
-                    { item: 'Akses API Terverifikasi', status: 'Success', time: '2 menit lalu', detail: 'Sesi Aktif' },
-                    { item: 'Pembaruan Konfigurasi', status: 'Success', time: '15 menit lalu', detail: 'SEO Updated' },
-                    { item: 'Validasi Lisensi', status: 'Success', time: '1 jam lalu', detail: 'Valid' },
-                    { item: 'Sync Database', status: 'Process', time: '3 jam lalu', detail: 'Indexing' },
+                    { item: 'Diamond MLBB 86', status: 'Success', time: '2 menit lalu', amount: 'Rp 19.500' },
+                    { item: 'Pulsa Telkomsel 10k', status: 'Success', time: '15 menit lalu', amount: 'Rp 10.250' },
+                    { item: 'PLN Token 50k', status: 'Process', time: '22 menit lalu', amount: 'Rp 50.000' },
+                    { item: 'Free Fire 70 Diamonds', status: 'Success', time: '1 jam lalu', amount: 'Rp 9.000' },
                   ].map((log, i) => (
                     <div key={i} className="px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
                        <div className="flex items-center gap-4">
@@ -96,7 +96,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
                           </div>
                        </div>
                        <div className="text-right whitespace-nowrap">
-                          <p className="text-sm font-bold text-primary">{log.detail}</p>
+                          <p className="text-sm font-bold text-primary">{log.amount}</p>
                           <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest">{log.status}</p>
                        </div>
                     </div>
@@ -106,7 +106,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
           </Card>
         </div>
 
-        {/* Sidebar Info - Identical to V1 */}
+        {/* Sidebar Info - Identik dengan V1 */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-border shadow-sm rounded-2xl bg-card p-8">
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
