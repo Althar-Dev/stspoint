@@ -12,9 +12,10 @@ import {
   Globe, 
   ShieldCheck, 
   Key, 
-  Building,
   LogOut,
-  Bot
+  Bot,
+  ShoppingBag,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,7 +91,7 @@ export default function SelectAppPage() {
       const appData = {
         id: appId,
         name: appName,
-        type: keyData.type || 'website',
+        type: keyData.type || 'website_topup',
         token: keyData.token || '',
         activationKey: activationKey.trim(),
         status: 'active',
@@ -123,6 +124,14 @@ export default function SelectAppPage() {
       window.location.href = "/signin";
     } catch (e) {
       window.location.reload();
+    }
+  };
+
+  const getAppTypeInfo = (type: string) => {
+    switch (type) {
+      case 'bot': return { label: 'Automation Bot', icon: Bot, color: 'text-purple-600', bg: 'bg-purple-500/5' };
+      case 'website_appprem': return { label: 'Premium App', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-500/5' };
+      default: return { label: 'Topup Store', icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-500/5' };
     }
   };
 
@@ -200,7 +209,7 @@ export default function SelectAppPage() {
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
                    <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      Licenses are <strong>One-Time Use</strong>. Once activated, the type (Web or Bot) and linked tokens will be assigned automatically.
+                      Licenses are <strong>One-Time Use</strong>. Once activated, the category (Topup, App Prem, or Bot) will be assigned automatically.
                    </p>
                 </div>
               </div>
@@ -230,30 +239,33 @@ export default function SelectAppPage() {
                 </CardContent>
               </Card>
             ))
-          ) : apps.map((app) => (
-            <button 
-              key={app.id} 
-              onClick={() => handleSelectApp(app.id)}
-              className="flex flex-col p-8 rounded-[2rem] border border-border bg-white shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all group text-left min-h-[220px]"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all">
-                {app.type === 'bot' ? <Bot className="w-7 h-7" /> : <Globe className="w-7 h-7" />}
-              </div>
-              <div className="space-y-2 flex-1">
-                <div className="flex items-center justify-between">
-                   <h3 className="font-bold text-lg truncate">{app.name}</h3>
-                   <Badge variant="outline" className="border-none text-[8px] uppercase font-bold text-muted-foreground/60">{app.type || 'Web'}</Badge>
+          ) : apps.map((app) => {
+            const typeInfo = getAppTypeInfo(app.type);
+            return (
+              <button 
+                key={app.id} 
+                onClick={() => handleSelectApp(app.id)}
+                className="flex flex-col p-8 rounded-[2rem] border border-border bg-white shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all group text-left min-h-[220px]"
+              >
+                <div className={`w-14 h-14 rounded-2xl ${typeInfo.bg} flex items-center justify-center ${typeInfo.color} mb-6 group-hover:bg-primary group-hover:text-white transition-all`}>
+                  <typeInfo.icon className="w-7 h-7" />
                 </div>
-                <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">ID: {app.id}</p>
-              </div>
-              <div className="pt-4 flex items-center justify-between">
-                 <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
-                 <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                   Manage <ChevronRight className="w-3 h-3" />
-                 </div>
-              </div>
-            </button>
-          ))}
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-lg truncate">{app.name}</h3>
+                    <Badge variant="outline" className="border-none text-[8px] uppercase font-bold text-muted-foreground/60">{typeInfo.label}</Badge>
+                  </div>
+                  <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">ID: {app.id}</p>
+                </div>
+                <div className="pt-4 flex items-center justify-between">
+                  <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
+                    Manage <ChevronRight className="w-3 h-3" />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </main>
 

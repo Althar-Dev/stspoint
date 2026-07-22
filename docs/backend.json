@@ -44,7 +44,7 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["website", "bot"] },
+        "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot"] },
         "token": { "type": "string" },
         "activationKey": { "type": "string" },
         "status": { "type": "string" },
@@ -125,7 +125,7 @@
       "properties": {
         "key": { "type": "string" },
         "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["website", "bot"] },
+        "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot"] },
         "token": { "type": "string" },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },

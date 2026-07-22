@@ -16,7 +16,9 @@ import {
   Globe,
   Bot,
   ShieldCheck,
-  Key as KeyIcon
+  Key as KeyIcon,
+  ShoppingBag,
+  Zap
 } from "lucide-react";
 import { 
   Dialog, 
@@ -46,7 +48,7 @@ export function AppKeyManagement() {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAppName, setNewAppName] = useState("");
-  const [appType, setAppType] = useState<"website" | "bot">("website");
+  const [appType, setAppType] = useState<"website_topup" | "website_appprem" | "bot">("website_topup");
   const [botToken, setBotToken] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -134,7 +136,7 @@ export function AppKeyManagement() {
             if (!open) { 
               setGeneratedKey(""); 
               setNewAppName(""); 
-              setAppType("website");
+              setAppType("website_topup");
               setBotToken("");
             }
           }}>
@@ -169,7 +171,8 @@ export function AppKeyManagement() {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
-                      <SelectItem value="website">Website Application</SelectItem>
+                      <SelectItem value="website_topup">Website (Topup)</SelectItem>
+                      <SelectItem value="website_appprem">Website (App Prem)</SelectItem>
                       <SelectItem value="bot">Automation Bot</SelectItem>
                     </SelectContent>
                   </Select>
@@ -295,9 +298,13 @@ export function AppKeyManagement() {
                             <Badge variant="outline" className="border-purple-500/20 text-purple-600 bg-purple-500/5 gap-1.5 h-6 rounded-md">
                                <Bot className="w-3 h-3" /> Bot
                             </Badge>
-                          ) : (
+                          ) : item.type === "website_topup" ? (
                             <Badge variant="outline" className="border-blue-500/20 text-blue-600 bg-blue-500/5 gap-1.5 h-6 rounded-md">
-                               <Globe className="w-3 h-3" /> Web
+                               <ShoppingBag className="w-3 h-3" /> Topup
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-amber-500/20 text-amber-600 bg-amber-500/5 gap-1.5 h-6 rounded-md">
+                               <Zap className="w-3 h-3" /> App Prem
                             </Badge>
                           )}
                        </div>
