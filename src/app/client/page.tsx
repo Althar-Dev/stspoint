@@ -96,6 +96,8 @@ export default function SelectAppPage() {
         token: keyData.token || '',
         mongoUser: keyData.mongoUser || '',
         mongoPass: keyData.mongoPass || '',
+        mongoDb: keyData.mongoDb || '',
+        mongoCol: keyData.mongoCol || '',
         activationKey: activationKey.trim(),
         status: 'active',
         createdAt: serverTimestamp()
@@ -171,66 +173,18 @@ export default function SelectAppPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Action: Activate New App */}
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <button className="flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border-2 border-dashed border-border bg-white hover:bg-muted/30 hover:border-primary/20 transition-all group min-h-[220px]">
-                <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <Plus className="w-7 h-7" />
-                </div>
-                <div className="space-y-1 text-center">
-                  <p className="font-bold text-sm">Activate New Application</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Use License Key</p>
-                </div>
-              </button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] border-border w-[92vw] sm:max-w-md p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-              <DialogHeader className="space-y-3">
-                <DialogTitle className="text-2xl font-headline font-bold">Start New Application</DialogTitle>
-                <DialogDescription className="text-xs">
-                  Enter the license key to permanently activate your partner website or bot in this account.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Friendly Name (Client Name)</Label>
-                  <Input 
-                    placeholder="e.g. MyStore Panel" 
-                    value={appName}
-                    onChange={(e) => setAppName(e.target.value)}
-                    className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Activation Key</Label>
-                  <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="STS-App_XXXX" 
-                      value={activationKey}
-                      onChange={(e) => setActivationKey(e.target.value)}
-                      className="h-12 pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono"
-                    />
-                  </div>
-                </div>
-                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
-                   <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                   <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      Licenses are <strong>One-Time Use</strong>. Once activated, the category and specialized credentials will be assigned automatically.
-                   </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  onClick={handleActivateApp} 
-                  disabled={isActivating || !activationKey || !appName}
-                  className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
-                >
-                  {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
-                  Activate Application
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border-2 border-dashed border-border bg-white hover:bg-muted/30 hover:border-primary/20 transition-all group min-h-[220px]"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+              <Plus className="w-7 h-7" />
+            </div>
+            <div className="space-y-1 text-center">
+              <p className="font-bold text-sm">Activate New Application</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Use License Key</p>
+            </div>
+          </button>
 
           {/* List: Existing Apps */}
           {appsLoading ? (
@@ -277,6 +231,56 @@ export default function SelectAppPage() {
           })}
         </div>
       </main>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="rounded-[2.5rem] border-border w-[92vw] sm:max-w-md p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-2xl font-headline font-bold">Start New Application</DialogTitle>
+            <DialogDescription className="text-xs">
+              Enter the license key to permanently activate your partner website or bot in this account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Friendly Name (Client Name)</Label>
+              <Input 
+                placeholder="e.g. MyStore Panel" 
+                value={appName}
+                onChange={(e) => setAppName(e.target.value)}
+                className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Activation Key</Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="STS-App_XXXX" 
+                  value={activationKey}
+                  onChange={(e) => setActivationKey(e.target.value)}
+                  className="h-12 pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono"
+                />
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+               <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+               <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
+                  Licenses are <strong>One-Time Use</strong>. Once activated, the category and specialized credentials will be assigned automatically.
+               </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={handleActivateApp} 
+              disabled={isActivating || !activationKey || !appName}
+              className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
+            >
+              {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
+              Activate Application
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <footer className="p-8 mt-auto opacity-20 text-center">
          <p className="text-[10px] font-bold uppercase tracking-[0.5em]">STSPoint Partner Ecosystem v2.0</p>

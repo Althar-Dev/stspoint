@@ -49,6 +49,8 @@
         "activationKey": { "type": "string" },
         "mongoUser": { "type": "string" },
         "mongoPass": { "type": "string" },
+        "mongoDb": { "type": "string" },
+        "mongoCol": { "type": "string" },
         "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
@@ -131,6 +133,8 @@
         "token": { "type": "string" },
         "mongoUser": { "type": "string" },
         "mongoPass": { "type": "string" },
+        "mongoDb": { "type": "string" },
+        "mongoCol": { "type": "string" },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
