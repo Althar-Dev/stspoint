@@ -24,7 +24,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeProvider } from "next-themes";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useMemo } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
@@ -69,6 +69,18 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   }, [db, user?.uid]);
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
+
+  // Fetch current app to check type for sidebar menu filtering
+  const appRef = useMemoFirebase(() => {
+    const storedId = typeof window !== 'undefined' ? localStorage.getItem("sts_selected_app_id") : null;
+    const pathSegments = pathname.split('/');
+    const idFromPath = pathSegments.length > 2 && !['orders', 'finance', 'settings'].includes(pathSegments[2]) ? pathSegments[2] : storedId;
+    
+    if (!db || !user?.uid || !idFromPath) return null;
+    return doc(db, "users", user.uid, "apps", idFromPath);
+  }, [db, user?.uid, pathname]);
+
+  const { data: currentApp } = useDoc(appRef);
 
   const isSelectAppPage = pathname === "/client";
 
@@ -117,6 +129,21 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const isAuthorized = profile?.role === 'client' || profile?.dev === true;
 
+  // Filter menu items: Hide Finance if app is website_appprem
+  const dynamicMenu = useMemo(() => {
+    const selectedId = appSelected || "";
+    let items = adminMenuItems;
+    
+    if (currentApp?.type === "website_appprem") {
+      items = items.filter(item => item.title !== "Finance");
+    }
+
+    return items.map(item => ({
+      ...item,
+      url: item.url === "/client" ? `/client/${selectedId}` : item.url.replace('/client/', `/client/${selectedId}/`)
+    }));
+  }, [appSelected, currentApp?.type]);
+
   if (authLoading || profileLoading || !user || !isAuthorized) {
     return (
       <div className="fixed top-0 left-0 right-0 z-[100] h-0.5 bg-muted overflow-hidden">
@@ -129,17 +156,11 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     return <div className="w-full min-w-0">{children}</div>;
   }
 
-  const selectedId = appSelected || "";
-  const dynamicMenu = adminMenuItems.map(item => ({
-    ...item,
-    url: item.url === "/client" ? `/client/${selectedId}` : item.url.replace('/client/', `/client/${selectedId}/`)
-  }));
-
   return (
     <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       <Sidebar collapsible="icon" className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out">
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
-          <Link href={`/client/${selectedId}`} className="flex items-center gap-2 group shrink-0">
+          <Link href={appSelected ? `/client/${appSelected}` : "/client"} className="flex items-center gap-2 group shrink-0">
             <Logo className="w-10 h-10 transition-transform group-hover:scale-105 shrink-0" />
             <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">
               PartnerPortal

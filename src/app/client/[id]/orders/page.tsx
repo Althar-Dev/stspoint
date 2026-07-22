@@ -13,7 +13,7 @@ import {
   Clock,
   XCircle,
   Download
-} from "lucide-react";
+} from "lucide-center";
 import React, { useState } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
@@ -69,7 +69,7 @@ export default function ClientOrdersPage() {
         </Button>
       </div>
 
-      <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card w-full">
+      <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card w-full min-w-0">
         <CardHeader className="px-6 py-4 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
           <CardTitle className="text-[10px] font-bold flex items-center gap-2 uppercase tracking-[0.2em] text-muted-foreground">
             <History className="w-4 h-4 text-primary" />
@@ -77,7 +77,6 @@ export default function ClientOrdersPage() {
           </CardTitle>
         </CardHeader>
         
-        {/* Kontainer Utama Tabel Responsif - Strict Horizontal Scroll */}
         <div className="w-full overflow-x-auto block">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
@@ -136,12 +135,6 @@ export default function ClientOrdersPage() {
           </table>
         </div>
       </Card>
-      
-      <div className="pt-4 text-center md:text-left">
-         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] opacity-40">
-           Partner Ledger System v2.0 • Real-time Data
-         </p>
-      </div>
     </div>
   );
 }
