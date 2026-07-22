@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -227,7 +226,7 @@ export function AppKeyManagement() {
                         <Input 
                           placeholder="Technical name for Mongo URI" 
                           value={mongoAppName} 
-                          onChange={(e) => setMongoAppName(e.target.value.toLowerCase())}
+                          onChange={(e) => setMongoAppName(e.target.value)}
                           className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
                         />
                       </div>

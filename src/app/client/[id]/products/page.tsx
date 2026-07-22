@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,17 +67,17 @@ export default function ClientProductsPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 w-full">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Cari SKU, Nama Produk, atau Brand..." 
-            className="pl-10 rounded-md border-border bg-card h-10 text-sm shadow-sm"
+            className="pl-10 rounded-md border-border bg-card h-10 text-sm shadow-sm w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 shrink-0">
           <Button 
             variant={category === 'all' ? 'default' : 'outline'} 
             size="sm" 

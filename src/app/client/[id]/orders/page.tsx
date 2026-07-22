@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,7 +79,7 @@ export default function ClientOrdersPage() {
           </CardTitle>
         </CardHeader>
         
-        <div className="w-full overflow-x-auto block custom-scrollbar">
+        <div className="w-full overflow-x-auto block">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
