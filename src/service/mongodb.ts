@@ -40,32 +40,17 @@ export async function getMongoProducts(userId: string, appId: string) {
     const mongoProducts = await collection.find({}).toArray();
     await client.close();
 
-    const mappedData: any[] = [];
-    
-    mongoProducts.forEach((p: any) => {
-      // Structure: Each product has a 'packages' array (the actual buyable items)
-      if (p.packages && Array.isArray(p.packages)) {
-        p.packages.forEach((pkg: any) => {
-          mappedData.push({
-            buyer_sku_code: pkg.id || `${p.id}-${pkg.name.substring(0, 3)}`,
-            product_name: pkg.name,
-            category: p.product || p.id || "Unknown Product",
-            brand: p.category || "App Prem",
-            type: "Digital",
-            price: pkg.price || 0,
-            buyer_product_status: (pkg.stock && pkg.stock.length > 0),
-            seller_product_status: true,
-            desc: p.description || "",
-            provider: "MongoDB"
-          });
-        });
-      }
-    });
+    // Map data to ensure serializable IDs
+    const serializedData = mongoProducts.map(p => ({
+      ...p,
+      _id: p._id.toString(),
+      provider: "MongoDB"
+    }));
 
     return { 
       success: true, 
-      data: mappedData,
-      message: `Berhasil mengambil ${mappedData.length} layanan dari MongoDB.`
+      data: serializedData,
+      message: `Berhasil mengambil ${serializedData.length} produk dari MongoDB.`
     };
   } catch (error: any) {
     console.error("MongoDB Bridge Error:", error);

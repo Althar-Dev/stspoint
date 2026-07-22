@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
-  Package, 
   RefreshCcw,
   Tag,
   Database,
-  Cloud
+  Cloud,
+  Star,
+  ShoppingBag,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+  Package,
+  Layers,
+  ArrowRight,
+  Info,
+  ExternalLink,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { getOrderkuotaPPOBPricelist, type OrkutPPOBProduct } from "@/service/orderkuota";
@@ -20,15 +33,20 @@ import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { cn } from "@/lib/utils";
 
 export default function ClientProductsPage() {
   const params = useParams();
   const { user } = useUser();
   const db = useFirestore();
-  const [products, setProducts] = useState<OrkutPPOBProduct[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+
+  // Pagination for large datasets (PPOB)
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 24;
 
   const appId = params.id as string;
 
@@ -48,7 +66,6 @@ export default function ClientProductsPage() {
         const res = await getMongoProducts(user!.uid, appId);
         if (res.success) {
           setProducts(res.data);
-          // Success toast removed as requested
         } else {
           toast({ variant: "destructive", title: "MongoDB Error", description: res.message });
         }
@@ -73,19 +90,127 @@ export default function ClientProductsPage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchesSearch = p.product_name.toLowerCase().includes(search.toLowerCase()) || 
-                           p.buyer_sku_code.toLowerCase().includes(search.toLowerCase()) ||
-                           p.brand.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = category === "all" || p.category.toLowerCase().includes(category.toLowerCase());
+      const name = (p.product_name || p.product || "").toLowerCase();
+      const sku = (p.buyer_sku_code || p.id || "").toLowerCase();
+      const brand = (p.brand || "").toLowerCase();
+      const s = search.toLowerCase();
+      
+      const matchesSearch = name.includes(s) || sku.includes(s) || brand.includes(s);
+      const matchesCategory = category === "all" || (p.category || "").toLowerCase().includes(category.toLowerCase());
+      
       return matchesSearch && matchesCategory;
     });
   }, [products, search, category]);
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
   const categories = useMemo(() => {
     const cats = new Set<string>();
-    products.forEach(p => cats.add(p.category));
+    products.forEach(p => { if (p.category) cats.add(p.category); });
     return Array.from(cats).sort();
   }, [products]);
+
+  // UI Helper: Web App Prem Card
+  const MongoProductCard = ({ product }: { product: any }) => (
+    <Card className="group border-border shadow-sm rounded-3xl overflow-hidden bg-card hover:border-primary/20 transition-all flex flex-col h-full">
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+         {product.imageUrl ? (
+           <img src={product.imageUrl} alt={product.product} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+         ) : (
+           <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
+              <Package className="w-12 h-12" />
+           </div>
+         )}
+         <div className="absolute top-4 left-4 flex gap-2">
+            <Badge className="bg-black/60 backdrop-blur-md border-none text-[8px] font-bold uppercase tracking-widest text-white">{product.category}</Badge>
+         </div>
+         {product.rating && (
+           <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+             <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+             <span className="text-[10px] font-bold">{product.rating}</span>
+           </div>
+         )}
+      </div>
+      <CardContent className="p-6 space-y-4 flex-1 flex flex-col">
+         <div className="space-y-1">
+            <h3 className="font-headline font-bold text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">{product.product}</h3>
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
+               <span className="flex items-center gap-1"><ShoppingBag className="w-3 h-3" /> {product.sold || 0} Terjual</span>
+               <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString('id-ID') : 'N/A'}</span>
+            </div>
+         </div>
+         
+         <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{product.description}</p>
+
+         <div className="space-y-2 pt-2 flex-1">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">Pilihan Paket:</p>
+            <div className="space-y-2">
+               {product.packages?.map((pkg: any) => (
+                 <div key={pkg.id} className="p-3 rounded-xl bg-muted/30 border border-border flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <div className="min-w-0">
+                       <p className="text-xs font-bold truncate">{pkg.name}</p>
+                       <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-tighter flex items-center gap-1">
+                         <CheckCircle2 className="w-2.5 h-2.5" /> Stok: {pkg.stock?.length || 0}
+                       </p>
+                    </div>
+                    <div className="text-right shrink-0 ml-4">
+                       <p className="text-xs font-bold text-primary">Rp {pkg.price?.toLocaleString('id-ID')}</p>
+                    </div>
+                 </div>
+               ))}
+            </div>
+         </div>
+         
+         <div className="pt-4 mt-auto border-t border-border flex items-center justify-between">
+            <span className="text-[9px] font-mono text-muted-foreground/40 uppercase">ID: {product.id}</span>
+            <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold uppercase tracking-widest gap-1 hover:text-primary">
+               Edit Detail <ChevronRight className="w-3 h-3" />
+            </Button>
+         </div>
+      </CardContent>
+    </Card>
+  );
+
+  // UI Helper: Flat PPOB Card
+  const FlatProductCard = ({ p }: { p: any }) => (
+    <Card className="group border-border shadow-sm rounded-2xl overflow-hidden bg-card hover:border-primary/20 transition-all shadow-none">
+      <CardContent className="p-5 space-y-3">
+         <div className="flex items-start justify-between">
+            <div className="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+               <Layers className="w-4.5 h-4.5" />
+            </div>
+            <Badge className={cn(
+              "border-none text-[8px] font-bold uppercase px-2 h-5 rounded-md",
+              p.buyer_product_status ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+            )}>
+              {p.buyer_product_status ? 'Active' : 'Offline'}
+            </Badge>
+         </div>
+
+         <div className="space-y-0.5">
+            <h4 className="font-bold text-xs truncate leading-snug">{p.product_name}</h4>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold flex items-center gap-1">
+               <Tag className="w-2.5 h-2.5" /> {p.brand}
+            </p>
+         </div>
+
+         <div className="pt-2 border-t border-border flex items-center justify-between">
+            <div className="space-y-0.5">
+               <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Harga Jual</p>
+               <p className="text-xs font-bold text-primary">Rp {(p.price || 0).toLocaleString('id-ID')}</p>
+            </div>
+            <div className="text-right">
+               <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">SKU</p>
+               <p className="text-[9px] font-mono font-bold text-foreground/40">{p.buyer_sku_code}</p>
+            </div>
+         </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 w-full min-w-0">
@@ -95,7 +220,7 @@ export default function ClientProductsPage() {
             <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Katalog <span className="text-primary">Produk</span></h1>
             {app?.type === 'website_appprem' && (
               <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[9px] font-bold uppercase h-5 px-2">
-                <Cloud className="w-3 h-3 mr-1" /> MongoDB
+                <Cloud className="w-3 h-3 mr-1" /> MongoDB Live
               </Badge>
             )}
           </div>
@@ -113,14 +238,17 @@ export default function ClientProductsPage() {
             placeholder="Cari SKU, Nama Produk, atau Brand..." 
             className="pl-10 rounded-md border-border bg-card h-10 text-sm shadow-sm w-full"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 shrink-0">
           <Button 
             variant={category === 'all' ? 'default' : 'outline'} 
             size="sm" 
-            onClick={() => setCategory('all')}
+            onClick={() => { setCategory('all'); setCurrentPage(1); }}
             className="rounded-md h-10 px-4 text-xs font-bold shrink-0"
           >
             Semua
@@ -130,7 +258,7 @@ export default function ClientProductsPage() {
               key={cat}
               variant={category === cat ? 'default' : 'outline'} 
               size="sm" 
-              onClick={() => setCategory(cat)}
+              onClick={() => { setCategory(cat); setCurrentPage(1); }}
               className="rounded-md h-10 px-4 text-xs font-bold shrink-0"
             >
               {cat}
@@ -139,70 +267,60 @@ export default function ClientProductsPage() {
         </div>
       </div>
 
-      <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card w-full min-w-0">
-        <CardHeader className="px-6 py-4 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-          <CardTitle className="text-[10px] font-bold flex items-center gap-2 uppercase tracking-[0.2em] text-muted-foreground">
-            {app?.type === 'website_appprem' ? <Database className="w-4 h-4 text-primary" /> : <Package className="w-4 h-4 text-primary" />}
-            {app?.type === 'website_appprem' ? "Master Mongo Database" : "Master Product List"}
-          </CardTitle>
-        </CardHeader>
-        
-        <div className="w-full overflow-x-auto block">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">SKU Produk</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Nama Produk & Brand</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Kategori</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Tipe</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap text-right">Harga Jual</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center whitespace-nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i}><td colSpan={6} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
-                ))
-              ) : filteredProducts.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-24 text-center text-muted-foreground italic text-xs">Produk tidak ditemukan.</td></tr>
-              ) : (
-                filteredProducts.map((prod) => (
-                  <tr key={`${prod.buyer_sku_code}-${prod.provider}`} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap uppercase tracking-tighter">
-                      {prod.buyer_sku_code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-bold text-xs truncate max-w-[250px]">{prod.product_name}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold flex items-center gap-1">
-                        <Tag className="w-2.5 h-2.5" /> {prod.brand}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="secondary" className="bg-primary/5 text-primary border-none text-[8px] font-bold uppercase px-2 py-0.5 rounded-sm">
-                        {prod.category}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-[10px] font-medium text-muted-foreground">{prod.type}</span>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-primary text-xs whitespace-nowrap text-right">
-                      Rp {(prod.price || 0).toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Badge className={`rounded-md border-none text-[8px] font-bold uppercase px-2 py-0.5 h-5 shadow-sm ${
-                        prod.buyer_product_status ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'
-                      }`}>
-                        {prod.buyer_product_status ? 'Active' : 'Offline'}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 w-full rounded-3xl" />
+          ))}
         </div>
-      </Card>
+      ) : filteredProducts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center opacity-20">
+              <Package className="w-8 h-8" />
+           </div>
+           <p className="text-sm font-medium text-muted-foreground italic">Produk tidak ditemukan atau katalog masih kosong.</p>
+        </div>
+      ) : app?.type === 'website_appprem' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+           {filteredProducts.map((product) => (
+             <MongoProductCard key={product.id || product._id} product={product} />
+           ))}
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+             {paginatedProducts.map((p) => (
+               <FlatProductCard key={`${p.buyer_sku_code}-${p.provider}`} p={p} />
+             ))}
+          </div>
+
+          {/* Pagination for PPOB */}
+          {totalPages > 1 && (
+            <div className="px-4 py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Showing <span className="text-foreground">{startRange}</span> to <span className="text-foreground">{endRange}</span> of <span className="text-foreground">{filteredProducts.length.toLocaleString()}</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-md bg-background" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                  <ChevronsLeft className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-md bg-background" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <div className="px-4 h-8 flex items-center justify-center bg-background border border-border rounded-md min-w-[80px]">
+                  <span className="text-[10px] font-bold">Page {currentPage} of {totalPages}</span>
+                </div>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-md bg-background" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8 rounded-md bg-background" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                  <ChevronsRight className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
