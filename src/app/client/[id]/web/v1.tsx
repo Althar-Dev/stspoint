@@ -9,11 +9,13 @@ import {
   ShoppingCart, 
   History,
   ChevronRight,
-  Users,
-  ArrowUpRight
+  TrendingUp,
+  ArrowUpRight,
+  Package
 } from "lucide-react";
 import React from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 interface V1DashboardProps {
   profile: any;
@@ -22,83 +24,85 @@ interface V1DashboardProps {
 }
 
 export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps) {
+  const { id: appId } = useParams();
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-headline font-bold tracking-tight">
-            Store <span className="text-primary">Overview</span>
+            Ringkasan <span className="text-primary">Toko</span>
           </h1>
           <p className="text-muted-foreground text-sm">
-            Welcome back, {profile?.name || "Admin"}. Monitor your store performance today.
+            Pantau performa penjualan dan pendapatan website top-up Anda.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-1 border-none shadow-xl shadow-amber-500/20 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 text-white rounded-md overflow-hidden relative group">
+        {/* Revenue Card */}
+        <Card className="lg:col-span-1 border-none shadow-xl shadow-amber-500/10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white rounded-2xl overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-8 space-y-6 relative z-10 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                <div className="space-y-1">
-                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Store Revenue (STSPay)</p>
+                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Pendapatan Toko</p>
                  {isLoading ? <Skeleton className="h-10 w-32 bg-white/20" /> : (
                    <h2 className="text-3xl font-headline font-bold">
                      Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}
                    </h2>
                  )}
                </div>
-               <div className="w-12 h-12 rounded-md bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
+               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
                  <Wallet className="w-6 h-6 text-white" />
                </div>
             </div>
             <div className="flex gap-2">
-              <Button asChild className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-md h-11 text-xs uppercase tracking-wider border-none">
-                <Link href="/client/finance">Withdraw</Link>
-              </Button>
-              <Button variant="outline" className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold rounded-md h-11 text-xs uppercase tracking-wider">
-                Reports
+              <Button asChild className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-lg h-10 text-[10px] uppercase tracking-wider border-none shadow-lg shadow-black/5">
+                <Link href={`/client/${appId}/finance`}>Tarik Dana</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
+        {/* Quick Stats */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-           <Card className="border-border shadow-sm rounded-md bg-card p-6">
+           <Card className="border-border shadow-sm rounded-xl bg-card p-6 flex flex-col justify-center">
               <div className="flex items-center justify-between mb-4">
-                 <div className="p-2 rounded-md bg-primary/5 text-primary">
+                 <div className="p-2.5 rounded-xl bg-primary/5 text-primary">
                     <ShoppingCart className="w-5 h-5" />
                  </div>
-                 <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-md">+5.2%</span>
+                 <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
               </div>
-              <h4 className="text-2xl font-headline font-bold">428</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Successful Orders</p>
+              <h4 className="text-2xl font-headline font-bold">124</h4>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
            </Card>
-           <Card className="border-border shadow-sm rounded-md bg-card p-6">
+           <Card className="border-border shadow-sm rounded-xl bg-card p-6 flex flex-col justify-center">
               <div className="flex items-center justify-between mb-4">
-                 <div className="p-2 rounded-md bg-primary/5 text-primary">
-                    <Users className="w-5 h-5" />
+                 <div className="p-2.5 rounded-xl bg-primary/5 text-primary">
+                    <TrendingUp className="w-5 h-5" />
                  </div>
-                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Today</span>
+                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
               </div>
-              <h4 className="text-2xl font-headline font-bold">1,024</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Web Visitors</p>
+              <h4 className="text-2xl font-headline font-bold">Rp 1.250.000</h4>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
            </Card>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Recent Orders Table */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border-border shadow-sm rounded-md overflow-hidden bg-card">
+          <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
             <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                     <History className="w-4 h-4 text-primary" />
-                    Recent Orders
+                    Aktivitas Terbaru
                   </CardTitle>
-                  <Button asChild variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest hover:text-primary cursor-pointer">
-                    <Link href="/client/orders">
-                      All Orders <ChevronRight className="w-3 h-3 ml-1" />
+                  <Button asChild variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest hover:text-primary cursor-pointer h-8">
+                    <Link href={`/client/${appId}/orders`}>
+                      Semua Pesanan <ChevronRight className="w-3 h-3 ml-1" />
                     </Link>
                   </Button>
                </div>
@@ -106,24 +110,22 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
             <CardContent className="p-0">
                <div className="divide-y divide-border">
                   {[
-                    { item: 'Diamond MLBB', status: 'Success', time: '2 mins ago', amount: 'Rp 15.000' },
-                    { item: 'Pulsa Telkomsel', status: 'Success', time: '12 mins ago', amount: 'Rp 10.250' },
-                    { item: 'PLN Token', status: 'Process', time: '25 mins ago', amount: 'Rp 50.000' },
-                    { item: 'Diamond Free Fire', status: 'Success', time: '1 hour ago', amount: 'Rp 20.000' },
+                    { item: 'Diamond MLBB 86', status: 'Success', time: '2 menit lalu', amount: 'Rp 19.500' },
+                    { item: 'Pulsa Telkomsel 10k', status: 'Success', time: '15 menit lalu', amount: 'Rp 10.250' },
+                    { item: 'PLN Token 50k', status: 'Process', time: '22 menit lalu', amount: 'Rp 50.000' },
+                    { item: 'Free Fire 70 Diamonds', status: 'Success', time: '1 jam lalu', amount: 'Rp 9.000' },
                   ].map((log, i) => (
-                    <div key={i} className="px-8 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                    <div key={i} className="px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
                        <div className="flex items-center gap-4">
-                          <div className={`w-2 h-2 rounded-full ${log.status === 'Success' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
-                          <div>
-                             <p className="text-xs font-bold">{log.item}</p>
-                             <p className="text-[10px] text-muted-foreground">{log.time}</p>
+                          <div className={`w-2 h-2 rounded-full ${log.status === 'Success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'}`}></div>
+                          <div className="min-w-0">
+                             <p className="text-sm font-bold truncate max-w-[200px]">{log.item}</p>
+                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{log.time}</p>
                           </div>
                        </div>
-                       <div className="text-right">
-                          <p className="text-xs font-bold text-primary">{log.amount}</p>
-                          <Badge variant="outline" className="border-none text-[8px] font-bold uppercase text-muted-foreground/60 p-0 h-auto">
-                            {log.status}
-                          </Badge>
+                       <div className="text-right whitespace-nowrap">
+                          <p className="text-sm font-bold text-primary">{log.amount}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest">{log.status}</p>
                        </div>
                     </div>
                   ))}
@@ -132,25 +134,42 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
           </Card>
         </div>
 
+        {/* Sidebar Info */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-border shadow-sm rounded-md bg-card p-8">
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Support & Quick Links</h4>
+          <Card className="border-border shadow-sm rounded-2xl bg-card p-8">
+            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
             <div className="space-y-4">
                {[
-                 { label: 'Merchant Documentation', icon: ArrowUpRight },
-                 { label: 'Technical Support', icon: ArrowUpRight },
+                 { label: 'Panduan Merchant', icon: FileTextIcon },
+                 { label: 'Hubungi Support', icon: HeadphonesIcon },
                ].map((item, i) => (
-                 <button key={i} className="w-full flex items-center justify-between p-4 rounded-md bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left">
+                 <button key={i} className="w-full flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left">
                     <div className="flex items-center gap-3">
                        <item.icon className="w-4 h-4 text-primary" />
                        <span className="text-xs font-bold text-foreground/80">{item.label}</span>
                     </div>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                  </button>
                ))}
+            </div>
+            <div className="mt-8 p-5 rounded-2xl bg-primary/5 border border-primary/10">
+               <p className="text-[10px] text-primary font-bold uppercase mb-1.5 flex items-center gap-2">
+                 <ShieldCheck className="w-3.5 h-3.5" />
+                 Sistem Terverifikasi
+               </p>
+               <p className="text-[10px] text-muted-foreground leading-relaxed">Website Anda menggunakan infrastruktur STS v2.0 yang stabil dan aman.</p>
             </div>
           </Card>
         </div>
       </div>
     </div>
   );
+}
+
+function FileTextIcon(props: any) {
+  return <Package {...props} />
+}
+
+function HeadphonesIcon(props: any) {
+  return <TrendingUp {...props} />
 }
