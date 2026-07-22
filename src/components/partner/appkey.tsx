@@ -21,7 +21,8 @@ import {
   Zap,
   Database,
   Lock,
-  Table as TableIcon
+  Table as TableIcon,
+  User as UserIcon
 } from "lucide-react";
 import { 
   Dialog, 
@@ -216,7 +217,7 @@ export function AppKeyManagement() {
                 {appType === "website_appprem" && (
                   <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Connection Info</Label>
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Source (Database & Col)</Label>
                       <div className="grid grid-cols-2 gap-3">
                          <div className="relative">
                             <Database className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

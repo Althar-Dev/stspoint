@@ -45,8 +45,10 @@ export default function ClientOrdersPage() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 w-full min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Riwayat <span className="text-primary">Pesanan</span></h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Kelola dan pantau semua transaksi pelanggan di website Anda.</p>
+          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground text-center md:text-left">
+            Riwayat <span className="text-primary">Pesanan</span>
+          </h1>
+          <p className="text-muted-foreground text-xs md:text-sm text-center md:text-left">Kelola dan pantau semua transaksi pelanggan di website Anda.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="w-full md:w-auto rounded-md font-bold text-[10px] uppercase tracking-wider h-9 shadow-sm">
@@ -55,17 +57,17 @@ export default function ClientOrdersPage() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 w-full">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder="Cari ID Pesanan atau Produk..." 
-            className="pl-10 rounded-md border-border bg-card h-10 text-sm shadow-sm"
+            className="pl-10 rounded-md border-border bg-card h-10 text-sm shadow-sm w-full"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="rounded-md h-10 px-4 gap-2 font-bold text-xs shrink-0 bg-card border-border shadow-sm">
+        <Button variant="outline" className="rounded-md h-10 px-4 gap-2 font-bold text-xs shrink-0 bg-card border-border shadow-sm w-full sm:w-auto">
           <Calendar className="w-4 h-4" /> Pilih Tanggal
         </Button>
       </div>
@@ -78,7 +80,7 @@ export default function ClientOrdersPage() {
           </CardTitle>
         </CardHeader>
         
-        <div className="w-full overflow-x-auto block">
+        <div className="w-full overflow-x-auto block custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
