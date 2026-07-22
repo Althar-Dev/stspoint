@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -43,6 +44,8 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["website", "bot"] },
+        "token": { "type": "string" },
         "activationKey": { "type": "string" },
         "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
@@ -122,6 +125,8 @@
       "properties": {
         "key": { "type": "string" },
         "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["website", "bot"] },
+        "token": { "type": "string" },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
@@ -155,7 +160,7 @@
     },
     "/users/{userId}/notifications/{notificationId}": {
       "schema": "Notification",
-      "description": "Sub-koleksi notifikasi masuk untuk pengguna."
+      "description": "Pesan sistem untuk pengguna."
     },
     "/users/{userId}/apps/{appId}": {
       "schema": "AppInstance",
@@ -163,7 +168,7 @@
     },
     "/users/{userId}/services/{serviceId}": {
       "schema": "ServiceConfig",
-      "description": "Sub-koleksi untuk menyimpan data provider (digiflazz, orderkuota, gomerchant)."
+      "description": "Sub-koleksi untuk menyimpan data provider."
     },
     "/users/{userId}/ai/{configId}": {
       "schema": "AiConfig",
@@ -171,23 +176,23 @@
     },
     "/stspay_transactions/{transactionId}": {
       "schema": "STSPayTransaction",
-      "description": "Koleksi global transaksi pembayaran STSPay untuk akses publik yang mudah."
+      "description": "Koleksi global transaksi pembayaran STSPay."
     },
     "/transactions/{transactionId}": {
       "schema": "Transaction",
-      "description": "Public records of successful top-ups for the ledger."
+      "description": "Catatan publik transaksi untuk ledger."
     },
     "/Client_Keys/{keyId}": {
       "schema": "LicenseKey",
-      "description": "Storage for registration keys/licenses."
+      "description": "Penyimpanan kunci registrasi klien."
     },
     "/Application_Keys/{keyId}": {
       "schema": "LicenseKey",
-      "description": "Storage for application activation keys."
+      "description": "Penyimpanan kunci aktivasi aplikasi."
     },
     "/payment_channels/{channelId}": {
       "schema": "PaymentChannel",
-      "description": "Global payment channel registry."
+      "description": "Registri kanal pembayaran global."
     }
   }
 }

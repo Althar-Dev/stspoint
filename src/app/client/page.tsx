@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,7 +13,8 @@ import {
   ShieldCheck, 
   Key, 
   Building,
-  LogOut
+  LogOut,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,7 +77,9 @@ export default function SelectAppPage() {
         throw new Error("Invalid Activation Key.");
       }
 
-      if (keySnap.data().status === 'used') {
+      const keyData = keySnap.data();
+
+      if (keyData.status === 'used') {
         throw new Error("This Activation Key has already been used.");
       }
 
@@ -86,6 +90,8 @@ export default function SelectAppPage() {
       const appData = {
         id: appId,
         name: appName,
+        type: keyData.type || 'website',
+        token: keyData.token || '',
         activationKey: activationKey.trim(),
         status: 'active',
         createdAt: serverTimestamp()
@@ -166,12 +172,12 @@ export default function SelectAppPage() {
               <DialogHeader className="space-y-3">
                 <DialogTitle className="text-2xl font-headline font-bold">Start New Application</DialogTitle>
                 <DialogDescription className="text-xs">
-                  Enter the license key to permanently activate your partner website in this account.
+                  Enter the license key to permanently activate your partner website or bot in this account.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Website / Client Name</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Friendly Name (Client Name)</Label>
                   <Input 
                     placeholder="e.g. MyStore Panel" 
                     value={appName}
@@ -194,7 +200,7 @@ export default function SelectAppPage() {
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
                    <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      Licenses are <strong>One-Time Use</strong>. Once successfully activated, the application will appear in your list permanently.
+                      Licenses are <strong>One-Time Use</strong>. Once activated, the type (Web or Bot) and linked tokens will be assigned automatically.
                    </p>
                 </div>
               </div>
@@ -204,7 +210,7 @@ export default function SelectAppPage() {
                   disabled={isActivating || !activationKey || !appName}
                   className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
                 >
-                  {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-4 h-4 mr-2" />}
+                  {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
                   Activate Application
                 </Button>
               </DialogFooter>
@@ -231,10 +237,13 @@ export default function SelectAppPage() {
               className="flex flex-col p-8 rounded-[2rem] border border-border bg-white shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all group text-left min-h-[220px]"
             >
               <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all">
-                <Building className="w-7 h-7" />
+                {app.type === 'bot' ? <Bot className="w-7 h-7" /> : <Globe className="w-7 h-7" />}
               </div>
               <div className="space-y-2 flex-1">
-                <h3 className="font-bold text-lg truncate">{app.name}</h3>
+                <div className="flex items-center justify-between">
+                   <h3 className="font-bold text-lg truncate">{app.name}</h3>
+                   <Badge variant="outline" className="border-none text-[8px] uppercase font-bold text-muted-foreground/60">{app.type || 'Web'}</Badge>
+                </div>
                 <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">ID: {app.id}</p>
               </div>
               <div className="pt-4 flex items-center justify-between">

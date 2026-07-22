@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -7,12 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
-  Ticket, 
   Plus, 
   Copy, 
   Search, 
   Loader2, 
-  Layout 
+  Layout,
+  Globe,
+  Bot,
+  ShieldCheck,
+  Key as KeyIcon
 } from "lucide-react";
 import { 
   Dialog, 
@@ -23,6 +27,13 @@ import {
   DialogFooter,
   DialogDescription
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -35,6 +46,8 @@ export function AppKeyManagement() {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAppName, setNewAppName] = useState("");
+  const [appType, setAppType] = useState<"website" | "bot">("website");
+  const [botToken, setBotToken] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -69,6 +82,11 @@ export function AppKeyManagement() {
       return;
     }
 
+    if (appType === "bot" && !botToken) {
+      toast({ variant: "destructive", title: "Token Required", description: "Bots must have an access token." });
+      return;
+    }
+
     setIsGenerating(true);
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let randomPart = '';
@@ -80,6 +98,8 @@ export function AppKeyManagement() {
     const keyData = {
       key: key,
       name: newAppName,
+      type: appType,
+      token: appType === "bot" ? botToken.trim() : "",
       status: 'unused',
       createdAt: serverTimestamp(),
     };
@@ -111,64 +131,117 @@ export function AppKeyManagement() {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open);
-            if (!open) { setGeneratedKey(""); setNewAppName(""); }
+            if (!open) { 
+              setGeneratedKey(""); 
+              setNewAppName(""); 
+              setAppType("website");
+              setBotToken("");
+            }
           }}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-md px-6 gap-2 border-none">
+              <Button className="w-full sm:w-auto h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-md px-6 gap-2 border-none shadow-lg shadow-blue-600/20">
                 <Plus className="w-3.5 h-3.5" />
                 Generate Activation Key
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[94%] sm:max-w-[425px] rounded-xl border-border p-6">
-              <DialogHeader>
-                <DialogTitle className="font-headline font-bold">New Application Key</DialogTitle>
+            <DialogContent className="w-[94%] sm:max-w-[425px] rounded-[2rem] border-border p-8 max-h-[90vh] overflow-y-auto">
+              <DialogHeader className="space-y-2">
+                <DialogTitle className="font-headline font-bold text-2xl">New Application Key</DialogTitle>
                 <DialogDescription className="text-xs">
                   Create an activation key for a partner to launch their app instance.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-6 py-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Assigned Application Name</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Application Name</Label>
                   <Input 
                     placeholder="e.g. MyStore Panel" 
                     value={newAppName} 
                     onChange={(e) => setNewAppName(e.target.value)}
-                    className="rounded-md h-12 focus:ring-primary/20"
+                    className="rounded-xl h-12 focus:ring-primary/20 bg-muted/30 border-transparent"
                   />
                 </div>
-                {generatedKey && (
-                  <div className="p-4 rounded-md bg-blue-500/5 border border-blue-500/20 space-y-2 animate-in zoom-in-95 duration-300">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Activation Key:</p>
-                    <div className="flex items-center justify-between gap-2">
-                      <code className="text-sm font-mono font-bold text-foreground break-all">{generatedKey}</code>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 rounded-md hover:bg-blue-500/10 shrink-0"
-                        onClick={() => copyToClipboard(generatedKey, "Activation Key")}
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </Button>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Application Type</Label>
+                  <Select value={appType} onValueChange={(v: any) => setAppType(v)}>
+                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-transparent">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="website">Website Application</SelectItem>
+                      <SelectItem value="bot">Automation Bot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {appType === "bot" && (
+                  <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Access Token</Label>
+                    <div className="relative">
+                      <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Bot Token (e.g. 7329xxxx)" 
+                        value={botToken} 
+                        onChange={(e) => setBotToken(e.target.value)}
+                        className="rounded-xl h-12 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                      />
                     </div>
+                  </div>
+                )}
+
+                {generatedKey && (
+                  <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-3 animate-in zoom-in-95 duration-300">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-600">Generated Activation Key:</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <code className="text-xs font-mono font-bold text-foreground break-all">{generatedKey}</code>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-md hover:bg-blue-500/10 shrink-0"
+                          onClick={() => copyToClipboard(generatedKey, "Activation Key")}
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    {appType === "bot" && (
+                       <div className="space-y-1 border-t border-blue-500/10 pt-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-600">Linked Token:</p>
+                          <div className="flex items-center justify-between gap-2">
+                            <code className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">{botToken}</code>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 rounded-md hover:bg-blue-500/10 shrink-0"
+                              onClick={() => copyToClipboard(botToken, "Bot Token")}
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                       </div>
+                    )}
                   </div>
                 )}
               </div>
               <DialogFooter>
                 {!generatedKey ? (
                   <Button 
-                    className="w-full h-11 rounded-md font-bold"
+                    className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
                     onClick={handleGenerateKey}
-                    disabled={isGenerating || !newAppName}
+                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken)}
                   >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Generate App Key"}
+                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
+                    Create {appType === 'bot' ? 'Bot' : 'Web'} Key
                   </Button>
                 ) : (
                   <Button 
                     variant="outline"
-                    className="w-full h-11 rounded-md font-bold"
+                    className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] border-border"
                     onClick={() => setIsDialogOpen(false)}
                   >
-                    Finished
+                    Close Dialog
                   </Button>
                 )}
               </DialogFooter>
@@ -178,7 +251,7 @@ export function AppKeyManagement() {
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input 
-              className="pl-9 rounded-md h-11 bg-card border-border focus:ring-primary/20 text-xs" 
+              className="pl-9 rounded-md h-11 bg-card border-border focus:ring-primary/20 text-xs shadow-sm" 
               placeholder="Search app keys..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -200,6 +273,7 @@ export function AppKeyManagement() {
               <tr>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Activation Key</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">App Name</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-center whitespace-nowrap">Type</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Status</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Issued At</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Action</th>
@@ -207,16 +281,29 @@ export function AppKeyManagement() {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing registry...</td></tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing registry...</td></tr>
               ) : filteredKeys.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">No records found.</td></tr>
+                <tr><td colSpan={6} className="px-6 py-12 text-center text-muted-foreground/30 italic">No records found.</td></tr>
               ) : (
                 filteredKeys.map((item, i) => (
                   <tr key={i} className="hover:bg-muted/10 transition-colors group">
                     <td className="px-6 py-4 font-mono font-bold text-blue-600 whitespace-nowrap">{item.key}</td>
                     <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">{item.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                       <div className="flex justify-center">
+                          {item.type === "bot" ? (
+                            <Badge variant="outline" className="border-purple-500/20 text-purple-600 bg-purple-500/5 gap-1.5 h-6 rounded-md">
+                               <Bot className="w-3 h-3" /> Bot
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-blue-500/20 text-blue-600 bg-blue-500/5 gap-1.5 h-6 rounded-md">
+                               <Globe className="w-3 h-3" /> Web
+                            </Badge>
+                          )}
+                       </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge className={`${item.status === 'unused' ? 'bg-blue-500/10 text-blue-600' : 'bg-muted text-muted-foreground/40'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
+                        <Badge className={`${item.status === 'unused' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground/40'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
                           {item.status === 'used' ? `Active (${item.usedBy?.substring(0,6)})` : item.status}
                         </Badge>
                     </td>
@@ -224,14 +311,27 @@ export function AppKeyManagement() {
                       {item.createdAt ? format(item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt), "dd MMM yyyy HH:mm") : '---'}
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 rounded-md hover:bg-muted"
-                        onClick={() => copyToClipboard(item.key, "Activation Key")}
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-md hover:bg-muted"
+                          onClick={() => copyToClipboard(item.key, "Activation Key")}
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
+                        {item.token && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-md hover:bg-muted text-purple-600"
+                            onClick={() => copyToClipboard(item.token, "Bot Token")}
+                            title="Copy Linked Token"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
