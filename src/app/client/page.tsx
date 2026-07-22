@@ -62,7 +62,7 @@ export default function SelectAppPage() {
 
   const handleActivateApp = async () => {
     if (!activationKey || !appName || !user?.uid || !db) {
-      toast({ variant: "destructive", title: "Gagal", description: "Lengkapi semua data." });
+      toast({ variant: "destructive", title: "Failed", description: "Please complete all fields." });
       return;
     }
 
@@ -72,11 +72,11 @@ export default function SelectAppPage() {
       const keySnap = await getDoc(keyRef);
 
       if (!keySnap.exists()) {
-        throw new Error("Kunci Aktivasi tidak valid.");
+        throw new Error("Invalid Activation Key.");
       }
 
       if (keySnap.data().status === 'used') {
-        throw new Error("Kunci Aktivasi sudah pernah digunakan.");
+        throw new Error("This Activation Key has already been used.");
       }
 
       // Create new app instance
@@ -100,12 +100,12 @@ export default function SelectAppPage() {
         updatedAt: serverTimestamp()
       });
 
-      toast({ title: "Berhasil!", description: "Application Anda telah diaktifkan." });
+      toast({ title: "Success!", description: "Your Application has been activated." });
       setIsModalOpen(false);
       setActivationKey("");
       setAppName("");
     } catch (e: any) {
-      toast({ variant: "destructive", title: "Aktivasi Gagal", description: e.message });
+      toast({ variant: "destructive", title: "Activation Failed", description: e.message });
     } finally {
       setIsActivating(false);
     }
@@ -128,23 +128,23 @@ export default function SelectAppPage() {
       <header className="h-16 px-6 md:px-10 flex items-center justify-between border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Logo className="w-8 h-8" />
-          <h1 className="font-headline font-bold text-lg tracking-tight">Hub <span className="text-primary/40">Partner</span></h1>
+          <h1 className="font-headline font-bold text-lg tracking-tight">Partner <span className="text-primary/40">Hub</span></h1>
         </div>
         <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs font-bold gap-2 text-muted-foreground hover:text-destructive">
-          <LogOut className="w-4 h-4" /> Keluar
+          <LogOut className="w-4 h-4" /> Logout
         </Button>
       </header>
 
       <main className="flex-1 w-full max-w-screen-2xl mx-auto p-6 md:p-12 lg:p-20 space-y-12">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tight">Pilih <span className="text-primary">Application</span></h2>
+            <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tight">Select <span className="text-primary">Application</span></h2>
             <Badge variant="secondary" className="bg-muted text-muted-foreground text-[10px] font-bold rounded-md">
-              {appsLoading ? "..." : apps.length} Terdaftar
+              {appsLoading ? "..." : apps.length} Registered
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm max-w-2xl leading-relaxed">
-            Selamat datang di hub manajemen partner. Silakan pilih Application yang ingin Anda kelola atau aktifkan lisensi baru yang Anda dapatkan dari pengembang.
+            Welcome to the partner management hub. Please select the Application you want to manage or activate a new license obtained from the developer.
           </p>
         </div>
 
@@ -157,23 +157,23 @@ export default function SelectAppPage() {
                   <Plus className="w-7 h-7" />
                 </div>
                 <div className="space-y-1 text-center">
-                  <p className="font-bold text-sm">Aktifkan Application Baru</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Gunakan License Key</p>
+                  <p className="font-bold text-sm">Activate New Application</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Use License Key</p>
                 </div>
               </button>
             </DialogTrigger>
             <DialogContent className="rounded-[2.5rem] border-border max-w-md p-8">
               <DialogHeader className="space-y-3">
-                <DialogTitle className="text-2xl font-headline font-bold">Mulai Application Baru</DialogTitle>
+                <DialogTitle className="text-2xl font-headline font-bold">Start New Application</DialogTitle>
                 <DialogDescription className="text-xs">
-                  Masukkan kunci lisensi untuk mengaktifkan website partner Anda secara permanen di akun ini.
+                  Enter the license key to permanently activate your partner website in this account.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Website / Client</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Website / Client Name</Label>
                   <Input 
-                    placeholder="Contoh: Toko Pro Jaktim" 
+                    placeholder="e.g. MyStore Panel" 
                     value={appName}
                     onChange={(e) => setAppName(e.target.value)}
                     className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
@@ -194,7 +194,7 @@ export default function SelectAppPage() {
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
                    <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      Lisensi bersifat <strong>Sekali Pakai</strong>. Setelah berhasil diaktivasi, application akan muncul di daftar aplikasi secara permanen.
+                      Licenses are <strong>One-Time Use</strong>. Once successfully activated, the application will appear in your list permanently.
                    </p>
                 </div>
               </div>
@@ -205,7 +205,7 @@ export default function SelectAppPage() {
                   className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
                 >
                   {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-4 h-4 mr-2" />}
-                  Aktifkan Application
+                  Activate Application
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -240,7 +240,7 @@ export default function SelectAppPage() {
               <div className="pt-4 flex items-center justify-between">
                  <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
                  <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
-                   Kelola <ChevronRight className="w-3 h-3" />
+                   Manage <ChevronRight className="w-3 h-3" />
                  </div>
               </div>
             </button>

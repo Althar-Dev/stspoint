@@ -39,17 +39,17 @@ const adminMenuItems = [
     url: "/client",
   },
   {
-    title: "Riwayat Pesanan",
+    title: "Order History",
     icon: ShoppingCart,
     url: "/client/orders",
   },
   {
-    title: "Keuangan",
+    title: "Finance",
     icon: CreditCard,
     url: "/client/finance",
   },
   {
-    title: "Pengaturan Web",
+    title: "Website Settings",
     icon: Settings,
     url: "/client/settings",
   }
@@ -185,7 +185,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
                 className="h-11 rounded-md text-muted-foreground hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center mb-1"
               >
                 <ArrowLeftRight className="w-4.5 h-4.5 shrink-0" />
-                <span className="text-sm group-data-[collapsible=icon]:hidden">Ganti Aplikasi</span>
+                <span className="text-sm group-data-[collapsible=icon]:hidden">Switch Application</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
@@ -194,7 +194,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
                 className="h-11 rounded-md text-muted-foreground hover:text-foreground transition-colors group-data-[collapsible=icon]:justify-center"
               >
                 <LogOut className="w-4.5 h-4.5 shrink-0 text-destructive" />
-                <span className="text-sm group-data-[collapsible=icon]:hidden">Keluar</span>
+                <span className="text-sm group-data-[collapsible=icon]:hidden">Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -202,7 +202,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1 bg-background">
-        <MainHeader searchPlaceholder="Cari data pesanan..." />
+        <MainHeader searchPlaceholder="Search order data..." />
         <main className="flex-1 p-6 md:p-10">
           {children}
         </main>
