@@ -44,7 +44,7 @@ export default function ClientOrdersPage() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight">Riwayat <span className="text-primary">Pesanan</span></h1>
+          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Riwayat <span className="text-primary">Pesanan</span></h1>
           <p className="text-muted-foreground text-xs md:text-sm">Kelola dan pantau semua transaksi pelanggan di website Anda.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -76,15 +76,17 @@ export default function ClientOrdersPage() {
             Log Transaksi Terkini
           </CardTitle>
         </CardHeader>
-        <div className="w-full overflow-x-auto relative scrollbar-hide md:scrollbar-default">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+        
+        {/* Kontainer Utama Tabel Responsif */}
+        <div className="w-full overflow-x-auto relative">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Pesanan</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Produk & Game</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Target / User ID</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Nominal</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap text-center">Status</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Waktu</th>
               </tr>
             </thead>
@@ -112,8 +114,8 @@ export default function ClientOrdersPage() {
                     <td className="px-6 py-4 font-bold text-primary text-xs whitespace-nowrap">
                       Rp {(order.priceAmount || 0).toLocaleString('id-ID')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={`rounded-md border-none text-[8px] font-bold uppercase px-2 py-0.5 h-5 flex items-center w-fit gap-1 shadow-sm ${
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <Badge className={`rounded-md border-none text-[8px] font-bold uppercase px-2 py-0.5 h-5 inline-flex items-center gap-1 shadow-sm ${
                         order.status === 'Success' ? 'bg-green-500/10 text-green-600' : 
                         order.status === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 
                         'bg-red-500/10 text-red-600'

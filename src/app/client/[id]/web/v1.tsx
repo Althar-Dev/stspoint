@@ -29,10 +29,9 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      {/* Header Responsif */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight">
+          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">
             Ringkasan <span className="text-primary">Toko</span>
           </h1>
           <p className="text-muted-foreground text-xs md:text-sm">
@@ -42,7 +41,6 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Revenue Card - Visual Impact */}
         <Card className="lg:col-span-1 border-none shadow-xl shadow-amber-500/10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white rounded-2xl overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-6 md:p-8 space-y-6 relative z-10 h-full flex flex-col justify-between">
@@ -67,7 +65,6 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
           </CardContent>
         </Card>
 
-        {/* Quick Stats Grid */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
            <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
               <div className="flex items-center justify-between mb-4">
@@ -76,7 +73,7 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                  </div>
                  <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
               </div>
-              <h4 className="text-2xl font-headline font-bold">124</h4>
+              <h4 className="text-xl md:text-2xl font-headline font-bold">124</h4>
               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
            </Card>
            <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
@@ -86,14 +83,13 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                  </div>
                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
               </div>
-              <h4 className="text-2xl font-headline font-bold text-primary">Rp 1.250.000</h4>
+              <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">Rp 1.250.000</h4>
               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
            </Card>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        {/* Recent Orders Table Section */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
             <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
@@ -109,8 +105,8 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                   </Button>
                </div>
             </CardHeader>
-            <CardContent className="p-0">
-               <div className="divide-y divide-border">
+            <div className="w-full overflow-x-auto">
+               <div className="divide-y divide-border min-w-[500px]">
                   {[
                     { item: 'Diamond MLBB 86', status: 'Success', time: '2 menit lalu', amount: 'Rp 19.500' },
                     { item: 'Pulsa Telkomsel 10k', status: 'Success', time: '15 menit lalu', amount: 'Rp 10.250' },
@@ -118,25 +114,24 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                     { item: 'Free Fire 70 Diamonds', status: 'Success', time: '1 jam lalu', amount: 'Rp 9.000' },
                   ].map((log, i) => (
                     <div key={i} className="px-6 md:px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
-                       <div className="flex items-center gap-4 min-w-0">
+                       <div className="flex items-center gap-4 min-w-0 flex-1">
                           <div className={`shrink-0 w-2 h-2 rounded-full ${log.status === 'Success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'}`}></div>
                           <div className="min-w-0">
-                             <p className="text-sm font-bold truncate max-w-[140px] sm:max-w-xs">{log.item}</p>
+                             <p className="text-xs md:text-sm font-bold truncate max-w-[140px] sm:max-w-xs">{log.item}</p>
                              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{log.time}</p>
                           </div>
                        </div>
                        <div className="text-right whitespace-nowrap ml-4">
-                          <p className="text-sm font-bold text-primary">{log.amount}</p>
+                          <p className="text-xs md:text-sm font-bold text-primary">{log.amount}</p>
                           <p className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest">{log.status}</p>
                        </div>
                     </div>
                   ))}
                </div>
-            </CardContent>
+            </div>
           </Card>
         </div>
 
-        {/* Sidebar Info Cards */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-border shadow-sm rounded-2xl bg-card p-6 md:p-8">
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
