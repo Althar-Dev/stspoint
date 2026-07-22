@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview MongoDB Product Service for Web App Prem.
- * Handles secure connection and data retrieval from partner's MongoDB instance.
+ * Handles secure connection using a direct URI input for Atlas compatibility.
  */
 
 import { MongoClient } from 'mongodb';
@@ -20,16 +20,13 @@ export async function getMongoProducts(userId: string, appId: string) {
     }
 
     const appData = appSnap.data();
-    const { mongoUser, mongoPass, mongoDb, mongoCol, mongoAppName } = appData;
+    const { mongoUri, mongoDb, mongoCol } = appData;
 
-    if (!mongoUser || !mongoPass || !mongoAppName) {
-      throw new Error("Kredensial MongoDB belum dikonfigurasi untuk aplikasi ini.");
+    if (!mongoUri) {
+      throw new Error("Kredensial MongoDB (URI) belum dikonfigurasi untuk aplikasi ini.");
     }
 
-    // URI construction based on standard Atlas SRV pattern
-    const uri = `mongodb+srv://${mongoUser}:${encodeURIComponent(mongoPass)}@${mongoAppName}.mongodb.net/?retryWrites=true&w=majority`;
-    
-    const client = new MongoClient(uri, {
+    const client = new MongoClient(mongoUri, {
       connectTimeoutMS: 15000,
       socketTimeoutMS: 30000,
     });

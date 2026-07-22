@@ -94,11 +94,9 @@ export default function SelectAppPage() {
         name: appName,
         type: keyData.type || 'website_topup',
         token: keyData.token || '',
-        mongoUser: keyData.mongoUser || '',
-        mongoPass: keyData.mongoPass || '',
+        mongoUri: keyData.mongoUri || '',
         mongoDb: keyData.mongoDb || '',
         mongoCol: keyData.mongoCol || '',
-        mongoAppName: keyData.mongoAppName || '',
         activationKey: activationKey.trim(),
         status: 'active',
         createdAt: serverTimestamp()
@@ -221,7 +219,7 @@ export default function SelectAppPage() {
                 <div className="pt-4 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
-                    {app.mongoUser && <Database className="w-3 h-3 text-muted-foreground/40" />}
+                    {app.mongoUri && <Database className="w-3 h-3 text-muted-foreground/40" />}
                   </div>
                   <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
                     Manage <ChevronRight className="w-3 h-3" />

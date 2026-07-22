@@ -47,11 +47,9 @@
         "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot"] },
         "token": { "type": "string" },
         "activationKey": { "type": "string" },
-        "mongoUser": { "type": "string" },
-        "mongoPass": { "type": "string" },
+        "mongoUri": { "type": "string", "description": "Full MongoDB Connection String." },
         "mongoDb": { "type": "string" },
         "mongoCol": { "type": "string" },
-        "mongoAppName": { "type": "string" },
         "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
@@ -132,11 +130,9 @@
         "name": { "type": "string" },
         "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot"] },
         "token": { "type": "string" },
-        "mongoUser": { "type": "string" },
-        "mongoPass": { "type": "string" },
+        "mongoUri": { "type": "string", "description": "Full MongoDB Connection String." },
         "mongoDb": { "type": "string" },
         "mongoCol": { "type": "string" },
-        "mongoAppName": { "type": "string" },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }

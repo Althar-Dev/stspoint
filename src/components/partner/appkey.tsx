@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -6,23 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, 
   Copy, 
   Search, 
   Loader2, 
   Layout,
-  Globe,
   Bot,
   ShieldCheck,
   Key as KeyIcon,
   ShoppingBag,
   Zap,
   Database,
-  Lock,
-  Table as TableIcon,
-  User as UserIcon,
-  Type
+  Link2,
+  Table as TableIcon
 } from "lucide-react";
 import { 
   Dialog, 
@@ -54,11 +53,9 @@ export function AppKeyManagement() {
   const [newAppName, setNewAppName] = useState("");
   const [appType, setAppType] = useState<"website_topup" | "website_appprem" | "bot">("website_topup");
   const [botToken, setBotToken] = useState("");
-  const [mongoUser, setMongoUser] = useState("");
-  const [mongoPass, setMongoPass] = useState("");
+  const [mongoUri, setMongoUri] = useState("");
   const [mongoDb, setMongoDb] = useState("");
   const [mongoCol, setMongoCol] = useState("");
-  const [mongoAppName, setMongoAppName] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -98,8 +95,8 @@ export function AppKeyManagement() {
       return;
     }
 
-    if (appType === "website_appprem" && (!mongoUser || !mongoPass || !mongoDb || !mongoCol || !mongoAppName)) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Web App Prem requires full MongoDB and Technical App Name info." });
+    if (appType === "website_appprem" && (!mongoUri || !mongoDb || !mongoCol)) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Web App Prem requires URI, DB name, and Collection name." });
       return;
     }
 
@@ -116,11 +113,9 @@ export function AppKeyManagement() {
       name: newAppName,
       type: appType,
       token: appType === "bot" ? botToken.trim() : "",
-      mongoUser: appType === "website_appprem" ? mongoUser.trim() : "",
-      mongoPass: appType === "website_appprem" ? mongoPass.trim() : "",
+      mongoUri: appType === "website_appprem" ? mongoUri.trim() : "",
       mongoDb: appType === "website_appprem" ? mongoDb.trim() : "",
       mongoCol: appType === "website_appprem" ? mongoCol.trim() : "",
-      mongoAppName: appType === "website_appprem" ? mongoAppName.trim() : "",
       status: 'unused',
       createdAt: serverTimestamp(),
     };
@@ -157,11 +152,9 @@ export function AppKeyManagement() {
               setNewAppName(""); 
               setAppType("website_topup");
               setBotToken("");
-              setMongoUser("");
-              setMongoPass("");
+              setMongoUri("");
               setMongoDb("");
               setMongoCol("");
-              setMongoAppName("");
             }
           }}>
             <DialogTrigger asChild>
@@ -220,24 +213,24 @@ export function AppKeyManagement() {
                 {appType === "website_appprem" && (
                   <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Technical App Name (URI)</Label>
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Connection URI (Atlas)</Label>
                       <div className="relative">
-                        <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="Technical name for Mongo URI" 
-                          value={mongoAppName} 
-                          onChange={(e) => setMongoAppName(e.target.value)}
-                          className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                        <Link2 className="absolute left-3 top-4 w-4 h-4 text-muted-foreground" />
+                        <Textarea 
+                          placeholder="mongodb+srv://user:pass@cluster.mongodb.net/..." 
+                          value={mongoUri} 
+                          onChange={(e) => setMongoUri(e.target.value)}
+                          className="rounded-xl pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-[11px] min-h-[100px]"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Structure (DB & Col)</Label>
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Structure (Database & Collection)</Label>
                       <div className="grid grid-cols-2 gap-3">
                          <div className="relative">
                             <Database className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
-                              placeholder="Database" 
+                              placeholder="test" 
                               value={mongoDb} 
                               onChange={(e) => setMongoDb(e.target.value)}
                               className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
@@ -246,34 +239,12 @@ export function AppKeyManagement() {
                          <div className="relative">
                             <TableIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
-                              placeholder="Collection" 
+                              placeholder="products" 
                               value={mongoCol} 
                               onChange={(e) => setMongoCol(e.target.value)}
                               className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
                             />
                          </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Auth Credentials</Label>
-                      <div className="relative">
-                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="Mongo Username" 
-                          value={mongoUser} 
-                          onChange={(e) => setMongoUser(e.target.value)}
-                          className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
-                        />
-                      </div>
-                      <div className="relative mt-2">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input 
-                          type="password"
-                          placeholder="Mongo Password" 
-                          value={mongoPass} 
-                          onChange={(e) => setMongoPass(e.target.value)}
-                          className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
-                        />
                       </div>
                     </div>
                   </div>
@@ -303,7 +274,7 @@ export function AppKeyManagement() {
                   <Button 
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
                     onClick={handleGenerateKey}
-                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken) || (appType === "website_appprem" && (!mongoUser || !mongoPass || !mongoDb || !mongoCol || !mongoAppName))}
+                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken) || (appType === "website_appprem" && (!mongoUri || !mongoDb || !mongoCol))}
                   >
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
                     Create Activation Key
@@ -314,7 +285,7 @@ export function AppKeyManagement() {
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] border-border"
                     onClick={() => setIsDialogOpen(false)}
                   >
-                    Close Dialog
+                    Finished
                   </Button>
                 )}
               </DialogFooter>
