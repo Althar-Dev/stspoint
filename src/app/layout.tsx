@@ -2,6 +2,7 @@ import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import {Toaster} from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
+import { DevToolsGuard } from '@/components/devtools-guard';
 
 export const metadata: Metadata = {
   applicationName: 'STSPoint',
@@ -118,6 +119,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased selection:bg-primary/10 selection:text-primary min-h-screen">
         <FirebaseClientProvider>
+          <DevToolsGuard />
           {children}
           <Toaster />
         </FirebaseClientProvider>
