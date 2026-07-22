@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "User": {
@@ -36,6 +35,18 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "message", "type", "createdAt"]
+    },
+    "AppInstance": {
+      "title": "App Instance",
+      "description": "Instance aplikasi yang diaktifkan oleh partner.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "activationKey": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     },
     "AiConfig": {
       "title": "AI Config",
@@ -105,8 +116,8 @@
       "required": ["externalId", "amount", "status", "type", "createdAt", "userId"]
     },
     "LicenseKey": {
-      "title": "Client Key",
-      "description": "Pre-generated keys for client registration.",
+      "title": "License Key",
+      "description": "Pre-generated keys for registration or activation.",
       "type": "object",
       "properties": {
         "key": { "type": "string" },
@@ -146,6 +157,10 @@
       "schema": "Notification",
       "description": "Sub-koleksi notifikasi masuk untuk pengguna."
     },
+    "/users/{userId}/apps/{appId}": {
+      "schema": "AppInstance",
+      "description": "Daftar aplikasi yang dimiliki partner."
+    },
     "/users/{userId}/services/{serviceId}": {
       "schema": "ServiceConfig",
       "description": "Sub-koleksi untuk menyimpan data provider (digiflazz, orderkuota, gomerchant)."
@@ -165,6 +180,10 @@
     "/Client_Keys/{keyId}": {
       "schema": "LicenseKey",
       "description": "Storage for registration keys/licenses."
+    },
+    "/Application_Keys/{keyId}": {
+      "schema": "LicenseKey",
+      "description": "Storage for application activation keys."
     },
     "/payment_channels/{channelId}": {
       "schema": "PaymentChannel",
