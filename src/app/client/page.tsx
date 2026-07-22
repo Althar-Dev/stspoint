@@ -162,7 +162,7 @@ export default function SelectAppPage() {
                 </div>
               </button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] border-border max-w-md p-8">
+            <DialogContent className="rounded-[2.5rem] border-border w-[92vw] sm:max-w-md p-6 sm:p-8">
               <DialogHeader className="space-y-3">
                 <DialogTitle className="text-2xl font-headline font-bold">Start New Application</DialogTitle>
                 <DialogDescription className="text-xs">
