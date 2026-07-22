@@ -70,18 +70,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Fetch current app to check type for sidebar menu filtering
-  const appRef = useMemoFirebase(() => {
-    const storedId = typeof window !== 'undefined' ? localStorage.getItem("sts_selected_app_id") : null;
-    const pathSegments = pathname.split('/');
-    const idFromPath = pathSegments.length > 2 && !['orders', 'finance', 'settings'].includes(pathSegments[2]) ? pathSegments[2] : storedId;
-    
-    if (!db || !user?.uid || !idFromPath) return null;
-    return doc(db, "users", user.uid, "apps", idFromPath);
-  }, [db, user?.uid, pathname]);
-
-  const { data: currentApp } = useDoc(appRef);
-
   const isSelectAppPage = pathname === "/client";
 
   useEffect(() => {
@@ -129,20 +117,13 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const isAuthorized = profile?.role === 'client' || profile?.dev === true;
 
-  // Filter menu items: Hide Finance if app is website_appprem
   const dynamicMenu = useMemo(() => {
     const selectedId = appSelected || "";
-    let items = adminMenuItems;
-    
-    if (currentApp?.type === "website_appprem") {
-      items = items.filter(item => item.title !== "Finance");
-    }
-
-    return items.map(item => ({
+    return adminMenuItems.map(item => ({
       ...item,
       url: item.url === "/client" ? `/client/${selectedId}` : item.url.replace('/client/', `/client/${selectedId}/`)
     }));
-  }, [appSelected, currentApp?.type]);
+  }, [appSelected]);
 
   if (authLoading || profileLoading || !user || !isAuthorized) {
     return (

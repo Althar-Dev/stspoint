@@ -25,7 +25,6 @@ export default function ClientDashboardPage() {
 
   const { data: app, loading: appLoading } = useDoc(appRef);
 
-  // Profile and STSPay only relevant for V1
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid);
@@ -42,10 +41,9 @@ export default function ClientDashboardPage() {
 
   const isLoading = authLoading || profileLoading || stspayLoading || appLoading || !mounted;
 
-  // Wait for app data to decide which dashboard to show
   if (appLoading || !mounted) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-8 min-w-0">
         <div className="space-y-2">
            <div className="h-8 w-48 bg-muted animate-pulse rounded-md"></div>
            <div className="h-4 w-64 bg-muted animate-pulse rounded-md"></div>
@@ -59,11 +57,9 @@ export default function ClientDashboardPage() {
     );
   }
 
-  // Choose dashboard based on app type
-  // website_appprem uses V2 (Infrastructure focus)
-  // Others use V1 (Revenue focus)
+  // Both dashboards now feature the Balance/Finance module as per user request
   if (app?.type === "website_appprem") {
-    return <V2Dashboard profile={profile} isLoading={isLoading} />;
+    return <V2Dashboard profile={profile} stspaySvc={stspaySvc} isLoading={isLoading} />;
   }
 
   return <V1Dashboard profile={profile} stspaySvc={stspaySvc} isLoading={isLoading} />;

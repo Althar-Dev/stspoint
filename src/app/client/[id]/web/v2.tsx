@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
+  Wallet, 
   ShoppingCart, 
   History,
   ChevronRight,
@@ -19,10 +20,11 @@ import { useParams } from "next/navigation";
 
 interface V2DashboardProps {
   profile: any;
+  stspaySvc?: any;
   isLoading: boolean;
 }
 
-export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
+export function V2Dashboard({ profile, stspaySvc, isLoading }: V2DashboardProps) {
   const { id: appId } = useParams();
 
   return (
@@ -33,32 +35,58 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
             Ringkasan <span className="text-primary">Toko</span>
           </h1>
           <p className="text-muted-foreground text-xs md:text-sm">
-            Pantau performa penjualan dan aktivitas website Anda.
+            Pantau performa penjualan dan pendapatan website Anda.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-        <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center group hover:border-primary/20 transition-all">
-          <div className="flex items-center justify-between mb-4">
-             <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
-                <ShoppingCart className="w-5 h-5" />
-             </div>
-             <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
-          </div>
-          <h4 className="text-xl md:text-2xl font-headline font-bold">124</h4>
-          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <Card className="lg:col-span-1 border-none shadow-xl shadow-amber-500/10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white rounded-2xl overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+          <CardContent className="p-6 md:p-8 space-y-6 relative z-10 h-full flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+               <div className="space-y-1">
+                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Pendapatan Toko</p>
+                 {isLoading ? <Skeleton className="h-10 w-32 bg-white/20" /> : (
+                   <h2 className="text-2xl md:text-3xl font-headline font-bold">
+                     Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}
+                   </h2>
+                 )}
+               </div>
+               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
+                 <Wallet className="w-5 h-5 md:w-6 md:h-6 text-white" />
+               </div>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-lg h-10 text-[10px] uppercase tracking-wider border-none shadow-lg shadow-black/5 transition-all active:scale-95">
+                <Link href={`/client/${appId}/finance`}>Tarik Dana</Link>
+              </Button>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center group hover:border-primary/20 transition-all">
-          <div className="flex items-center justify-between mb-4">
-             <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
-                <TrendingUp className="w-5 h-5" />
-             </div>
-             <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
-          </div>
-          <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">Rp 1.250.000</h4>
-          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
-        </Card>
+
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+           <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
+              <div className="flex items-center justify-between mb-4">
+                 <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
+                    <ShoppingCart className="w-5 h-5" />
+                 </div>
+                 <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
+              </div>
+              <h4 className="text-xl md:text-2xl font-headline font-bold">124</h4>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
+           </Card>
+           <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
+              <div className="flex items-center justify-between mb-4">
+                 <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
+                    <TrendingUp className="w-5 h-5" />
+                 </div>
+                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
+              </div>
+              <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">Rp 1.250.000</h4>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
+           </Card>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 w-full min-w-0">
