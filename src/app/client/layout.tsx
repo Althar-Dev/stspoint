@@ -20,12 +20,13 @@ import {
   Settings,
   LogOut,
   History,
-  Globe
+  Globe,
+  ArrowLeftRight
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeProvider } from "next-themes";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
@@ -63,6 +64,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const auth = useAuth();
+  const [appSelected, setAppSelected] = useState<string | null>(null);
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -75,15 +77,26 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     if (!authLoading && !profileLoading) {
       if (!user) {
         router.push("/signin");
+        return;
       } else if (profile && profile.role !== 'client' && !profile.dev) {
         router.push("/console");
+        return;
+      }
+
+      // Check if an app is selected
+      const selectedId = localStorage.getItem("sts_selected_app_id");
+      setAppSelected(selectedId);
+
+      if (!selectedId && pathname !== "/client/select-app") {
+        router.push("/client/select-app");
       }
     }
-  }, [user, profile, authLoading, profileLoading, router]);
+  }, [user, profile, authLoading, profileLoading, router, pathname]);
 
   const handleLogout = async () => {
     if (!auth) return;
     try {
+      localStorage.removeItem("sts_selected_app_id");
       await fetch("/api/auth/session", { method: "DELETE" });
       await signOut(auth);
       toast({ title: "Logged out", description: "You have been signed out successfully." });
@@ -97,6 +110,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   };
 
   const isAuthorized = profile?.role === 'client' || profile?.dev === true;
+  const isSelectAppPage = pathname === "/client/select-app";
 
   if (authLoading || profileLoading || !user || !isAuthorized) {
     return (
@@ -104,6 +118,11 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         <div className="animate-loading-bar" style={{ width: '40%' }}></div>
       </div>
     );
+  }
+
+  // Render Select App page without Sidebar
+  if (isSelectAppPage) {
+    return <>{children}</>;
   }
 
   return (
@@ -149,6 +168,18 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
         <SidebarFooter className="px-2 group-data-[state=expanded]:px-3 py-4 border-t border-border group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
           <SidebarMenu>
+            <SidebarMenuItem>
+               <SidebarMenuButton 
+                onClick={() => {
+                   localStorage.removeItem("sts_selected_app_id");
+                   router.push("/client/select-app");
+                }}
+                className="h-11 rounded-md text-muted-foreground hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center mb-1"
+              >
+                <ArrowLeftRight className="w-4.5 h-4.5 shrink-0" />
+                <span className="text-sm group-data-[collapsible=icon]:hidden">Ganti Aplikasi</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
                <SidebarMenuButton 
                 onClick={handleLogout}

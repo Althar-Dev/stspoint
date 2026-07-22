@@ -33,7 +33,8 @@ import {
   Handshake,
   Landmark,
   Banknote,
-  Key
+  Key,
+  Layout
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -59,6 +60,7 @@ const devMenuItems = [
     icon: Key,
     items: [
       { title: "Client Keys", url: "/dev/key?view=client", view: "client" },
+      { title: "Application Keys", url: "/dev/key?view=application", view: "application" },
     ]
   },
   { 

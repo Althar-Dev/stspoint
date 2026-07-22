@@ -3,11 +3,13 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClientKeyManagement } from "@/components/partner/clientkey";
+import { AppKeyManagement } from "@/components/partner/appkey";
 import { 
   Key, 
   ChevronRight, 
   ShieldCheck, 
-  Info 
+  Info,
+  Layout
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -23,6 +25,13 @@ function KeyManagementContent() {
           description: "Manage one-time registration keys for business partners.",
           icon: Key,
           color: "text-primary"
+        };
+      case 'application':
+        return {
+          title: "Application Activation Keys",
+          description: "Generate license keys for partners to activate their app/website instances.",
+          icon: Layout,
+          color: "text-blue-500"
         };
       default:
         return {
@@ -58,6 +67,8 @@ function KeyManagementContent() {
       <div className="grid grid-cols-1 gap-8">
         {view === 'client' ? (
           <ClientKeyManagement />
+        ) : view === 'application' ? (
+          <AppKeyManagement />
         ) : (
           <Card className="border border-dashed border-border bg-muted/20">
              <CardContent className="py-20 flex flex-col items-center justify-center text-center space-y-4">
