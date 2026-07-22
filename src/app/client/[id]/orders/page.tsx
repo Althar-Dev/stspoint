@@ -13,7 +13,7 @@ import {
   Clock,
   XCircle,
   Download
-} from "lucide-center";
+} from "lucide-react";
 import React, { useState } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
@@ -78,7 +78,7 @@ export default function ClientOrdersPage() {
         </CardHeader>
         
         <div className="w-full overflow-x-auto block">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Pesanan</th>
