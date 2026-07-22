@@ -59,12 +59,6 @@ export default function ClientDashboardPage() {
             Welcome back, {profile?.name || "Admin"}. Monitor your store performance today.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-card border-border py-1.5 px-3 flex items-center gap-2 rounded-md text-[10px] font-bold uppercase tracking-wider">
-             <Activity className="w-3 h-3 text-green-500 animate-pulse" />
-             System Status: Normal
-          </Badge>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
