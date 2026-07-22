@@ -19,8 +19,6 @@ import {
   CreditCard, 
   Settings,
   LogOut,
-  History,
-  Globe,
   ArrowLeftRight
 } from "lucide-react";
 import Link from "next/link";
@@ -73,6 +71,9 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
+  // Path check logic: /client is the entry hub
+  const isSelectAppPage = pathname === "/client";
+
   useEffect(() => {
     if (!authLoading && !profileLoading) {
       if (!user) {
@@ -87,11 +88,12 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       const selectedId = localStorage.getItem("sts_selected_app_id");
       setAppSelected(selectedId);
 
-      if (!selectedId && pathname !== "/client/select-app") {
-        router.push("/client/select-app");
+      // Force to Hub if no app is selected and not already there
+      if (!selectedId && !isSelectAppPage) {
+        router.push("/client");
       }
     }
-  }, [user, profile, authLoading, profileLoading, router, pathname]);
+  }, [user, profile, authLoading, profileLoading, router, pathname, isSelectAppPage]);
 
   const handleLogout = async () => {
     if (!auth) return;
@@ -110,7 +112,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   };
 
   const isAuthorized = profile?.role === 'client' || profile?.dev === true;
-  const isSelectAppPage = pathname === "/client/select-app";
 
   if (authLoading || profileLoading || !user || !isAuthorized) {
     return (
@@ -120,10 +121,17 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     );
   }
 
-  // Render Select App page without Sidebar
+  // Render Hub Page without Sidebar
   if (isSelectAppPage) {
     return <>{children}</>;
   }
+
+  // Find dynamic app base URL
+  const selectedId = appSelected || "";
+  const dynamicMenu = adminMenuItems.map(item => ({
+    ...item,
+    url: item.url === "/client" ? `/client/${selectedId}` : item.url.replace('/client/', `/client/${selectedId}/`)
+  }));
 
   return (
     <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
@@ -132,7 +140,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
       >
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
-          <Link href="/client" className="flex items-center gap-2 group shrink-0">
+          <Link href={`/client/${selectedId}`} className="flex items-center gap-2 group shrink-0">
             <Logo className="w-10 h-10 transition-transform group-hover:scale-105 shrink-0" />
             <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">
               PartnerPortal
@@ -143,7 +151,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         <SidebarContent className="px-2 group-data-[state=expanded]:px-3 group-data-[collapsible=icon]:px-0">
           <SidebarGroup>
             <SidebarMenu className="group-data-[collapsible=icon]:items-center">
-              {adminMenuItems.map((item) => (
+              {dynamicMenu.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild
@@ -172,7 +180,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
                <SidebarMenuButton 
                 onClick={() => {
                    localStorage.removeItem("sts_selected_app_id");
-                   router.push("/client/select-app");
+                   router.push("/client");
                 }}
                 className="h-11 rounded-md text-muted-foreground hover:text-primary transition-colors group-data-[collapsible=icon]:justify-center mb-1"
               >

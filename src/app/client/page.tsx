@@ -1,188 +1,256 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, doc, getDoc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { 
-  Wallet, 
-  ShoppingCart, 
-  TrendingUp, 
-  ArrowUpRight, 
-  History,
-  Activity,
-  ChevronRight,
-  ShieldCheck,
-  Package,
-  Users
+  Plus, 
+  ChevronRight, 
+  Loader2, 
+  Globe, 
+  ShieldCheck, 
+  Key, 
+  Building,
+  LogOut
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
+import { Logo } from "@/components/logo";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function ClientDashboardPage() {
-  const { user, loading: authLoading } = useUser();
+export default function SelectAppPage() {
+  const router = useRouter();
+  const { user } = useUser();
   const db = useFirestore();
+  
+  const [activationKey, setActivationKey] = useState("");
+  const [appName, setAppName] = useState("");
+  const [isActivating, setIsActivating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const profileRef = useMemoFirebase(() => {
+  // Fetch registered apps
+  const appsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
-    return doc(db, "users", user.uid);
+    return collection(db, "users", user.uid, "apps");
   }, [db, user?.uid]);
 
-  const { data: profile, loading: profileLoading } = useDoc(profileRef);
+  const { data: apps, loading: appsLoading } = useCollection(appsQuery);
 
-  const isLoading = authLoading || profileLoading || !mounted;
+  const handleSelectApp = (appId: string) => {
+    localStorage.setItem("sts_selected_app_id", appId);
+    router.push(`/client/${appId}`);
+  };
+
+  const handleActivateApp = async () => {
+    if (!activationKey || !appName || !user?.uid || !db) {
+      toast({ variant: "destructive", title: "Gagal", description: "Lengkapi semua data." });
+      return;
+    }
+
+    setIsActivating(true);
+    try {
+      const keyRef = doc(db, "Application_Keys", activationKey.trim());
+      const keySnap = await getDoc(keyRef);
+
+      if (!keySnap.exists()) {
+        throw new Error("Kunci Aktivasi tidak valid.");
+      }
+
+      if (keySnap.data().status === 'used') {
+        throw new Error("Kunci Aktivasi sudah pernah digunakan.");
+      }
+
+      // Create new app instance
+      const appId = `APP-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+      const appRef = doc(db, "users", user.uid, "apps", appId);
+      
+      const appData = {
+        id: appId,
+        name: appName,
+        activationKey: activationKey.trim(),
+        status: 'active',
+        createdAt: serverTimestamp()
+      };
+
+      await setDoc(appRef, appData);
+
+      // Mark key as used
+      await updateDoc(keyRef, {
+        status: 'used',
+        usedBy: user.uid,
+        updatedAt: serverTimestamp()
+      });
+
+      toast({ title: "Berhasil!", description: "Aplikasi Anda telah diaktifkan." });
+      setIsModalOpen(false);
+      setActivationKey("");
+      setAppName("");
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Aktivasi Gagal", description: e.message });
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/session", { method: "DELETE" });
+      window.location.href = "/signin";
+    } catch (e) {
+      window.location.reload();
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-headline font-bold tracking-tight">
-            Ringkasan <span className="text-primary">Toko</span>
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Selamat datang, {profile?.name || "Admin"}. Pantau kinerja penjualan website Anda hari ini.
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col w-full text-foreground selection:bg-primary/10">
+      {/* Mini Header */}
+      <header className="h-16 px-6 md:px-10 flex items-center justify-between border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <Logo className="w-8 h-8" />
+          <h1 className="font-headline font-bold text-lg tracking-tight">Hub <span className="text-primary/40">Partner</span></h1>
+        </div>
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs font-bold gap-2 text-muted-foreground hover:text-destructive">
+          <LogOut className="w-4 h-4" /> Keluar
+        </Button>
+      </header>
+
+      <main className="flex-1 w-full max-w-screen-2xl mx-auto p-6 md:p-12 lg:p-20 space-y-12">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tight">Pilih <span className="text-primary">Aplikasi</span></h2>
+            <Badge variant="secondary" className="bg-muted text-muted-foreground text-[10px] font-bold rounded-md">
+              {appsLoading ? "..." : apps.length} Terdaftar
+            </Badge>
+          </div>
+          <p className="text-muted-foreground text-sm max-w-2xl leading-relaxed">
+            Selamat datang di hub manajemen partner. Silakan pilih instance aplikasi yang ingin Anda kelola atau aktifkan lisensi baru yang Anda dapatkan dari pengembang.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-card border-border py-1.5 px-3 flex items-center gap-2 rounded-md text-[10px] font-bold uppercase tracking-wider">
-             <Activity className="w-3 h-3 text-green-500 animate-pulse" />
-             Status Sistem: Normal
-          </Badge>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Balance Card - Golden Yellow */}
-        <Card className="lg:col-span-1 border-none shadow-xl shadow-amber-500/20 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 text-white rounded-md overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-8 space-y-6 relative z-10 h-full flex flex-col justify-between">
-            <div className="flex justify-between items-start">
-               <div className="space-y-1">
-                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Total Pendapatan</p>
-                 {isLoading ? <Skeleton className="h-10 w-32 bg-white/20" /> : (
-                   <h2 className="text-3xl font-headline font-bold">
-                     Rp {(profile?.balance || 0).toLocaleString('id-ID')}
-                   </h2>
-                 )}
-               </div>
-               <div className="w-12 h-12 rounded-md bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10">
-                 <Wallet className="w-6 h-6 text-white" />
-               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-md h-11 text-xs uppercase tracking-wider border-none">
-                Tarik Saldo
-              </Button>
-              <Button variant="outline" className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold rounded-md h-11 text-xs uppercase tracking-wider">
-                Laporan
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Stats Grid */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-           <Card className="border-border shadow-sm rounded-md bg-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                 <div className="p-2 rounded-md bg-primary/5 text-primary">
-                    <ShoppingCart className="w-5 h-5" />
-                 </div>
-                 <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-md">+5.2%</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Action: Activate New App */}
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <button className="flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border-2 border-dashed border-border bg-white hover:bg-muted/30 hover:border-primary/20 transition-all group min-h-[220px]">
+                <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <Plus className="w-7 h-7" />
+                </div>
+                <div className="space-y-1 text-center">
+                  <p className="font-bold text-sm">Aktifkan Instance Baru</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Gunakan License Key</p>
+                </div>
+              </button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] border-border max-w-md p-8">
+              <DialogHeader className="space-y-3">
+                <DialogTitle className="text-2xl font-headline font-bold">Mulai Instance Baru</DialogTitle>
+                <DialogDescription className="text-xs">
+                  Masukkan kunci lisensi aplikasi untuk mengaktifkan website partner Anda secara permanen di akun ini.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Website / Client</Label>
+                  <Input 
+                    placeholder="Contoh: Toko Pro Jaktim" 
+                    value={appName}
+                    onChange={(e) => setAppName(e.target.value)}
+                    className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Activation Key</Label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="STS-App_XXXX" 
+                      value={activationKey}
+                      onChange={(e) => setActivationKey(e.target.value)}
+                      className="h-12 pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono"
+                    />
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+                   <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                   <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
+                      Lisensi bersifat <strong>Sekali Pakai</strong>. Setelah berhasil diaktivasi, instance akan muncul di daftar aplikasi secara permanen.
+                   </p>
+                </div>
               </div>
-              <h4 className="text-2xl font-headline font-bold">428</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
-           </Card>
-           <Card className="border-border shadow-sm rounded-md bg-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                 <div className="p-2 rounded-md bg-primary/5 text-primary">
-                    <Users className="w-5 h-5" />
-                 </div>
-                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Hari Ini</span>
+              <DialogFooter>
+                <Button 
+                  onClick={handleActivateApp} 
+                  disabled={isActivating || !activationKey || !appName}
+                  className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
+                >
+                  {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-4 h-4 mr-2" />}
+                  Aktifkan Instance
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* List: Existing Apps */}
+          {appsLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="rounded-[2rem] border-border shadow-sm">
+                <CardContent className="p-8 space-y-4">
+                  <Skeleton className="h-14 w-14 rounded-2xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : apps.map((app) => (
+            <button 
+              key={app.id} 
+              onClick={() => handleSelectApp(app.id)}
+              className="flex flex-col p-8 rounded-[2rem] border border-border bg-white shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all group text-left min-h-[220px]"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all">
+                <Building className="w-7 h-7" />
               </div>
-              <h4 className="text-2xl font-headline font-bold">1,024</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pengunjung Web</p>
-           </Card>
+              <div className="space-y-2 flex-1">
+                <h3 className="font-bold text-lg truncate">{app.name}</h3>
+                <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">ID: {app.id}</p>
+              </div>
+              <div className="pt-4 flex items-center justify-between">
+                 <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
+                 <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
+                   Kelola <ChevronRight className="w-3 h-3" />
+                 </div>
+              </div>
+            </button>
+          ))}
         </div>
-      </div>
+      </main>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Orders Table */}
-        <div className="lg:col-span-8 space-y-6">
-          <Card className="border-border shadow-sm rounded-md overflow-hidden bg-card">
-            <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-               <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
-                    <History className="w-4 h-4 text-primary" />
-                    Pesanan Terbaru
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest hover:text-primary">
-                    Semua Pesanan <ChevronRight className="w-3 h-3 ml-1" />
-                  </Button>
-               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-               <div className="divide-y divide-border">
-                  {[
-                    { item: 'Diamond MLBB', status: 'Selesai', time: '2 menit lalu', amount: 'Rp 15.000' },
-                    { item: 'Pulsa Telkomsel', status: 'Selesai', time: '12 menit lalu', amount: 'Rp 10.250' },
-                    { item: 'Token PLN', status: 'Proses', time: '25 menit lalu', amount: 'Rp 50.000' },
-                    { item: 'Diamond Free Fire', status: 'Selesai', time: '1 jam lalu', amount: 'Rp 20.000' },
-                  ].map((log, i) => (
-                    <div key={i} className="px-8 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                       <div className="flex items-center gap-4">
-                          <div className={`w-2 h-2 rounded-full ${log.status === 'Selesai' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
-                          <div>
-                             <p className="text-xs font-bold">{log.item}</p>
-                             <p className="text-[10px] text-muted-foreground">{log.time}</p>
-                          </div>
-                       </div>
-                       <div className="text-right">
-                          <p className="text-xs font-bold text-primary">{log.amount}</p>
-                          <Badge variant="outline" className="border-none text-[8px] font-bold uppercase text-muted-foreground/60 p-0 h-auto">
-                            {log.status}
-                          </Badge>
-                       </div>
-                    </div>
-                  ))}
-               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Support & Quick Links */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-border shadow-sm rounded-md bg-card p-8">
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Bantuan & Panduan</h4>
-            <div className="space-y-4">
-               {[
-                 { label: 'Panduan Admin', icon: Package },
-                 { label: 'Dukungan Teknis', icon: ShieldCheck },
-               ].map((item, i) => (
-                 <button key={i} className="w-full flex items-center justify-between p-4 rounded-md bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group">
-                    <div className="flex items-center gap-3">
-                       <item.icon className="w-4 h-4 text-primary" />
-                       <span className="text-xs font-bold text-foreground/80">{item.label}</span>
-                    </div>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                 </button>
-               ))}
-            </div>
-            
-            <div className="mt-8 p-4 rounded-md bg-primary/5 border border-primary/10">
-               <p className="text-[10px] text-primary font-bold uppercase mb-1">Butuh kustomasi?</p>
-               <p className="text-[10px] text-muted-foreground leading-relaxed">Hubungi developer Anda untuk penambahan fitur khusus di panel ini.</p>
-            </div>
-          </Card>
-        </div>
-      </div>
+      <footer className="p-8 mt-auto opacity-20 text-center">
+         <p className="text-[10px] font-bold uppercase tracking-[0.5em]">STSPoint Partner Ecosystem v2.0</p>
+      </footer>
     </div>
   );
 }
