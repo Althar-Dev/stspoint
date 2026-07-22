@@ -37,7 +37,15 @@ export default function ClientDashboardPage() {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  const isLoading = authLoading || profileLoading || !mounted;
+  // Fetch STSPay specific balance (Revenue)
+  const stspaySvcRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "stspay");
+  }, [db, user?.uid]);
+
+  const { data: stspaySvc, loading: stspayLoading } = useDoc(stspaySvcRef);
+
+  const isLoading = authLoading || profileLoading || stspayLoading || !mounted;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -45,16 +53,16 @@ export default function ClientDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-headline font-bold tracking-tight">
-            Ringkasan <span className="text-primary">Toko</span>
+            Store <span className="text-primary">Overview</span>
           </h1>
           <p className="text-muted-foreground text-sm">
-            Selamat datang, {profile?.name || "Admin"}. Pantau kinerja penjualan website Anda hari ini.
+            Welcome back, {profile?.name || "Admin"}. Monitor your store performance today.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="bg-card border-border py-1.5 px-3 flex items-center gap-2 rounded-md text-[10px] font-bold uppercase tracking-wider">
              <Activity className="w-3 h-3 text-green-500 animate-pulse" />
-             Status Sistem: Normal
+             System Status: Normal
           </Badge>
         </div>
       </div>
@@ -66,10 +74,10 @@ export default function ClientDashboardPage() {
           <CardContent className="p-8 space-y-6 relative z-10 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                <div className="space-y-1">
-                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Total Pendapatan</p>
+                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Store Revenue (STSPay)</p>
                  {isLoading ? <Skeleton className="h-10 w-32 bg-white/20" /> : (
                    <h2 className="text-3xl font-headline font-bold">
-                     Rp {(profile?.balance || 0).toLocaleString('id-ID')}
+                     Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}
                    </h2>
                  )}
                </div>
@@ -78,11 +86,11 @@ export default function ClientDashboardPage() {
                </div>
             </div>
             <div className="flex gap-2">
-              <Button className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-md h-11 text-xs uppercase tracking-wider border-none">
-                Tarik Saldo
+              <Button asChild className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-md h-11 text-xs uppercase tracking-wider border-none">
+                <Link href="/client/finance">Withdraw</Link>
               </Button>
               <Button variant="outline" className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold rounded-md h-11 text-xs uppercase tracking-wider">
-                Laporan
+                Reports
               </Button>
             </div>
           </CardContent>
@@ -98,17 +106,17 @@ export default function ClientDashboardPage() {
                  <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-md">+5.2%</span>
               </div>
               <h4 className="text-2xl font-headline font-bold">428</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Successful Orders</p>
            </Card>
            <Card className="border-border shadow-sm rounded-md bg-card p-6">
               <div className="flex items-center justify-between mb-4">
                  <div className="p-2 rounded-md bg-primary/5 text-primary">
                     <Users className="w-5 h-5" />
                  </div>
-                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Hari Ini</span>
+                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Today</span>
               </div>
               <h4 className="text-2xl font-headline font-bold">1,024</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pengunjung Web</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Web Visitors</p>
            </Card>
         </div>
       </div>
@@ -121,24 +129,26 @@ export default function ClientDashboardPage() {
                <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider">
                     <History className="w-4 h-4 text-primary" />
-                    Pesanan Terbaru
+                    Recent Orders
                   </CardTitle>
-                  <Button variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest hover:text-primary">
-                    Semua Pesanan <ChevronRight className="w-3 h-3 ml-1" />
+                  <Button asChild variant="ghost" size="sm" className="text-[10px] font-bold uppercase tracking-widest hover:text-primary cursor-pointer">
+                    <Link href="/client/orders">
+                      All Orders <ChevronRight className="w-3 h-3 ml-1" />
+                    </Link>
                   </Button>
                </div>
             </CardHeader>
             <CardContent className="p-0">
                <div className="divide-y divide-border">
                   {[
-                    { item: 'Diamond MLBB', status: 'Selesai', time: '2 menit lalu', amount: 'Rp 15.000' },
-                    { item: 'Pulsa Telkomsel', status: 'Selesai', time: '12 menit lalu', amount: 'Rp 10.250' },
-                    { item: 'Token PLN', status: 'Proses', time: '25 menit lalu', amount: 'Rp 50.000' },
-                    { item: 'Diamond Free Fire', status: 'Selesai', time: '1 jam lalu', amount: 'Rp 20.000' },
+                    { item: 'Diamond MLBB', status: 'Success', time: '2 mins ago', amount: 'Rp 15.000' },
+                    { item: 'Pulsa Telkomsel', status: 'Success', time: '12 mins ago', amount: 'Rp 10.250' },
+                    { item: 'PLN Token', status: 'Process', time: '25 mins ago', amount: 'Rp 50.000' },
+                    { item: 'Diamond Free Fire', status: 'Success', time: '1 hour ago', amount: 'Rp 20.000' },
                   ].map((log, i) => (
                     <div key={i} className="px-8 py-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
                        <div className="flex items-center gap-4">
-                          <div className={`w-2 h-2 rounded-full ${log.status === 'Selesai' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+                          <div className={`w-2 h-2 rounded-full ${log.status === 'Success' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
                           <div>
                              <p className="text-xs font-bold">{log.item}</p>
                              <p className="text-[10px] text-muted-foreground">{log.time}</p>
@@ -160,13 +170,13 @@ export default function ClientDashboardPage() {
         {/* Support & Quick Links */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-border shadow-sm rounded-md bg-card p-8">
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Bantuan & Panduan</h4>
+            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Support & Guides</h4>
             <div className="space-y-4">
                {[
-                 { label: 'Panduan Admin', icon: Package },
-                 { label: 'Dukungan Teknis', icon: ShieldCheck },
+                 { label: 'Admin Documentation', icon: Package },
+                 { label: 'Technical Support', icon: ShieldCheck },
                ].map((item, i) => (
-                 <button key={i} className="w-full flex items-center justify-between p-4 rounded-md bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group">
+                 <button key={i} className="w-full flex items-center justify-between p-4 rounded-md bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left">
                     <div className="flex items-center gap-3">
                        <item.icon className="w-4 h-4 text-primary" />
                        <span className="text-xs font-bold text-foreground/80">{item.label}</span>
@@ -177,8 +187,8 @@ export default function ClientDashboardPage() {
             </div>
             
             <div className="mt-8 p-4 rounded-md bg-primary/5 border border-primary/10">
-               <p className="text-[10px] text-primary font-bold uppercase mb-1">Butuh kustomasi?</p>
-               <p className="text-[10px] text-muted-foreground leading-relaxed">Hubungi developer Anda untuk penambahan fitur khusus di panel ini.</p>
+               <p className="text-[10px] text-primary font-bold uppercase mb-1">Need customization?</p>
+               <p className="text-[10px] text-muted-foreground leading-relaxed">Contact your developer for adding specialized features to this panel.</p>
             </div>
           </Card>
         </div>
