@@ -105,10 +105,10 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto p-4">
+      <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto p-4">
          <Skeleton className="h-10 w-32 rounded-xl" />
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            <Skeleton className="h-[400px] w-full rounded-3xl" />
+         <div className="space-y-6">
+            <Skeleton className="h-[300px] w-full rounded-3xl" />
             <Skeleton className="h-[400px] w-full rounded-3xl" />
          </div>
       </div>
@@ -116,7 +116,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-20 px-1 md:px-0">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto pb-20 px-1 md:px-0">
       {/* Header - Optimized for Mobile */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3 md:gap-4">
@@ -138,9 +138,9 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 gap-6 md:gap-8">
         {/* Basic Info & Packages Section */}
-        <div className="lg:col-span-7 space-y-6 md:space-y-8 order-2 lg:order-1">
+        <div className="space-y-6 md:space-y-8">
           <Card className="border-border shadow-sm rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-card">
             <CardHeader className="bg-muted/30 p-5 md:p-8 border-b border-border">
                <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest flex items-center gap-2">
@@ -273,48 +273,6 @@ export default function ProductDetailPage() {
                 ))}
              </CardContent>
           </Card>
-        </div>
-
-        {/* Preview Section - Optimized for sticky behavior */}
-        <div className="lg:col-span-5 space-y-6 md:space-y-8 order-1 lg:order-2">
-           <Card className="border-border shadow-sm rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-card lg:sticky lg:top-24">
-              <CardHeader className="bg-muted/30 p-5 md:p-8 border-b border-border">
-                 <CardTitle className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">Live Preview</CardTitle>
-              </CardHeader>
-              <CardContent className="p-5 md:p-8 space-y-5 md:space-y-6">
-                 <div className="aspect-square w-full rounded-xl md:rounded-2xl overflow-hidden bg-muted border border-border group relative">
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center opacity-10"><ImageIcon className="w-16 h-16" /></div>
-                    )}
-                 </div>
-                 
-                 <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-4">
-                       <h3 className="text-lg md:text-xl font-headline font-bold truncate">{product.product || "Tanpa Nama"}</h3>
-                       <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold shrink-0">READY</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                       {product.description || "Belum ada deskripsi yang ditambahkan untuk produk ini."}
-                    </p>
-                 </div>
-
-                 <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-muted/50 border border-border space-y-1">
-                       <p className="text-[8px] font-bold text-muted-foreground uppercase">Revenue Terjual</p>
-                       <p className="text-xs md:text-sm font-bold text-primary">{product.sold || 0} unit</p>
-                    </div>
-                    <div className="p-3 md:p-4 rounded-xl md:rounded-2xl bg-muted/50 border border-border space-y-1">
-                       <p className="text-[8px] font-bold text-muted-foreground uppercase">Rata-rata Rating</p>
-                       <div className="flex items-center gap-1">
-                          <p className="text-xs md:text-sm font-bold text-amber-600">{product.rating || "0.0"}</p>
-                          <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                       </div>
-                    </div>
-                 </div>
-              </CardContent>
-           </Card>
         </div>
       </div>
     </div>
