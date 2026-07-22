@@ -126,11 +126,11 @@ export default function SelectAppPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center p-4 md:p-12 lg:p-20">
-      <div className="w-full max-w-7xl space-y-12">
+    <div className="min-h-screen w-full bg-[#F8FAFC] flex flex-col items-center">
+      <div className="w-full max-w-screen-2xl px-6 py-12 md:px-12 md:py-20 flex-1 flex flex-col space-y-12">
         
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-border pb-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-border pb-8 w-full">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/5 rounded-lg border border-primary/10">
@@ -148,8 +148,8 @@ export default function SelectAppPage() {
           </div>
         </div>
 
-        <div className="space-y-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
+        <div className="space-y-8 w-full">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1 w-full">
             <div className="flex items-center gap-4">
               <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
                 <Globe className="w-3.5 h-3.5" />
@@ -225,13 +225,13 @@ export default function SelectAppPage() {
             </Dialog>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
             {appsLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 4 }).map((_, i) => (
                 <Card key={i} className="animate-pulse h-40 border-border bg-white rounded-[2rem]" />
               ))
             ) : apps.length === 0 ? (
-              <Card className="col-span-full border-dashed border-2 bg-transparent shadow-none rounded-[2rem]">
+              <Card className="col-span-full border-dashed border-2 bg-transparent shadow-none rounded-[2rem] w-full">
                 <CardContent className="py-32 flex flex-col items-center justify-center text-center space-y-4">
                   <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center">
                     <AppWindow className="w-10 h-10 text-muted-foreground/20" />
@@ -249,7 +249,7 @@ export default function SelectAppPage() {
                   onClick={() => handleSelectApp(app.id)}
                   className="w-full text-left group transition-all outline-none"
                 >
-                  <Card className="border-border hover:border-primary/40 bg-white transition-all shadow-sm group-hover:shadow-2xl group-hover:-translate-y-1 rounded-[2rem] overflow-hidden">
+                  <Card className="border-border hover:border-primary/40 bg-white transition-all shadow-sm group-hover:shadow-2xl group-hover:-translate-y-1 rounded-[2rem] overflow-hidden h-full">
                     <CardContent className="p-8 flex flex-col justify-between h-full space-y-8">
                       <div className="flex items-start justify-between">
                         <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10 group-hover:bg-primary group-hover:text-white transition-all duration-300">
@@ -274,7 +274,7 @@ export default function SelectAppPage() {
           </div>
         </div>
 
-        <div className="text-center pt-12 border-t border-border/50">
+        <div className="text-center pt-12 border-t border-border/50 w-full">
            <p className="text-[10px] text-muted-foreground/30 font-bold uppercase tracking-[1em] ml-[1em]">STSPoint Bridge Engine</p>
         </div>
       </div>
