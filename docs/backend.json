@@ -105,7 +105,7 @@
       "required": ["externalId", "amount", "status", "type", "createdAt", "userId"]
     },
     "LicenseKey": {
-      "title": "License Key",
+      "title": "Client Key",
       "description": "Pre-generated keys for client registration.",
       "type": "object",
       "properties": {
@@ -162,7 +162,7 @@
       "schema": "Transaction",
       "description": "Public records of successful top-ups for the ledger."
     },
-    "/license_keys/{keyId}": {
+    "/Client_Keys/{keyId}": {
       "schema": "LicenseKey",
       "description": "Storage for registration keys/licenses."
     },

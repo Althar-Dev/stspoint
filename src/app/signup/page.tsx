@@ -114,10 +114,10 @@ export default function SignUpPage() {
       if (role === 'partner') {
         const cleanKey = licenseKey.trim();
         if (!cleanKey) {
-          throw new Error("License Key wajib diisi untuk pendaftaran Partner.");
+          throw new Error("Client Key wajib diisi untuk pendaftaran Partner.");
         }
         
-        const keyRef = doc(db, 'license_keys', cleanKey);
+        const keyRef = doc(db, 'Client_Keys', cleanKey);
         const keySnap = await getDoc(keyRef);
 
         if (!keySnap.exists()) {
@@ -192,7 +192,7 @@ export default function SignUpPage() {
       });
 
       if (role === 'partner') {
-        const keyRef = doc(db, 'license_keys', licenseKey.trim());
+        const keyRef = doc(db, 'Client_Keys', licenseKey.trim());
         await updateDoc(keyRef, {
           status: 'used',
           usedBy: user.uid,
@@ -276,7 +276,7 @@ export default function SignUpPage() {
                           <div>
                             <p className="text-[11px] font-bold text-primary uppercase tracking-tight mb-1">Partner</p>
                             <p className="text-[10px] text-muted-foreground leading-relaxed">
-                              For specialized partners who purchased a website source. A valid License Key is required for registration.
+                              For specialized partners who purchased a website source. A valid Client Key is required for registration.
                             </p>
                           </div>
                           <div className="pt-2 border-t border-border">
@@ -306,7 +306,7 @@ export default function SignUpPage() {
 
               {role === 'partner' && (
                 <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                  <Label htmlFor="licenseKey" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">License Key</Label>
+                  <Label htmlFor="licenseKey" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Client Key</Label>
                   <div className="relative">
                     <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input 
@@ -319,7 +319,7 @@ export default function SignUpPage() {
                       onChange={(e) => setLicenseKey(e.target.value)}
                     />
                   </div>
-                  <p className="text-[9px] text-muted-foreground ml-1">Enter the 1x use license key provided by your developer.</p>
+                  <p className="text-[9px] text-muted-foreground ml-1">Enter the 1x use Client Key provided by your developer.</p>
                 </div>
               )}
 

@@ -41,7 +41,7 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    match /license_keys/{keyId} {
+    match /Client_Keys/{keyId} {
       allow read: if true;
       allow write: if isDev() || true;
     }

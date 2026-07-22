@@ -32,7 +32,8 @@ import {
   ArrowLeft,
   Handshake,
   Landmark,
-  Banknote
+  Banknote,
+  Key
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -53,6 +54,13 @@ import { toast } from "@/hooks/use-toast";
 
 const devMenuItems = [
   { title: "Root Console", icon: Terminal, url: "/dev" },
+  {
+    title: "Key Management",
+    icon: Key,
+    items: [
+      { title: "Client Keys", url: "/dev/database?view=licenses", view: "licenses" },
+    ]
+  },
   { 
     title: "System Management", 
     icon: Layers, 
@@ -61,7 +69,6 @@ const devMenuItems = [
       { title: "Clients Registry", url: "/dev/database?view=clients", view: "clients" },
       { title: "Merchants Registry", url: "/dev/database?view=merchants", view: "merchants" },
       { title: "Transactions Log", url: "/dev/database?view=transactions", view: "transactions" },
-      { title: "License Keys", url: "/dev/database?view=licenses", view: "licenses" },
       { title: "Payment Channels", url: "/dev/database?view=channels", view: "channels" },
       { title: "Website Settings", url: "/dev/settings" },
     ]
@@ -80,9 +87,6 @@ const devMenuItems = [
     items: [
       { title: "Orderkuota Bridge", url: "/dev/services/orderkuota" },
       { title: "PPOB Engine", url: "/dev/services/ppob" },
-      // Hidden for now
-      // { title: "SMM Bridge", url: "/dev/services/smm" },
-      // { title: "OTP Gateway", url: "/dev/services/otp" },
     ]
   },
   { title: "Live Traffic", icon: Activity, url: "/dev/traffic" },

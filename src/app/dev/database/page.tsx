@@ -302,7 +302,7 @@ function ManagementContent() {
 
   const keysQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, "license_keys");
+    return collection(db, "Client_Keys");
   }, [db]);
 
   const channelsQuery = useMemoFirebase(() => {
@@ -421,12 +421,12 @@ function ManagementContent() {
     };
 
     if (!db) return;
-    const keyRef = doc(db, "license_keys", key);
+    const keyRef = doc(db, "Client_Keys", key);
 
     setDoc(keyRef, keyData)
       .then(() => {
         setGeneratedKey(key);
-        toast({ title: "Key Generated", description: "The new license key has been saved." });
+        toast({ title: "Key Generated", description: "The new Client Key has been saved." });
       })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -744,7 +744,7 @@ function ManagementContent() {
               </DialogTrigger>
               <DialogContent className="w-[94%] sm:max-w-[425px] rounded-xl border-border p-6">
                 <DialogHeader>
-                  <DialogTitle className="font-headline font-bold">New License Key</DialogTitle>
+                  <DialogTitle className="font-headline font-bold">New Client Key</DialogTitle>
                   <DialogDescription className="text-xs">
                     Assign a one-time registration key for a specific client.
                   </DialogDescription>
@@ -768,7 +768,7 @@ function ManagementContent() {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 rounded-md hover:bg-emerald-500/10 shrink-0"
-                          onClick={() => copyToClipboard(generatedKey, "License Key")}
+                          onClick={() => copyToClipboard(generatedKey, "Client Key")}
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </Button>
@@ -1323,7 +1323,7 @@ function ManagementContent() {
                     </>
                   ) : view === "licenses" ? (
                     <>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">License Key</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Client Key</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Client Name</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Status</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Generated At</th>
@@ -1377,7 +1377,7 @@ function ManagementContent() {
                               variant="ghost" 
                               size="icon" 
                               className="h-8 w-8 rounded-md hover:bg-muted"
-                              onClick={() => copyToClipboard(item.key, "License Key")}
+                              onClick={() => copyToClipboard(item.key, "Client Key")}
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </Button>
