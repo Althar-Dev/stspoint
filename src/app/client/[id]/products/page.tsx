@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,41 +10,27 @@ import {
   Search, 
   RefreshCcw,
   Tag,
-  Database,
   Cloud,
-  Star,
-  ShoppingBag,
-  CheckCircle2,
-  Clock,
-  ChevronRight,
   Package,
   Layers,
-  ArrowRight,
-  Info,
-  ExternalLink,
+  ChevronRight,
   ChevronLeft,
   ChevronsLeft,
   ChevronsRight
 } from "lucide-react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogDescription
-} from "@/components/ui/dialog";
 import React, { useState, useEffect, useMemo } from "react";
-import { getOrderkuotaPPOBPricelist, type OrkutPPOBProduct } from "@/service/orderkuota";
+import { getOrderkuotaPPOBPricelist } from "@/service/orderkuota";
 import { getMongoProducts } from "@/service/mongodb";
 import { toast } from "@/hooks/use-toast";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export default function ClientProductsPage() {
   const params = useParams();
+  const router = useRouter();
   const { user } = useUser();
   const db = useFirestore();
   const [products, setProducts] = useState<any[]>([]);
@@ -52,7 +38,6 @@ export default function ClientProductsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
 
-  // Pagination for large datasets (PPOB)
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
 
@@ -125,114 +110,31 @@ export default function ClientProductsPage() {
     return Array.from(cats).sort();
   }, [products]);
 
-  // UI Helper: Web App Prem Card with Detail Dialog
   const MongoProductCard = ({ product }: { product: any }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Card className="group border-border shadow-sm rounded-3xl overflow-hidden bg-card hover:border-primary/20 transition-all flex flex-col h-full cursor-pointer ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-          <div className="relative aspect-video w-full overflow-hidden bg-muted">
-             {product.imageUrl ? (
-               <img src={product.imageUrl} alt={product.product} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
-             ) : (
-               <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
-                  <Package className="w-12 h-12" />
-               </div>
-             )}
-             <div className="absolute top-4 left-4 flex gap-2">
-                <Badge className="bg-black/60 backdrop-blur-md border-none text-[8px] font-bold uppercase tracking-widest text-white">{product.category}</Badge>
+    <Link href={`/client/${appId}/products/${product.id || product._id}`}>
+      <Card className="group border-border shadow-sm rounded-3xl overflow-hidden bg-card hover:border-primary/20 transition-all flex flex-col h-full cursor-pointer">
+        <div className="relative aspect-square w-full overflow-hidden bg-muted">
+           {product.imageUrl ? (
+             <img src={product.imageUrl} alt={product.product} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+           ) : (
+             <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
+                <Package className="w-12 h-12" />
              </div>
-          </div>
-          <CardContent className="p-5">
-             <h3 className="font-headline font-bold text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">{product.product}</h3>
-          </CardContent>
-        </Card>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl rounded-3xl p-0 overflow-hidden border-border shadow-2xl max-h-[92vh] overflow-y-auto outline-none">
-         <div className="relative aspect-[21/9] w-full overflow-hidden bg-muted border-b border-border">
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.product} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
-                 <Package className="w-16 h-16" />
-              </div>
-            )}
-            <div className="absolute top-4 left-4 flex gap-2">
-               <Badge className="bg-black/60 backdrop-blur-md border-none text-[9px] font-bold uppercase tracking-widest text-white">{product.category}</Badge>
-            </div>
-         </div>
-         
-         <div className="p-8 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-               <div className="space-y-1">
-                  <DialogTitle className="text-2xl font-headline font-bold text-foreground leading-tight">{product.product}</DialogTitle>
-                  <div className="flex items-center gap-4 text-[11px] text-muted-foreground font-bold uppercase tracking-tighter">
-                     <span className="flex items-center gap-1.5"><ShoppingBag className="w-3.5 h-3.5" /> {product.sold || 0} Terjual</span>
-                     <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Updated {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString('id-ID') : 'N/A'}</span>
-                  </div>
-               </div>
-               {product.rating && (
-                  <div className="bg-amber-500/10 px-3 py-1.5 rounded-xl flex items-center gap-2 border border-amber-500/20 w-fit">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="text-sm font-bold text-amber-600">{product.rating} / 5.0</span>
-                  </div>
-               )}
-            </div>
-
-            <DialogDescription className="space-y-3 block">
-               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 mb-2">
-                  <Info className="w-3.5 h-3.5" /> Deskripsi Layanan
-               </span>
-               <span className="text-sm text-muted-foreground leading-relaxed block bg-muted/30 p-4 rounded-2xl border border-border/50">
-                  {product.description}
-               </span>
-            </DialogDescription>
-
-            {product.featured && product.featured.length > 0 && (
-               <div className="space-y-3">
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Fitur Utama</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                     {product.featured.map((f: string, i: number) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-foreground/80">
-                           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                           {f}
-                        </div>
-                     ))}
-                  </div>
-               </div>
-            )}
-
-            <div className="space-y-4">
-               <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  <Layers className="w-3.5 h-3.5" /> Paket Tersedia
-               </h4>
-               <div className="grid grid-cols-1 gap-3">
-                  {product.packages?.map((pkg: any) => (
-                    <div key={pkg.id} className="p-4 rounded-2xl bg-muted/30 border border-border flex items-center justify-between hover:bg-muted/50 transition-colors group">
-                       <div className="min-w-0">
-                          <p className="text-sm font-bold truncate">{pkg.name}</p>
-                          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tighter flex items-center gap-1.5 mt-0.5">
-                            <CheckCircle2 className="w-3 h-3" /> Stok Ready: {pkg.stock?.length || 0}
-                          </p>
-                       </div>
-                       <div className="text-right shrink-0 ml-4">
-                          <p className="text-sm font-bold text-primary">Rp {pkg.price?.toLocaleString('id-ID')}</p>
-                          <Badge variant="outline" className="text-[8px] font-mono mt-1 opacity-0 group-hover:opacity-100 transition-opacity">ID: {pkg.id}</Badge>
-                       </div>
-                    </div>
-                  ))}
-               </div>
-            </div>
-            
-            <div className="pt-4 border-t border-border flex justify-between items-center opacity-40">
-               <span className="text-[9px] font-mono uppercase">Internal ID: {product.id}</span>
-               <span className="text-[9px] font-bold uppercase tracking-widest">STSPoint Partner Node</span>
-            </div>
-         </div>
-      </DialogContent>
-    </Dialog>
+           )}
+           <div className="absolute top-3 left-3 md:top-4 md:left-4">
+              <Badge className="bg-black/60 backdrop-blur-md border-none text-[8px] font-bold uppercase tracking-widest text-white px-2 py-0.5">{product.category}</Badge>
+           </div>
+        </div>
+        <CardContent className="p-3 md:p-5">
+           <h3 className="font-headline font-bold text-sm md:text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">{product.product}</h3>
+           <p className="text-[10px] text-muted-foreground mt-1 flex items-center justify-between">
+              Manage Details <ChevronRight className="w-3 h-3" />
+           </p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 
-  // UI Helper: Flat PPOB Card
   const FlatProductCard = ({ p }: { p: any }) => (
     <Card className="group border-border shadow-sm rounded-2xl overflow-hidden bg-card hover:border-primary/20 transition-all shadow-none">
       <CardContent className="p-5 space-y-3">
@@ -247,14 +149,12 @@ export default function ClientProductsPage() {
               {p.buyer_product_status ? 'Active' : 'Offline'}
             </Badge>
          </div>
-
          <div className="space-y-0.5">
             <h4 className="font-bold text-xs truncate leading-snug">{p.product_name}</h4>
             <p className="text-[10px] text-muted-foreground uppercase font-bold flex items-center gap-1">
                <Tag className="w-2.5 h-2.5" /> {p.brand}
             </p>
          </div>
-
          <div className="pt-2 border-t border-border flex items-center justify-between">
             <div className="space-y-0.5">
                <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Harga Jual</p>
@@ -325,9 +225,9 @@ export default function ClientProductsPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 w-full rounded-3xl" />
+            <Skeleton key={i} className="aspect-square w-full rounded-3xl" />
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
@@ -338,20 +238,19 @@ export default function ClientProductsPage() {
            <p className="text-sm font-medium text-muted-foreground italic">Produk tidak ditemukan atau katalog masih kosong.</p>
         </div>
       ) : app?.type === 'website_appprem' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
            {filteredProducts.map((product) => (
              <MongoProductCard key={product.id || product._id} product={product} />
            ))}
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
              {paginatedProducts.map((p) => (
                <FlatProductCard key={`${p.buyer_sku_code}-${p.provider}`} p={p} />
              ))}
           </div>
 
-          {/* Pagination for PPOB */}
           {totalPages > 1 && (
             <div className="px-4 py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
