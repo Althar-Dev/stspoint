@@ -14,10 +14,6 @@ export function CTASection() {
         <div className="absolute bottom-0 right-1/4 w-48 h-48 md:w-96 md:h-96 bg-zinc-500/10 blur-[60px] md:blur-[120px] translate-y-1/2 opacity-50"></div>
 
         <div className="relative z-10 space-y-6 md:space-y-8 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/10 text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/80 mb-1 md:mb-2">
-            <Terminal className="w-3.5 h-3.5 text-primary" />
-            Infrastructure for the Future
-          </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-headline font-bold leading-[1.15] tracking-tight">
             Ready to <span className="text-white/30">Scale</span> Your Digital Business?
           </h2>

@@ -85,6 +85,29 @@ export async function addProduct(params: {
 }
 
 /**
+ * Memperbarui brand (kategori) produk berdasarkan SKU dan Provider
+ */
+export async function updateProductBrand(params: {
+  sku: string;
+  provider: string;
+  brand: string;
+}) {
+  const db = getDb();
+  try {
+    const stmt = db.prepare(`
+      UPDATE products 
+      SET kategori = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE kode = ? AND provider = ?
+    `);
+    stmt.run(params.brand.toUpperCase().trim(), params.sku, params.provider);
+    return { success: true, message: "Brand produk berhasil diperbarui." };
+  } catch (error: any) {
+    console.error("Update Product Brand Error:", error);
+    return { success: false, message: error.message || "Gagal memperbarui brand." };
+  }
+}
+
+/**
  * Mengambil produk dari OkeConnect (Orderkuota) dan menyimpan ke SQLite database/ppob.db
  */
 export async function getProduct(url: string, tipe: 'Prepaid' | 'Pasca' = 'Prepaid') {
