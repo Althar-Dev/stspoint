@@ -31,7 +31,8 @@ import {
   Tag,
   TrendingUp,
   Hash,
-  Check
+  Check,
+  PackageCheck
 } from "lucide-react";
 import { 
   Table, 
@@ -85,6 +86,7 @@ import {
   deleteProducts, 
   addProduct, 
   updateProductBrand,
+  updateProductsBrandBulk,
   type OrkutPPOBProduct,
   getMarkupRules,
   addMarkupRule,
@@ -127,6 +129,7 @@ export default function PPOBManagementPage() {
   // Add/Edit Brand States
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
   const [isEditBrandOpen, setIsEditBrandOpen] = useState(false);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<OrkutPPOBProduct | null>(null);
   const [newBrandValue, setNewBrandValue] = useState("");
   const [isUpdatingBrand, setIsUpdatingBrand] = useState(false);
@@ -364,6 +367,28 @@ export default function PPOBManagementPage() {
     }
   };
 
+  const handleBulkUpdateBrand = async () => {
+    if (selectedIds.length === 0 || !newBrandValue.trim()) return;
+    setIsUpdatingBrand(true);
+    try {
+      const res = await updateProductsBrandBulk({
+        ids: selectedIds,
+        brand: newBrandValue.trim()
+      });
+      if (res.success) {
+        toast({ title: "Bulk Update Berhasil!", description: res.message });
+        setIsBulkEditOpen(false);
+        setSelectedIds([]);
+        setNewBrandValue("");
+        await loadLocalData();
+      } else {
+        toast({ variant: "destructive", title: "Gagal", description: res.message });
+      }
+    } finally {
+      setIsUpdatingBrand(false);
+    }
+  };
+
   const handleClearData = async () => {
     setLoading(true);
     setIsClearDialogOpen(false);
@@ -473,10 +498,14 @@ export default function PPOBManagementPage() {
   const endRange = Math.min(currentPage * itemsPerPage, filteredProducts.length);
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === paginatedProducts.length) {
-      setSelectedIds([]);
+    if (paginatedProducts.length === 0) return;
+    const currentBatchIds = paginatedProducts.map(p => `${p.buyer_sku_code}-${p.provider}`);
+    const allSelected = currentBatchIds.every(id => selectedIds.includes(id));
+    
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !currentBatchIds.includes(id)));
     } else {
-      setSelectedIds(paginatedProducts.map(p => `${p.buyer_sku_code}-${p.provider}`));
+      setSelectedIds(prev => Array.from(new Set([...prev, ...currentBatchIds])));
     }
   };
 
@@ -1009,17 +1038,66 @@ export default function PPOBManagementPage() {
              <div className="flex items-center justify-between">
                <div className="flex items-center gap-4">
                   <Checkbox 
-                    checked={paginatedProducts.length > 0 && selectedIds.length === paginatedProducts.length}
+                    checked={paginatedProducts.length > 0 && paginatedProducts.every(p => selectedIds.includes(`${p.buyer_sku_code}-${p.provider}`))}
                     onCheckedChange={toggleSelectAll}
                   />
-                  <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-                      <LayoutGrid className="w-4 h-4 text-primary" />
-                      PPOB Master Catalog
-                  </CardTitle>
+                  {selectedIds.length > 0 ? (
+                    <div className="flex items-center gap-3 animate-in slide-in-from-left-2 duration-300">
+                       <Badge className="bg-primary text-primary-foreground border-none font-bold text-[10px] uppercase h-7 px-3 rounded-full">
+                         {selectedIds.length} Produk Terpilih
+                       </Badge>
+                       <Dialog open={isBulkEditOpen} onOpenChange={setIsBulkEditOpen}>
+                          <DialogTrigger asChild>
+                             <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-7 px-3 rounded-full font-bold text-[9px] uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5"
+                              onClick={() => {
+                                setNewBrandValue("");
+                                setIsBulkEditOpen(true);
+                              }}
+                             >
+                               <PackageCheck className="w-3 h-3 mr-1.5" />
+                               Edit Brand Terpilih
+                             </Button>
+                          </DialogTrigger>
+                          <DialogContent className="w-[94vw] md:max-w-md rounded-2xl">
+                             <DialogHeader>
+                                <DialogTitle className="font-headline font-bold">Edit Massal Brand</DialogTitle>
+                                <DialogDescription className="text-xs">Ubah brand untuk <strong>{selectedIds.length}</strong> produk yang Anda pilih.</DialogDescription>
+                             </DialogHeader>
+                             <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                   <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Brand Baru</Label>
+                                   <Input 
+                                      value={newBrandValue} 
+                                      onChange={(e) => setNewBrandValue(e.target.value.toUpperCase())}
+                                      placeholder="e.g. TELKOMSEL"
+                                      className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
+                                   />
+                                </div>
+                             </div>
+                             <DialogFooter>
+                                <Button 
+                                   onClick={handleBulkUpdateBrand} 
+                                   disabled={isUpdatingBrand || !newBrandValue.trim()} 
+                                   className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[11px]"
+                                >
+                                   {isUpdatingBrand ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+                                   Terapkan ke {selectedIds.length} Produk
+                                </Button>
+                             </DialogFooter>
+                          </DialogContent>
+                       </Dialog>
+                    </div>
+                  ) : (
+                    <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                        Master Catalog
+                    </CardTitle>
+                  )}
                </div>
                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Rows:</span>
                      <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(parseInt(v))}>
                         <SelectTrigger className="h-8 w-24 text-[10px] font-bold rounded-md bg-background"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -1031,7 +1109,7 @@ export default function PPOBManagementPage() {
                         </SelectContent>
                      </Select>
                   </div>
-                  <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">{filteredProducts.length.toLocaleString()} Products</Badge>
+                  <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">{filteredProducts.length.toLocaleString()}</Badge>
                </div>
              </div>
           </CardHeader>
@@ -1191,9 +1269,9 @@ export default function PPOBManagementPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <TrendingUp className="w-4 h-4 text-primary" />
-              Active Markup Configuration
+              Active Markup
             </CardTitle>
-            <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold">{markupRules.length} Rules Active</Badge>
+            <Badge variant="secondary" className="bg-primary/5 text-primary text-[10px] font-bold">{markupRules.length}</Badge>
           </div>
         </CardHeader>
         <div className="overflow-x-auto">

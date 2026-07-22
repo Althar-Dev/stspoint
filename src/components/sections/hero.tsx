@@ -9,7 +9,7 @@ const HERO_FEATURES = [
   { icon: Zap, label: "Instant", sub: "Proses < 60 Detik", color: "text-emerald-400", bg: "bg-emerald-500/10" },
   { icon: ShieldCheck, label: "Verified", sub: "Official Partner", color: "text-indigo-400", bg: "bg-indigo-500/10" },
   { icon: Trophy, label: "Best Price", sub: "Harga Termurah", color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  { icon: Sparkles, label: "Smart AI", sub: "24/7 Support", color: "text-purple-400", bg: "bg-purple-500/10" },
+  { icon: Sparkles, label: "Support", sub: "24/7 Support", color: "text-purple-400", bg: "bg-purple-500/10" },
   { icon: CreditCard, label: "Secure", sub: "Payment Aman", color: "text-rose-400", bg: "bg-rose-500/10" },
 ];
 

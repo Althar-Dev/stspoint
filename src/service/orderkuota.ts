@@ -85,6 +85,36 @@ export async function addProduct(params: {
 }
 
 /**
+ * Memperbarui brand (kategori) produk secara massal
+ */
+export async function updateProductsBrandBulk(params: {
+  ids: string[]; // Format: "SKU-Provider"
+  brand: string;
+}) {
+  const db = getDb();
+  try {
+    const stmt = db.prepare(`
+      UPDATE products 
+      SET kategori = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE kode = ? AND provider = ?
+    `);
+    
+    const transaction = db.transaction((items: string[]) => {
+      for (const id of items) {
+        const [sku, provider] = id.split('-');
+        stmt.run(params.brand.toUpperCase().trim(), sku, provider);
+      }
+    });
+
+    transaction(params.ids);
+    return { success: true, message: `Berhasil memperbarui brand untuk ${params.ids.length} produk.` };
+  } catch (error: any) {
+    console.error("Bulk Update Brand Error:", error);
+    return { success: false, message: error.message || "Gagal memperbarui brand secara massal." };
+  }
+}
+
+/**
  * Memperbarui brand (kategori) produk berdasarkan SKU dan Provider
  */
 export async function updateProductBrand(params: {
