@@ -58,7 +58,6 @@ const adminMenuItems = [
 function ClientLayoutInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { setOpen, isMobile } = useSidebar();
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const auth = useAuth();
@@ -71,7 +70,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Path check logic: /client is the entry hub
   const isSelectAppPage = pathname === "/client";
 
   useEffect(() => {
@@ -84,13 +82,22 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if an app is selected
-      const selectedId = localStorage.getItem("sts_selected_app_id");
-      setAppSelected(selectedId);
+      // 1. Detect APP ID from URL segments
+      const pathSegments = pathname.split('/');
+      const idFromPath = pathSegments.length > 2 ? pathSegments[2] : null;
 
-      // Force to Hub if no app is selected and not already there
-      if (!selectedId && !isSelectAppPage) {
-        router.push("/client");
+      // 2. Synchronize Session
+      if (idFromPath && !['orders', 'finance', 'settings'].includes(idFromPath)) {
+        localStorage.setItem("sts_selected_app_id", idFromPath);
+        setAppSelected(idFromPath);
+      } else {
+        const storedId = localStorage.getItem("sts_selected_app_id");
+        setAppSelected(storedId);
+
+        // 3. Kick to Hub only if no app context exists and we're trying to view nested app pages
+        if (!storedId && !isSelectAppPage) {
+          router.push("/client");
+        }
       }
     }
   }, [user, profile, authLoading, profileLoading, router, pathname, isSelectAppPage]);
@@ -121,12 +128,10 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     );
   }
 
-  // Render Hub Page without Sidebar
   if (isSelectAppPage) {
     return <>{children}</>;
   }
 
-  // Find dynamic app base URL
   const selectedId = appSelected || "";
   const dynamicMenu = adminMenuItems.map(item => ({
     ...item,
@@ -135,10 +140,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
-      <Sidebar 
-        collapsible="icon" 
-        className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
-      >
+      <Sidebar collapsible="icon" className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out">
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href={`/client/${selectedId}`} className="flex items-center gap-2 group shrink-0">
             <Logo className="w-10 h-10 transition-transform group-hover:scale-105 shrink-0" />

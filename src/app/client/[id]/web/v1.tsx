@@ -11,7 +11,8 @@ import {
   ChevronRight,
   TrendingUp,
   ArrowUpRight,
-  Package
+  Package,
+  ShieldCheck
 } from "lucide-react";
 import React from "react";
 import Link from "next/link";
@@ -140,8 +141,8 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
             <div className="space-y-4">
                {[
-                 { label: 'Panduan Merchant', icon: FileTextIcon },
-                 { label: 'Hubungi Support', icon: HeadphonesIcon },
+                 { label: 'Panduan Merchant', icon: Package },
+                 { label: 'Hubungi Support', icon: TrendingUp },
                ].map((item, i) => (
                  <button key={i} className="w-full flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left">
                     <div className="flex items-center gap-3">
@@ -164,12 +165,4 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
       </div>
     </div>
   );
-}
-
-function FileTextIcon(props: any) {
-  return <Package {...props} />
-}
-
-function HeadphonesIcon(props: any) {
-  return <TrendingUp {...props} />
 }
