@@ -15,10 +15,8 @@ import {
   Activity, 
   Link2, 
   Plus,
-  Key,
   Clock, 
   Loader2,
-  Ticket,
   Copy,
   CheckCircle2,
   Layers,
@@ -31,7 +29,6 @@ import {
   Scale,
   Landmark,
   Banknote,
-  Handshake,
   XCircle,
   Check
 } from "lucide-react";
@@ -69,8 +66,9 @@ import {
 import React, { useState, useMemo, useEffect, useCallback, Suspense } from "react";
 import { checkEndpointHealth } from "./actions";
 import { toast } from "@/hooks/use-toast";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
+import { ClientKeyManagement } from "@/components/partner/clientkey";
 
 type ManagementView = "clients" | "merchants" | "transactions" | "gateway" | "licenses" | "channels" | "bank-accounts" | "withdrawals";
 
@@ -108,11 +106,6 @@ function ManagementContent() {
   const view = (searchParams.get("view") as ManagementView) || "gateway";
   const [search, setSearch] = useState("");
   
-  const [isKeyDialogOpen, setIsKeyDialogOpen] = useState(false);
-  const [newClientName, setNewClientName] = useState("");
-  const [generatedKey, setGeneratedKey] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-
   const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -190,30 +183,10 @@ function ManagementContent() {
       httpCode: 0
     },
     { 
-      provider: "Orderkuota",
-      name: "Account Profile", 
-      type: "GET", 
-      endpoint: "https://api.qrispay.biz.id/orderkuota/profile",
-      status: "Initializing", 
-      latency: 0,
-      lastCheck: "Never",
-      httpCode: 0
-    },
-    { 
       provider: "GoMerchant",
       name: "Login Session", 
       type: "POST", 
       endpoint: "https://api.gomerchant.biz.id/v1/login",
-      status: "Initializing", 
-      latency: 0,
-      lastCheck: "Never",
-      httpCode: 0
-    },
-    { 
-      provider: "GoMerchant",
-      name: "OTP Verification", 
-      type: "POST", 
-      endpoint: "https://api.gomerchant.biz.id/v1/verify",
       status: "Initializing", 
       latency: 0,
       lastCheck: "Never",
@@ -228,27 +201,7 @@ function ManagementContent() {
       latency: 0,
       lastCheck: "Never",
       httpCode: 0
-    },
-    { 
-      provider: "GoMerchant",
-      name: "Token Refresh", 
-      type: "POST", 
-      endpoint: "https://api.gomerchant.biz.id/v1/refresh",
-      status: "Initializing", 
-      latency: 0,
-      lastCheck: "Never",
-      httpCode: 0
-    },
-    { 
-      provider: "SMM Panel",
-      name: "Social Engine", 
-      type: "POST", 
-      endpoint: "", 
-      status: "No Set", 
-      latency: 0,
-      lastCheck: "N/A",
-      httpCode: 0
-    },
+    }
   ]);
 
   const performAudit = useCallback(async () => {
@@ -300,11 +253,6 @@ function ManagementContent() {
     return query(collection(db, "stspay_transactions"), where("type", "==", "payout"));
   }, [db]);
 
-  const keysQuery = useMemoFirebase(() => {
-    if (!db) return null;
-    return collection(db, "Client_Keys");
-  }, [db]);
-
   const channelsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "payment_channels");
@@ -313,7 +261,6 @@ function ManagementContent() {
   const { data: users, loading: usersLoading } = useCollection(usersQuery);
   const { data: transactions, loading: txLoading } = useCollection(txsQuery);
   const { data: stspayTransactions, loading: stsTxLoading } = useCollection(stspayTxsQuery);
-  const { data: licenseKeys, loading: keysLoading } = useCollection(keysQuery);
   const { data: paymentChannels, loading: channelsLoading } = useCollection(channelsQuery);
 
   const filteredData = useMemo(() => {
@@ -356,13 +303,6 @@ function ManagementContent() {
       );
     }
 
-    if (view === "licenses") {
-      return licenseKeys.filter(k => 
-        k.key?.toLowerCase().includes(s) || 
-        k.name?.toLowerCase().includes(s)
-      );
-    }
-
     if (view === "channels") {
       const dbChannels = paymentChannels || [];
       const staticChannels = STATIC_CHANNELS.map(sc => {
@@ -381,7 +321,7 @@ function ManagementContent() {
     }
 
     return [];
-  }, [users, transactions, stspayTransactions, licenseKeys, paymentChannels, view, search]);
+  }, [users, transactions, stspayTransactions, paymentChannels, view, search]);
 
   const groupedGateways = useMemo(() => {
     return gateways.reduce((acc, curr) => {
@@ -397,48 +337,6 @@ function ManagementContent() {
     if (code >= 300 && code < 400) return <Badge className="bg-blue-500/10 text-blue-600 border-none font-mono">{code}</Badge>;
     if (code >= 400 && code < 500) return <Badge className="bg-amber-500/10 text-amber-600 border-none font-mono">{code}</Badge>;
     return <Badge className="bg-destructive/10 text-destructive border-none font-mono">{code}</Badge>;
-  };
-
-  const handleGenerateKey = async () => {
-    if (!newClientName) {
-      toast({ variant: "destructive", title: "Name Required", description: "Please enter the client name." });
-      return;
-    }
-
-    setIsGenerating(true);
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomPart = '';
-    for (let i = 0; i < 8; i++) {
-      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const key = `STS-Client_${randomPart}`;
-    
-    const keyData = {
-      key: key,
-      name: newClientName,
-      status: 'unused',
-      createdAt: serverTimestamp(),
-    };
-
-    if (!db) return;
-    const keyRef = doc(db, "Client_Keys", key);
-
-    setDoc(keyRef, keyData)
-      .then(() => {
-        setGeneratedKey(key);
-        toast({ title: "Key Generated", description: "The new Client Key has been saved." });
-      })
-      .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: keyRef.path,
-          operation: 'create',
-          requestResourceData: keyData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-      })
-      .finally(() => {
-        setIsGenerating(false);
-      });
   };
 
   const handleUpdateChannelStatus = async (channelId: string, channelName: string, channelGroup: string, status: boolean, feeValue: string, minPay: string, provider: string, settlement: string, logoUrl?: string) => {
@@ -494,7 +392,6 @@ function ManagementContent() {
       return;
     }
 
-    setIsGenerating(true);
     const channelId = id.toUpperCase();
     const data = {
       id: channelId,
@@ -520,8 +417,6 @@ function ManagementContent() {
       setEditingChannel(null);
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "Failed to save channel." });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -578,7 +473,6 @@ function ManagementContent() {
 
     updateDoc(txRef, updateData)
       .then(async () => {
-        // Handle Refund if Reject
         if (status === 'FAILED') {
           const stspaySvcRef = doc(db, "users", userId, "services", "stspay");
           updateDoc(stspaySvcRef, {
@@ -594,14 +488,12 @@ function ManagementContent() {
           });
         }
 
-        // Update both ledgers using setDoc with merge to avoid "No document to update"
         const ledgerStatus = status === 'PAID' ? 'Success' : 'Failed';
         const ledgerUpdate = { status: ledgerStatus, updatedAt: serverTimestamp() };
         
         setDoc(globalTxRef, ledgerUpdate, { merge: true });
         setDoc(userHistoryRef, ledgerUpdate, { merge: true });
 
-        // Kirim Notifikasi
         const notificationsRef = collection(db, "users", userId, "notifications");
         const notifData = {
           title: status === 'PAID' ? "Penarikan Berhasil" : "Penarikan Gagal",
@@ -657,12 +549,6 @@ function ManagementContent() {
     setIsChannelDialogOpen(true);
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: `${label} copied to clipboard.` });
-  };
-
   const getLogoPreview = (channel: any) => {
     const dbEntry = paymentChannels?.find(pc => pc.id.toUpperCase() === channel.id.toUpperCase());
     const logoSource = dbEntry?.logo || channel.logo;
@@ -708,20 +594,9 @@ function ManagementContent() {
 
   const header = getViewHeader();
 
-  const settlementSummary = useMemo(() => {
-    if (view !== 'channels') return [];
-    
-    const groups = ['QR', 'VA', 'E-Wallet', 'Retail'];
-    return groups.map(group => {
-      const related = filteredData.filter(c => c.group === group);
-      const settlements = Array.from(new Set(related.map(c => c.settlement || 'T+1')));
-      return {
-        group,
-        count: related.length,
-        durations: settlements.join(', ') || 'N/A'
-      };
-    });
-  }, [view, filteredData]);
+  if (view === 'licenses') {
+    return <ClientKeyManagement />;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
@@ -731,73 +606,6 @@ function ManagementContent() {
              <header.icon className={`w-3.5 h-3.5 ${header.color}`} />
              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/80">{header.title}</span>
           </div>
-
-          {view === 'licenses' && (
-            <Dialog open={isKeyDialogOpen} onOpenChange={setIsKeyDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="w-full sm:w-auto h-11 bg-primary text-primary-foreground font-bold text-[10px] uppercase tracking-widest rounded-md px-6 gap-2"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Generate License
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="w-[94%] sm:max-w-[425px] rounded-xl border-border p-6">
-                <DialogHeader>
-                  <DialogTitle className="font-headline font-bold">New Client Key</DialogTitle>
-                  <DialogDescription className="text-xs">
-                    Assign a one-time registration key for a specific client.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Client Business Name</Label>
-                    <Input 
-                      placeholder="e.g. TokoDigital Pro" 
-                      value={newClientName} 
-                      onChange={(e) => setNewClientName(e.target.value)}
-                      className="rounded-md h-12 focus:ring-primary/20"
-                    />
-                  </div>
-                  {generatedKey && (
-                    <div className="p-4 rounded-md bg-emerald-500/5 border border-emerald-500/20 space-y-2 animate-in zoom-in-95 duration-300">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Generated Key:</p>
-                      <div className="flex items-center justify-between gap-2">
-                        <code className="text-sm font-mono font-bold text-foreground break-all">{generatedKey}</code>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 rounded-md hover:bg-emerald-500/10 shrink-0"
-                          onClick={() => copyToClipboard(generatedKey, "Client Key")}
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  {!generatedKey ? (
-                    <Button 
-                      className="w-full h-11 rounded-md font-bold"
-                      onClick={handleGenerateKey}
-                      disabled={isGenerating || !newClientName}
-                    >
-                      {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Create Key"}
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="outline"
-                      className="w-full h-11 rounded-md font-bold"
-                      onClick={() => setIsKeyDialogOpen(false)}
-                    >
-                      Finished
-                    </Button>
-                  )}
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
 
           {view === 'channels' && (
             <Dialog open={isChannelDialogOpen} onOpenChange={setIsChannelDialogOpen}>
@@ -836,7 +644,7 @@ function ManagementContent() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Channel ID (Xendit/Midtrans Code)</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Channel ID</Label>
                     <Input 
                       placeholder="e.g. BCA, QRIS, OVO" 
                       value={channelForm.id} 
@@ -854,7 +662,7 @@ function ManagementContent() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Logo (Filename in /assets/bank/ or URL)</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Logo</Label>
                     <Input 
                       placeholder="e.g. bca.png or https://..." 
                       value={channelForm.logo} 
@@ -893,7 +701,7 @@ function ManagementContent() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Minimal Payment (IDR)</Label>
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Min Pay</Label>
                       <Input 
                         placeholder="e.g. 1000" 
                         value={channelForm.minPay} 
@@ -902,7 +710,7 @@ function ManagementContent() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Settlement Time</Label>
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Settlement</Label>
                       <Input 
                         placeholder="e.g. T+1" 
                         value={channelForm.settlement} 
@@ -914,7 +722,7 @@ function ManagementContent() {
                   <div className="flex items-center justify-between p-4 bg-muted/30 rounded-md border border-border">
                     <div className="space-y-0.5">
                        <p className="text-[10px] font-bold uppercase tracking-widest">Global Status</p>
-                       <p className="text-[9px] text-muted-foreground uppercase">Enable for all merchants</p>
+                       <p className="text-[9px] text-muted-foreground uppercase">Enable for all</p>
                     </div>
                     <Switch 
                       checked={channelForm.status} 
@@ -926,9 +734,8 @@ function ManagementContent() {
                   <Button 
                     className="w-full h-11 rounded-md font-bold"
                     onClick={handleSaveChannel}
-                    disabled={isGenerating}
                   >
-                    {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save Configuration"}
+                    Save Configuration
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -946,7 +753,7 @@ function ManagementContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input 
               className="pl-9 rounded-md h-11 bg-card border-border focus:ring-primary/20 text-xs" 
-              placeholder={`Search within registry...`} 
+              placeholder={`Search registry...`} 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -974,7 +781,6 @@ function ManagementContent() {
                 {view === 'bank-accounts' && <Landmark className="w-4 h-4 text-emerald-500" />}
                 {view === 'withdrawals' && <Banknote className="w-4 h-4 text-amber-500" />}
                 {view === 'transactions' && <History className="w-4 h-4 text-amber-500" />}
-                {view === 'licenses' && <Ticket className="w-4 h-4 text-purple-500" />}
                 {view === 'bank-accounts' ? 'Rekening Bank' : view.charAt(0).toUpperCase() + view.slice(1).replace('-', ' ')} Registry
               </>
             )}
@@ -1056,9 +862,9 @@ function ManagementContent() {
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Provider</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Logo</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Channel ID</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Payment Name</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Name</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Group</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Fee / MDR</th>
+                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Fee</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Min Pay</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Settlement</th>
                   <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Status</th>
@@ -1079,64 +885,22 @@ function ManagementContent() {
                     
                     return (
                       <tr key={i} className="hover:bg-muted/10 transition-colors group">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Select 
-                            value={providerName} 
-                            onValueChange={(val) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, val, settlement, dbChannel?.logo || channel.logo)}
-                          >
-                            <SelectTrigger className="h-8 w-28 text-[10px] font-bold border-transparent bg-transparent hover:bg-muted transition-all">
-                              <SelectValue placeholder="Provider" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Xendit" className="text-[10px]">Xendit</SelectItem>
-                              <SelectItem value="Midtrans" className="text-[10px]">Midtrans</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-[10px] font-bold">{providerName}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                            <div className="flex justify-center">
                              {getLogoPreview(channel)}
                            </div>
                         </td>
                         <td className="px-6 py-4 font-mono font-bold text-primary whitespace-nowrap uppercase">{channel.id}</td>
-                        <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">
-                          {channel.name}
-                        </td>
+                        <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">{channel.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                            <Badge variant="outline" className="text-[8px] uppercase font-bold px-2 py-0.5 border-border">
                              {channel.group}
                            </Badge>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                           <div className="max-w-[100px]">
-                              <Input 
-                                value={dbChannel?.fee || channel.fee || ""}
-                                placeholder="e.g. 0.7%"
-                                className="h-8 text-[10px] font-mono px-2 bg-muted/30 border-transparent focus:bg-background transition-all"
-                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, e.target.value, dbChannel?.min || channel.min, providerName, settlement, dbChannel?.logo || channel.logo)}
-                              />
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                           <div className="max-w-[100px] mx-auto">
-                              <Input 
-                                value={dbChannel?.min || channel.min || ""}
-                                placeholder="1000"
-                                className="h-8 text-[10px] font-mono px-2 bg-muted/30 border-transparent focus:bg-background transition-all text-center"
-                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, e.target.value, providerName, settlement, dbChannel?.logo || channel.logo)}
-                              />
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                           <div className="max-w-[80px] mx-auto">
-                              <Input 
-                                value={settlement}
-                                placeholder="T+1"
-                                className="h-8 text-[10px] font-bold px-2 bg-muted/30 border-transparent focus:bg-background transition-all text-center"
-                                onChange={(e) => handleUpdateChannelStatus(channel.id, channel.name, channel.group, isActive, dbChannel?.fee || channel.fee, dbChannel?.min || channel.min, providerName, e.target.value, dbChannel?.logo || channel.logo)}
-                              />
-                           </div>
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-mono">{dbChannel?.fee || channel.fee || ""}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center font-mono">{dbChannel?.min || channel.min || ""}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center font-bold">{settlement}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                            <Badge className={`${isActive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
                               {isActive ? 'Active' : 'Inactive'}
@@ -1316,18 +1080,10 @@ function ManagementContent() {
                   {view === "transactions" ? (
                     <>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">TXID</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Product Item</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Product</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">User Context</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Price</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Status</th>
-                    </>
-                  ) : view === "licenses" ? (
-                    <>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Client Key</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Client Name</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Status</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Generated At</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Action</th>
                     </>
                   ) : (
                     <>
@@ -1335,22 +1091,22 @@ function ManagementContent() {
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Email Address</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{view === 'clients' ? 'Client Key' : 'Merchant ID'}</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Role</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">System Balance</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Balance</th>
                     </>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {(view === 'transactions' ? txLoading : view === 'licenses' ? keysLoading : usersLoading) ? (
+                {(view === 'transactions' ? txLoading : usersLoading) ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing registry...</td></tr>
                 ) : filteredData.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">No records found in this category.</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">No records found.</td></tr>
                 ) : (
                   filteredData.map((item, i) => (
                     <tr key={i} className="hover:bg-muted/10 transition-colors group">
                       {view === 'transactions' ? (
                         <>
-                          <td className="px-6 py-4 font-mono text-muted-foreground group-hover:text-primary transition-colors whitespace-nowrap uppercase">{item.id?.substring(0, 10)}</td>
+                          <td className="px-6 py-4 font-mono text-muted-foreground whitespace-nowrap uppercase">{item.id?.substring(0, 10)}</td>
                           <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">{item.itemName}</td>
                           <td className="px-6 py-4 text-muted-foreground/60 whitespace-nowrap font-mono text-[9px]">{item.userId?.substring(0, 12)}...</td>
                           <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{item.price}</td>
@@ -1358,29 +1114,6 @@ function ManagementContent() {
                             <Badge className={`${item.status === 'Success' ? 'bg-emerald-500/10 text-emerald-600' : item.status === 'Pending' ? 'bg-amber-500/10 text-amber-600' : 'bg-destructive/10 text-destructive'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
                               {item.status}
                             </Badge>
-                          </td>
-                        </>
-                      ) : view === 'licenses' ? (
-                        <>
-                          <td className="px-6 py-4 font-mono font-bold text-primary whitespace-nowrap">{item.key}</td>
-                          <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">{item.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                             <Badge className={`${item.status === 'unused' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground/40'} border-none uppercase text-[8px] px-2 py-0.5 rounded-sm font-bold`}>
-                               {item.status}
-                             </Badge>
-                          </td>
-                          <td className="px-6 py-4 text-muted-foreground text-[10px] whitespace-nowrap font-medium">
-                            {item.createdAt ? format(item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt), "dd MMM yyyy HH:mm") : '---'}
-                          </td>
-                          <td className="px-6 py-4 text-right whitespace-nowrap">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-md hover:bg-muted"
-                              onClick={() => copyToClipboard(item.key, "Client Key")}
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
                           </td>
                         </>
                       ) : (
@@ -1404,63 +1137,6 @@ function ManagementContent() {
           )}
         </div>
       </Card>
-
-      {(view === 'channels') && (
-        <Card className="bg-card border-border rounded-md overflow-hidden shadow-sm">
-          <CardHeader className="bg-muted/30 dark:bg-[#0A0A0A] px-6 py-4 border-b border-border">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Scale className="w-4 h-4 text-primary" />
-              Settlement Matrix Summary
-            </CardTitle>
-          </CardHeader>
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-full text-[10px] md:text-xs text-left">
-              <thead className="bg-muted/50 border-b border-border">
-                <tr>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Method Group</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Active Channels</th>
-                  <th className="px-6 py-4 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-right">Settlement Duration</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {settlementSummary.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-muted/10 transition-colors">
-                    <td className="px-6 py-4 font-bold text-foreground/80">{item.group}</td>
-                    <td className="px-6 py-4 text-center">
-                       <Badge variant="outline" className="font-mono">{item.count}</Badge>
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-primary">{item.durations}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-md bg-muted/30 border border-border space-y-4 shadow-sm">
-           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Infrastructure Integrity</h4>
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                 <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">System Nodes</p>
-                 <p className="text-xl font-headline font-bold text-foreground">{users.length}</p>
-              </div>
-              <div className="space-y-1 text-right">
-                 <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">Live Traffic Flow</p>
-                 <p className="text-xl font-headline font-bold text-primary">{transactions.length}</p>
-              </div>
-           </div>
-        </div>
-
-        <div className="p-6 rounded-md bg-primary/5 border border-primary/20 flex items-center justify-between group cursor-pointer hover:bg-primary/10 transition-all shadow-sm">
-           <div className="space-y-1">
-              <h4 className="text-sm font-bold text-foreground uppercase tracking-tight">Data Export Cluster</h4>
-              <p className="text-[10px] text-muted-foreground leading-tight">Download a complete JSON snapshot of the system registry.</p>
-           </div>
-           <Badge variant="outline" className="border-border text-muted-foreground uppercase group-hover:text-primary group-hover:border-primary transition-colors text-[9px] font-bold py-1 px-3">Export</Badge>
-        </div>
-      </div>
     </div>
   );
 }
