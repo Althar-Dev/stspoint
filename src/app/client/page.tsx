@@ -15,7 +15,8 @@ import {
   LogOut,
   Bot,
   ShoppingBag,
-  Zap
+  Zap,
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -93,6 +94,8 @@ export default function SelectAppPage() {
         name: appName,
         type: keyData.type || 'website_topup',
         token: keyData.token || '',
+        mongoUser: keyData.mongoUser || '',
+        mongoPass: keyData.mongoPass || '',
         activationKey: activationKey.trim(),
         status: 'active',
         createdAt: serverTimestamp()
@@ -145,9 +148,12 @@ export default function SelectAppPage() {
           <Logo className="w-8 h-8" />
           <h1 className="font-headline font-bold text-lg tracking-tight">Partner <span className="text-primary/40">Hub</span></h1>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs font-bold gap-2 text-muted-foreground hover:text-destructive">
-          <LogOut className="w-4 h-4" /> Logout
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="h-8 w-px bg-border hidden sm:block"></div>
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-xs font-bold gap-2 text-muted-foreground hover:text-destructive transition-colors">
+            <LogOut className="w-4 h-4" /> Logout
+          </Button>
+        </div>
       </header>
 
       <main className="flex-1 w-full max-w-screen-2xl mx-auto p-6 md:p-12 lg:p-20 space-y-12">
@@ -209,7 +215,7 @@ export default function SelectAppPage() {
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
                    <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      Licenses are <strong>One-Time Use</strong>. Once activated, the category (Topup, App Prem, or Bot) will be assigned automatically.
+                      Licenses are <strong>One-Time Use</strong>. Once activated, the category and specialized credentials will be assigned automatically.
                    </p>
                 </div>
               </div>
@@ -258,7 +264,10 @@ export default function SelectAppPage() {
                   <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-tighter">ID: {app.id}</p>
                 </div>
                 <div className="pt-4 flex items-center justify-between">
-                  <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="bg-emerald-500/5 text-emerald-600 border-emerald-500/20 text-[9px] font-bold uppercase h-6">Operational</Badge>
+                    {app.mongoUser && <Database className="w-3 h-3 text-muted-foreground/40" />}
+                  </div>
                   <div className="flex items-center gap-1 text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
                     Manage <ChevronRight className="w-3 h-3" />
                   </div>

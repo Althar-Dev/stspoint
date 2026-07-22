@@ -18,7 +18,9 @@ import {
   ShieldCheck,
   Key as KeyIcon,
   ShoppingBag,
-  Zap
+  Zap,
+  Database,
+  Lock
 } from "lucide-react";
 import { 
   Dialog, 
@@ -50,6 +52,8 @@ export function AppKeyManagement() {
   const [newAppName, setNewAppName] = useState("");
   const [appType, setAppType] = useState<"website_topup" | "website_appprem" | "bot">("website_topup");
   const [botToken, setBotToken] = useState("");
+  const [mongoUser, setMongoUser] = useState("");
+  const [mongoPass, setMongoPass] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -89,6 +93,11 @@ export function AppKeyManagement() {
       return;
     }
 
+    if (appType === "website_appprem" && (!mongoUser || !mongoPass)) {
+      toast({ variant: "destructive", title: "DB Credentials Required", description: "Web App Prem requires MongoDB credentials." });
+      return;
+    }
+
     setIsGenerating(true);
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let randomPart = '';
@@ -102,6 +111,8 @@ export function AppKeyManagement() {
       name: newAppName,
       type: appType,
       token: appType === "bot" ? botToken.trim() : "",
+      mongoUser: appType === "website_appprem" ? mongoUser.trim() : "",
+      mongoPass: appType === "website_appprem" ? mongoPass.trim() : "",
       status: 'unused',
       createdAt: serverTimestamp(),
     };
@@ -138,6 +149,8 @@ export function AppKeyManagement() {
               setNewAppName(""); 
               setAppType("website_topup");
               setBotToken("");
+              setMongoUser("");
+              setMongoPass("");
             }
           }}>
             <DialogTrigger asChild>
@@ -193,6 +206,36 @@ export function AppKeyManagement() {
                   </div>
                 )}
 
+                {appType === "website_appprem" && (
+                  <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Username</Label>
+                      <div className="relative">
+                        <Database className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="DB Username" 
+                          value={mongoUser} 
+                          onChange={(e) => setMongoUser(e.target.value)}
+                          className="rounded-xl h-12 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          type="password"
+                          placeholder="DB Password" 
+                          value={mongoPass} 
+                          onChange={(e) => setMongoPass(e.target.value)}
+                          className="rounded-xl h-12 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {generatedKey && (
                   <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-3 animate-in zoom-in-95 duration-300">
                     <div className="space-y-1">
@@ -209,19 +252,28 @@ export function AppKeyManagement() {
                         </Button>
                       </div>
                     </div>
-                    {appType === "bot" && (
+                    {(appType === "bot" || appType === "website_appprem") && (
                        <div className="space-y-1 border-t border-blue-500/10 pt-3">
-                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-600">Linked Token:</p>
-                          <div className="flex items-center justify-between gap-2">
-                            <code className="text-[10px] font-mono text-muted-foreground truncate max-w-[200px]">{botToken}</code>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-md hover:bg-blue-500/10 shrink-0"
-                              onClick={() => copyToClipboard(botToken, "Bot Token")}
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-600">Linked Credentials:</p>
+                          <div className="flex flex-col gap-1">
+                            {appType === "bot" && (
+                              <div className="flex items-center justify-between gap-2">
+                                <code className="text-[10px] font-mono text-muted-foreground truncate">Token: {botToken}</code>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(botToken, "Token")}><Copy className="w-3 h-3" /></Button>
+                              </div>
+                            )}
+                            {appType === "website_appprem" && (
+                              <>
+                                <div className="flex items-center justify-between gap-2">
+                                  <code className="text-[10px] font-mono text-muted-foreground truncate">User: {mongoUser}</code>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(mongoUser, "DB User")}><Copy className="w-3 h-3" /></Button>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <code className="text-[10px] font-mono text-muted-foreground">Pass: ••••••••</code>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyToClipboard(mongoPass, "DB Pass")}><Copy className="w-3 h-3" /></Button>
+                                </div>
+                              </>
+                            )}
                           </div>
                        </div>
                     )}
@@ -233,7 +285,7 @@ export function AppKeyManagement() {
                   <Button 
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
                     onClick={handleGenerateKey}
-                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken)}
+                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken) || (appType === "website_appprem" && (!mongoUser || !mongoPass))}
                   >
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
                     Create {appType === 'bot' ? 'Bot' : 'Web'} Key
@@ -327,13 +379,15 @@ export function AppKeyManagement() {
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </Button>
-                        {item.token && (
+                        {(item.token || item.mongoUser) && (
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 rounded-md hover:bg-muted text-purple-600"
-                            onClick={() => copyToClipboard(item.token, "Bot Token")}
-                            title="Copy Linked Token"
+                            className="h-8 w-8 rounded-md hover:bg-muted text-primary"
+                            onClick={() => {
+                              const val = item.token || `User: ${item.mongoUser}`;
+                              copyToClipboard(val, "Credentials");
+                            }}
                           >
                             <ShieldCheck className="w-3.5 h-3.5" />
                           </Button>
