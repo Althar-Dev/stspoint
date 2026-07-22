@@ -43,6 +43,7 @@ export function middleware(request: NextRequest) {
     '/about',
     '/support',
     '/status',
+    '/access',
     '/qris-string',
     '/terms-of-service',
     '/privacy-policy',
