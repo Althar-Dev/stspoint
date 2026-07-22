@@ -176,7 +176,7 @@ export default function ClientProductsPage() {
             <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Katalog <span className="text-primary">Produk</span></h1>
             {app?.type === 'website_appprem' && (
               <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[9px] font-bold uppercase h-5 px-2 hidden sm:flex">
-                <Cloud className="w-3 h-3 mr-1" /> MongoDB Live
+                <Cloud className="w-3 h-3 mr-1" /> Database Live
               </Badge>
             )}
           </div>

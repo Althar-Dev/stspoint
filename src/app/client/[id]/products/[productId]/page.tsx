@@ -132,7 +132,7 @@ export default function ProductDetailPage() {
            <Button variant="outline" className="flex-1 md:flex-none rounded-xl h-10 md:h-12 px-4 md:px-6 font-bold text-[10px] md:text-xs" onClick={() => router.back()}>Batal</Button>
            <Button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none rounded-xl h-10 md:h-12 px-6 md:px-10 font-bold text-[10px] md:text-xs uppercase tracking-widest gap-2 shadow-xl shadow-primary/10">
              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-             <span className="hidden sm:inline">Simpan Ke Mongo</span>
+             <span className="hidden sm:inline">Simpan</span>
              <span className="sm:hidden">Simpan</span>
            </Button>
         </div>
