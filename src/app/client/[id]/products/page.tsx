@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,24 +10,54 @@ import {
   Search, 
   Package, 
   RefreshCcw,
-  Tag
+  Tag,
+  Database,
+  Cloud
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { getOrderkuotaPPOBPricelist, type OrkutPPOBProduct } from "@/service/orderkuota";
+import { getMongoProducts } from "@/service/mongodb";
 import { toast } from "@/hooks/use-toast";
+import { useParams } from "next/navigation";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 export default function ClientProductsPage() {
+  const params = useParams();
+  const { user } = useUser();
+  const db = useFirestore();
   const [products, setProducts] = useState<OrkutPPOBProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
 
+  const appId = params.id as string;
+
+  const appRef = useMemoFirebase(() => {
+    if (!db || !user?.uid || !appId) return null;
+    return doc(db, "users", user.uid, "apps", appId);
+  }, [db, user?.uid, appId]);
+
+  const { data: app, loading: appLoading } = useDoc(appRef);
+
   const fetchProducts = async () => {
+    if (appLoading || !app) return;
+    
     setLoading(true);
     try {
-      const res = await getOrderkuotaPPOBPricelist();
-      if (res.success) {
-        setProducts(res.data);
+      if (app.type === 'website_appprem') {
+        const res = await getMongoProducts(user!.uid, appId);
+        if (res.success) {
+          setProducts(res.data);
+          toast({ title: "Sync MongoDB", description: res.message });
+        } else {
+          toast({ variant: "destructive", title: "MongoDB Error", description: res.message });
+        }
+      } else {
+        const res = await getOrderkuotaPPOBPricelist();
+        if (res.success) {
+          setProducts(res.data);
+        }
       }
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "Gagal memuat katalog produk." });
@@ -36,8 +67,10 @@ export default function ClientProductsPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (!appLoading && app) {
+      fetchProducts();
+    }
+  }, [app, appLoading]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -59,7 +92,14 @@ export default function ClientProductsPage() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 w-full min-w-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Katalog <span className="text-primary">Produk</span></h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Katalog <span className="text-primary">Produk</span></h1>
+            {app?.type === 'website_appprem' && (
+              <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[9px] font-bold uppercase h-5 px-2">
+                <Cloud className="w-3 h-3 mr-1" /> MongoDB
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground text-xs md:text-sm">Pantau daftar layanan dan harga produk yang tersedia di website Anda.</p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchProducts} disabled={loading} className="h-9 px-4 rounded-md font-bold text-[10px] uppercase tracking-widest gap-2">
@@ -86,7 +126,7 @@ export default function ClientProductsPage() {
           >
             Semua
           </Button>
-          {categories.slice(0, 5).map(cat => (
+          {categories.slice(0, 8).map(cat => (
             <Button 
               key={cat}
               variant={category === cat ? 'default' : 'outline'} 
@@ -103,8 +143,8 @@ export default function ClientProductsPage() {
       <Card className="border-border shadow-sm rounded-xl overflow-hidden bg-card w-full min-w-0">
         <CardHeader className="px-6 py-4 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
           <CardTitle className="text-[10px] font-bold flex items-center gap-2 uppercase tracking-[0.2em] text-muted-foreground">
-            <Package className="w-4 h-4 text-primary" />
-            Master Product List
+            {app?.type === 'website_appprem' ? <Database className="w-4 h-4 text-primary" /> : <Package className="w-4 h-4 text-primary" />}
+            {app?.type === 'website_appprem' ? "Master Mongo Database" : "Master Product List"}
           </CardTitle>
         </CardHeader>
         
@@ -128,7 +168,7 @@ export default function ClientProductsPage() {
               ) : filteredProducts.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-24 text-center text-muted-foreground italic text-xs">Produk tidak ditemukan.</td></tr>
               ) : (
-                filteredProducts.slice(0, 100).map((prod) => (
+                filteredProducts.map((prod) => (
                   <tr key={`${prod.buyer_sku_code}-${prod.provider}`} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap uppercase tracking-tighter">
                       {prod.buyer_sku_code}
