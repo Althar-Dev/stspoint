@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,8 +85,8 @@ export default function ClientOrdersPage() {
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Pesanan</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Produk & Game</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Target / User ID</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Nominal</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap text-center">Status</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap text-right">Nominal</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center whitespace-nowrap">Status</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Waktu</th>
               </tr>
             </thead>
@@ -110,7 +111,7 @@ export default function ClientOrdersPage() {
                       <p className="font-medium text-foreground/80 text-xs truncate max-w-[150px]">{order.userId || "-"}</p>
                       <p className="text-[9px] text-muted-foreground uppercase">Zone: {order.zoneId || "-"}</p>
                     </td>
-                    <td className="px-6 py-4 font-bold text-primary text-xs whitespace-nowrap">
+                    <td className="px-6 py-4 font-bold text-primary text-xs whitespace-nowrap text-right">
                       Rp {(order.priceAmount || 0).toLocaleString('id-ID')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">

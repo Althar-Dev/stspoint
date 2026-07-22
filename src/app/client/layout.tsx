@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -19,7 +20,8 @@ import {
   CreditCard, 
   Settings,
   LogOut,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Package
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -42,6 +44,11 @@ const adminMenuItems = [
     title: "Order History",
     icon: ShoppingCart,
     url: "/client/orders",
+  },
+  {
+    title: "Products",
+    icon: Package,
+    url: "/client/products",
   },
   {
     title: "Finance",
@@ -85,7 +92,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       const pathSegments = pathname.split('/');
       const idFromPath = pathSegments.length > 2 ? pathSegments[2] : null;
 
-      if (idFromPath && !['orders', 'finance', 'settings'].includes(idFromPath)) {
+      if (idFromPath && !['orders', 'finance', 'settings', 'products'].includes(idFromPath)) {
         localStorage.setItem("sts_selected_app_id", idFromPath);
         setAppSelected(idFromPath);
       } else {
@@ -203,7 +210,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1 bg-background min-w-0">
-        <MainHeader searchPlaceholder="Search order data..." />
+        <MainHeader searchPlaceholder="Search portal..." />
         <main className="flex-1 p-4 md:p-10 min-w-0 overflow-x-hidden">
           {children}
         </main>

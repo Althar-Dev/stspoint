@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,8 @@ import {
   TrendingUp,
   ArrowUpRight,
   Package,
-  ShieldCheck
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 import React from "react";
 import Link from "next/link";
@@ -35,7 +37,7 @@ export function V2Dashboard({ profile, stspaySvc, isLoading }: V2DashboardProps)
             Ringkasan <span className="text-primary">Toko</span>
           </h1>
           <p className="text-muted-foreground text-xs md:text-sm">
-            Pantau performa penjualan dan pendapatan website Anda.
+            Pantau performa penjualan dan pendapatan website Premium Anda.
           </p>
         </div>
       </div>
@@ -79,12 +81,12 @@ export function V2Dashboard({ profile, stspaySvc, isLoading }: V2DashboardProps)
            <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
               <div className="flex items-center justify-between mb-4">
                  <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
-                    <TrendingUp className="w-5 h-5" />
+                    <Zap className="w-5 h-5" />
                  </div>
-                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
+                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Premium</Badge>
               </div>
-              <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">Rp 1.250.000</h4>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
+              <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">Katalog Aktif</h4>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Layanan Terintegrasi</p>
            </Card>
         </div>
       </div>
@@ -137,24 +139,26 @@ export function V2Dashboard({ profile, stspaySvc, isLoading }: V2DashboardProps)
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
             <div className="space-y-4">
                {[
-                 { label: 'Panduan Merchant', icon: Package },
-                 { label: 'Hubungi Support', icon: TrendingUp },
+                 { label: 'Kelola Produk', icon: Package, url: `/client/${appId}/products` },
+                 { label: 'Panduan Web Prem', icon: ShieldCheck, url: '#' },
                ].map((item, i) => (
-                 <button key={i} className="w-full flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left">
-                    <div className="flex items-center gap-3">
-                       <item.icon className="w-4 h-4 text-primary" />
-                       <span className="text-xs font-bold text-foreground/80">{item.label}</span>
-                    </div>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                 </button>
+                 <Link key={i} href={item.url}>
+                   <button className="w-full flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 hover:bg-primary/5 transition-all group text-left mb-2">
+                      <div className="flex items-center gap-3">
+                         <item.icon className="w-4 h-4 text-primary" />
+                         <span className="text-xs font-bold text-foreground/80">{item.label}</span>
+                      </div>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                   </button>
+                 </Link>
                ))}
             </div>
             <div className="mt-8 p-5 rounded-2xl bg-primary/5 border border-primary/10">
                <p className="text-[10px] text-primary font-bold uppercase mb-1.5 flex items-center gap-2">
                  <ShieldCheck className="w-3.5 h-3.5" />
-                 Sistem Terverifikasi
+                 Edisi Premium Aktif
                </p>
-               <p className="text-[10px] text-muted-foreground leading-relaxed">Website Anda menggunakan infrastruktur STS v2.0 yang stabil dan aman.</p>
+               <p className="text-[10px] text-muted-foreground leading-relaxed">Website Premium Anda mendapatkan prioritas akses ke kanal pembayaran terbaru.</p>
             </div>
           </Card>
         </div>
