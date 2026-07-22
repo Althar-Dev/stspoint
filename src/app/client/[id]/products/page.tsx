@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +48,7 @@ export default function ClientProductsPage() {
         const res = await getMongoProducts(user!.uid, appId);
         if (res.success) {
           setProducts(res.data);
-          toast({ title: "Sync MongoDB", description: res.message });
+          // Success toast removed as requested
         } else {
           toast({ variant: "destructive", title: "MongoDB Error", description: res.message });
         }
