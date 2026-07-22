@@ -71,7 +71,7 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
            <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
               <div className="flex items-center justify-between mb-4">
-                 <div className="p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                 <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
                     <ShoppingCart className="w-5 h-5" />
                  </div>
                  <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
@@ -81,7 +81,7 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
            </Card>
            <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
               <div className="flex items-center justify-between mb-4">
-                 <div className="p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                 <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
                     <TrendingUp className="w-5 h-5" />
                  </div>
                  <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>

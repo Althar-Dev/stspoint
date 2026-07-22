@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/badge";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -40,7 +40,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-        {/* Quick Stats - Identik dengan V1 */}
+        {/* Quick Stats Grid */}
         <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center group hover:border-primary/20 transition-all">
           <div className="flex items-center justify-between mb-4">
              <div className="p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all">
@@ -64,7 +64,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-        {/* Recent Activity Table - Identik dengan V1 */}
+        {/* Recent Activity Section */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="border-border shadow-sm rounded-2xl overflow-hidden bg-card">
             <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
@@ -107,7 +107,7 @@ export function V2Dashboard({ profile, isLoading }: V2DashboardProps) {
           </Card>
         </div>
 
-        {/* Sidebar Info - Identik dengan V1 */}
+        {/* Sidebar Info Section */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-border shadow-sm rounded-2xl bg-card p-6 md:p-8">
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Informasi Cepat</h4>
