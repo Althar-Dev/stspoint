@@ -22,7 +22,8 @@ import {
   Database,
   Lock,
   Table as TableIcon,
-  User as UserIcon
+  User as UserIcon,
+  Type
 } from "lucide-react";
 import { 
   Dialog, 
@@ -58,6 +59,7 @@ export function AppKeyManagement() {
   const [mongoPass, setMongoPass] = useState("");
   const [mongoDb, setMongoDb] = useState("");
   const [mongoCol, setMongoCol] = useState("");
+  const [mongoAppName, setMongoAppName] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -97,8 +99,8 @@ export function AppKeyManagement() {
       return;
     }
 
-    if (appType === "website_appprem" && (!mongoUser || !mongoPass || !mongoDb || !mongoCol)) {
-      toast({ variant: "destructive", title: "MongoDB Details Required", description: "Web App Prem requires full MongoDB connection info." });
+    if (appType === "website_appprem" && (!mongoUser || !mongoPass || !mongoDb || !mongoCol || !mongoAppName)) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Web App Prem requires full MongoDB and Technical App Name info." });
       return;
     }
 
@@ -119,6 +121,7 @@ export function AppKeyManagement() {
       mongoPass: appType === "website_appprem" ? mongoPass.trim() : "",
       mongoDb: appType === "website_appprem" ? mongoDb.trim() : "",
       mongoCol: appType === "website_appprem" ? mongoCol.trim() : "",
+      mongoAppName: appType === "website_appprem" ? mongoAppName.trim() : "",
       status: 'unused',
       createdAt: serverTimestamp(),
     };
@@ -159,6 +162,7 @@ export function AppKeyManagement() {
               setMongoPass("");
               setMongoDb("");
               setMongoCol("");
+              setMongoAppName("");
             }
           }}>
             <DialogTrigger asChild>
@@ -176,7 +180,7 @@ export function AppKeyManagement() {
               </DialogHeader>
               <div className="space-y-6 py-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Application Name</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Friendly Display Name</Label>
                   <Input 
                     placeholder="e.g. MyStore Panel" 
                     value={newAppName} 
@@ -217,7 +221,19 @@ export function AppKeyManagement() {
                 {appType === "website_appprem" && (
                   <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Source (Database & Col)</Label>
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Technical App Name (URI)</Label>
+                      <div className="relative">
+                        <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Technical name for Mongo URI" 
+                          value={mongoAppName} 
+                          onChange={(e) => setMongoAppName(e.target.value.toLowerCase())}
+                          className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Structure (DB & Col)</Label>
                       <div className="grid grid-cols-2 gap-3">
                          <div className="relative">
                             <Database className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -288,7 +304,7 @@ export function AppKeyManagement() {
                   <Button 
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
                     onClick={handleGenerateKey}
-                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken) || (appType === "website_appprem" && (!mongoUser || !mongoPass || !mongoDb || !mongoCol))}
+                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken) || (appType === "website_appprem" && (!mongoUser || !mongoPass || !mongoDb || !mongoCol || !mongoAppName))}
                   >
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
                     Create Activation Key

@@ -98,6 +98,7 @@ export default function SelectAppPage() {
         mongoPass: keyData.mongoPass || '',
         mongoDb: keyData.mongoDb || '',
         mongoCol: keyData.mongoCol || '',
+        mongoAppName: keyData.mongoAppName || '',
         activationKey: activationKey.trim(),
         status: 'active',
         createdAt: serverTimestamp()
@@ -232,6 +233,10 @@ export default function SelectAppPage() {
         </div>
       </main>
 
+      <footer className="p-8 mt-auto opacity-20 text-center">
+         <p className="text-[10px] font-bold uppercase tracking-[0.5em]">STSPoint Partner Ecosystem v2.0</p>
+      </footer>
+
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="rounded-[2.5rem] border-border w-[92vw] sm:max-w-md p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="space-y-3">
@@ -281,10 +286,6 @@ export default function SelectAppPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <footer className="p-8 mt-auto opacity-20 text-center">
-         <p className="text-[10px] font-bold uppercase tracking-[0.5em]">STSPoint Partner Ecosystem v2.0</p>
-      </footer>
     </div>
   );
 }

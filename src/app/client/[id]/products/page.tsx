@@ -9,11 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
   Package, 
-  Filter, 
   RefreshCcw,
-  Smartphone,
-  Gamepad2,
-  Zap,
   Tag
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
@@ -114,7 +110,7 @@ export default function ClientProductsPage() {
         </CardHeader>
         
         <div className="w-full overflow-x-auto block">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">SKU Produk</th>
@@ -134,7 +130,7 @@ export default function ClientProductsPage() {
                 <tr><td colSpan={6} className="px-6 py-24 text-center text-muted-foreground italic text-xs">Produk tidak ditemukan.</td></tr>
               ) : (
                 filteredProducts.slice(0, 100).map((prod) => (
-                  <tr key={prod.buyer_sku_code} className="hover:bg-muted/20 transition-colors">
+                  <tr key={`${prod.buyer_sku_code}-${prod.provider}`} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap uppercase tracking-tighter">
                       {prod.buyer_sku_code}
                     </td>
@@ -169,10 +165,6 @@ export default function ClientProductsPage() {
           </table>
         </div>
       </Card>
-      
-      <div className="text-center py-6 opacity-30">
-         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint Distribution Network • Global Catalog</p>
-      </div>
     </div>
   );
 }

@@ -51,6 +51,7 @@
         "mongoPass": { "type": "string" },
         "mongoDb": { "type": "string" },
         "mongoCol": { "type": "string" },
+        "mongoAppName": { "type": "string" },
         "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
@@ -135,6 +136,7 @@
         "mongoPass": { "type": "string" },
         "mongoDb": { "type": "string" },
         "mongoCol": { "type": "string" },
+        "mongoAppName": { "type": "string" },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }

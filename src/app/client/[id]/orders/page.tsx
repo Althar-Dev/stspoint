@@ -81,7 +81,7 @@ export default function ClientOrdersPage() {
         </CardHeader>
         
         <div className="w-full overflow-x-auto block custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Pesanan</th>
@@ -103,7 +103,7 @@ export default function ClientOrdersPage() {
                 filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 font-mono text-[10px] font-bold text-primary whitespace-nowrap uppercase tracking-tighter">
-                      #{order.id?.substring(0, 10)}
+                      #{order.id?.substring(0, 12)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-bold text-xs truncate max-w-[200px]">{order.itemName}</p>
