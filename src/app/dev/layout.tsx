@@ -58,7 +58,7 @@ const devMenuItems = [
     title: "Key Management",
     icon: Key,
     items: [
-      { title: "Client Keys", url: "/dev/database?view=licenses", view: "licenses" },
+      { title: "Client Keys", url: "/dev/key?view=client", view: "client" },
     ]
   },
   { 

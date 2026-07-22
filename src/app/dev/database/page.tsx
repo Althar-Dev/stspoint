@@ -30,8 +30,7 @@ import {
   Landmark,
   Banknote,
   XCircle,
-  Check,
-  Ticket
+  Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -69,9 +68,8 @@ import { checkEndpointHealth } from "./actions";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { ClientKeyManagement } from "@/components/partner/clientkey";
 
-type ManagementView = "clients" | "merchants" | "transactions" | "gateway" | "licenses" | "channels" | "bank-accounts" | "withdrawals";
+type ManagementView = "clients" | "merchants" | "transactions" | "gateway" | "channels" | "bank-accounts" | "withdrawals";
 
 interface GatewayItem {
   provider: string;
@@ -587,17 +585,12 @@ function ManagementContent() {
        case 'bank-accounts': return { title: 'Rekening Bank', icon: Landmark, color: 'text-emerald-500' };
        case 'withdrawals': return { title: 'Withdrawal Requester', icon: Banknote, color: 'text-amber-500' };
        case 'transactions': return { title: 'Transactions Registry', icon: History, color: 'text-amber-500' };
-       case 'licenses': return { title: 'License Registry', icon: Ticket, color: 'text-purple-500' };
        case 'channels': return { title: 'Payment Channels', icon: LayoutGrid, color: 'text-primary' };
        default: return { title: 'System Management', icon: Layers, color: 'text-primary' };
      }
   };
 
   const header = getViewHeader();
-
-  if (view === 'licenses') {
-    return <ClientKeyManagement />;
-  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
