@@ -30,7 +30,8 @@ import {
   Landmark,
   Banknote,
   XCircle,
-  Check
+  Check,
+  Ticket
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
