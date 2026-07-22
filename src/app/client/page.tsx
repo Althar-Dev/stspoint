@@ -100,7 +100,7 @@ export default function SelectAppPage() {
         updatedAt: serverTimestamp()
       });
 
-      toast({ title: "Berhasil!", description: "Aplikasi Anda telah diaktifkan." });
+      toast({ title: "Berhasil!", description: "Application Anda telah diaktifkan." });
       setIsModalOpen(false);
       setActivationKey("");
       setAppName("");
@@ -138,13 +138,13 @@ export default function SelectAppPage() {
       <main className="flex-1 w-full max-w-screen-2xl mx-auto p-6 md:p-12 lg:p-20 space-y-12">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tight">Pilih <span className="text-primary">Aplikasi</span></h2>
+            <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tight">Pilih <span className="text-primary">Application</span></h2>
             <Badge variant="secondary" className="bg-muted text-muted-foreground text-[10px] font-bold rounded-md">
               {appsLoading ? "..." : apps.length} Terdaftar
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm max-w-2xl leading-relaxed">
-            Selamat datang di hub manajemen partner. Silakan pilih instance aplikasi yang ingin Anda kelola atau aktifkan lisensi baru yang Anda dapatkan dari pengembang.
+            Selamat datang di hub manajemen partner. Silakan pilih Application yang ingin Anda kelola atau aktifkan lisensi baru yang Anda dapatkan dari pengembang.
           </p>
         </div>
 
@@ -157,16 +157,16 @@ export default function SelectAppPage() {
                   <Plus className="w-7 h-7" />
                 </div>
                 <div className="space-y-1 text-center">
-                  <p className="font-bold text-sm">Aktifkan Instance Baru</p>
+                  <p className="font-bold text-sm">Aktifkan Application Baru</p>
                   <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Gunakan License Key</p>
                 </div>
               </button>
             </DialogTrigger>
             <DialogContent className="rounded-[2.5rem] border-border max-w-md p-8">
               <DialogHeader className="space-y-3">
-                <DialogTitle className="text-2xl font-headline font-bold">Mulai Instance Baru</DialogTitle>
+                <DialogTitle className="text-2xl font-headline font-bold">Mulai Application Baru</DialogTitle>
                 <DialogDescription className="text-xs">
-                  Masukkan kunci lisensi aplikasi untuk mengaktifkan website partner Anda secara permanen di akun ini.
+                  Masukkan kunci lisensi untuk mengaktifkan website partner Anda secara permanen di akun ini.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-6">
@@ -194,7 +194,7 @@ export default function SelectAppPage() {
                 <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
                    <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      Lisensi bersifat <strong>Sekali Pakai</strong>. Setelah berhasil diaktivasi, instance akan muncul di daftar aplikasi secara permanen.
+                      Lisensi bersifat <strong>Sekali Pakai</strong>. Setelah berhasil diaktivasi, application akan muncul di daftar aplikasi secara permanen.
                    </p>
                 </div>
               </div>
@@ -205,7 +205,7 @@ export default function SelectAppPage() {
                   className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10"
                 >
                   {isActivating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Globe className="w-4 h-4 mr-2" />}
-                  Aktifkan Instance
+                  Aktifkan Application
                 </Button>
               </DialogFooter>
             </DialogContent>
