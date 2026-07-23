@@ -495,7 +495,7 @@ export default function CustomCheckoutPage() {
       <div className="light min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center space-y-6">
         <AlertCircle className="w-16 h-16 text-red-500" />
         <h2 className="text-xl font-bold">Bill Not Found</h2>
-        <Button onClick={() => router.push("/")} variant="outline">Back</Button>
+        <Button onClick={() => router.back()} variant="outline">Back</Button>
       </div>
     );
   }
@@ -554,21 +554,21 @@ export default function CustomCheckoutPage() {
               <div className="w-32 h-32 mx-auto"><Player autoplay loop src="/assets/lottie/success.json" /></div>
               <h2 className="text-xl md:text-2xl font-bold">{T[lang].paidTitle}</h2>
               <p className="text-sm text-slate-500">{T[lang].paidDesc}</p>
-              <Button onClick={() => router.push("/")} className="bg-indigo-600 hover:bg-indigo-700 h-12 px-10">{T[lang].finish}</Button>
+              <Button onClick={() => router.back()} className="bg-indigo-600 hover:bg-indigo-700 h-12 px-10">{T[lang].finish}</Button>
             </div>
           ) : isExpired ? (
             <div className="max-w-md mx-auto py-10 text-center space-y-6 animate-in zoom-in-95">
               <div className="w-32 h-32 mx-auto"><Player autoplay loop src="/assets/lottie/expired.json" /></div>
               <h2 className="text-xl md:text-2xl font-bold">{T[lang].expiredTitle}</h2>
               <p className="text-sm text-slate-500">{T[lang].expiredDesc}</p>
-              <Button onClick={() => router.push("/")} variant="outline" className="h-12 px-10">{T[lang].backHome}</Button>
+              <Button onClick={() => router.back()} variant="outline" className="h-12 px-10">{T[lang].backHome}</Button>
             </div>
           ) : isCanceled ? (
             <div className="max-w-md mx-auto py-10 text-center space-y-6 animate-in zoom-in-95">
               <div className="w-32 h-32 mx-auto"><Player autoplay loop src="/assets/lottie/failed.json" /></div>
               <h2 className="text-xl md:text-2xl font-bold">{T[lang].canceledTitle}</h2>
               <p className="text-sm text-slate-500">{T[lang].canceledDesc}</p>
-              <Button onClick={() => router.push("/")} variant="outline" className="h-12 px-10">{T[lang].backStore}</Button>
+              <Button onClick={() => router.back()} variant="outline" className="h-12 px-10">{T[lang].backStore}</Button>
             </div>
           ) : currentPaymentData ? (
             <div className="max-w-2xl mx-auto space-y-6 animate-in slide-in-from-bottom-4">
