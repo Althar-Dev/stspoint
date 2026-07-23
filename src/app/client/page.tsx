@@ -132,8 +132,19 @@ export default function SelectAppPage() {
   };
 
   const getAppTypeInfo = (type: string) => {
+    const isBot = type.startsWith('bot');
+    const isPrem = type.includes('appprem');
+
+    if (isBot) {
+      return { 
+        label: isPrem ? 'Premium Bot' : 'Topup Bot', 
+        icon: isPrem ? Zap : Bot, 
+        color: isPrem ? 'text-amber-600' : 'text-purple-600', 
+        bg: isPrem ? 'bg-amber-500/5' : 'bg-purple-500/5' 
+      };
+    }
+
     switch (type) {
-      case 'bot': return { label: 'Automation Bot', icon: Bot, color: 'text-purple-600', bg: 'bg-purple-500/5' };
       case 'website_appprem': return { label: 'Premium App', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-500/5' };
       default: return { label: 'Topup Store', icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-500/5' };
     }
@@ -248,7 +259,7 @@ export default function SelectAppPage() {
               <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Friendly Name (Client Name)</Label>
               <Input 
                 placeholder="e.g. MyStore Panel" 
-                value={appName}
+                value={appName} 
                 onChange={(e) => setAppName(e.target.value)}
                 className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
               />
@@ -259,7 +270,7 @@ export default function SelectAppPage() {
                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
                   placeholder="STS-App_XXXX" 
-                  value={activationKey}
+                  value={activationKey} 
                   onChange={(e) => setActivationKey(e.target.value)}
                   className="h-12 pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-mono"
                 />

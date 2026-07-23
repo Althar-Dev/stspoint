@@ -51,7 +51,7 @@ export function AppKeyManagement() {
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAppName, setNewAppName] = useState("");
-  const [appType, setAppType] = useState<"website_topup" | "website_appprem" | "bot">("website_topup");
+  const [appType, setAppType] = useState<string>("website_topup");
   const [botToken, setBotToken] = useState("");
   const [mongoUri, setMongoUri] = useState("");
   const [mongoDb, setMongoDb] = useState("");
@@ -84,19 +84,22 @@ export function AppKeyManagement() {
     toast({ title: "Copied!", description: `${label} copied to clipboard.` });
   };
 
+  const needsBotToken = appType.startsWith('bot');
+  const needsMongo = appType.includes('appprem');
+
   const handleGenerateKey = async () => {
     if (!newAppName) {
       toast({ variant: "destructive", title: "Name Required", description: "Please enter the application name." });
       return;
     }
 
-    if (appType === "bot" && !botToken) {
+    if (needsBotToken && !botToken) {
       toast({ variant: "destructive", title: "Token Required", description: "Bots must have an access token." });
       return;
     }
 
-    if (appType === "website_appprem" && (!mongoUri || !mongoDb || !mongoCol)) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Web App Prem requires URI, DB name, and Collection name." });
+    if (needsMongo && (!mongoUri || !mongoDb || !mongoCol)) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Premium applications require MongoDB configuration." });
       return;
     }
 
@@ -112,10 +115,10 @@ export function AppKeyManagement() {
       key: key,
       name: newAppName,
       type: appType,
-      token: appType === "bot" ? botToken.trim() : "",
-      mongoUri: appType === "website_appprem" ? mongoUri.trim() : "",
-      mongoDb: appType === "website_appprem" ? mongoDb.trim() : "",
-      mongoCol: appType === "website_appprem" ? mongoCol.trim() : "",
+      token: needsBotToken ? botToken.trim() : "",
+      mongoUri: needsMongo ? mongoUri.trim() : "",
+      mongoDb: needsMongo ? mongoDb.trim() : "",
+      mongoCol: needsMongo ? mongoCol.trim() : "",
       status: 'unused',
       createdAt: serverTimestamp(),
     };
@@ -182,20 +185,21 @@ export function AppKeyManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Application Type</Label>
-                  <Select value={appType} onValueChange={(v: any) => setAppType(v)}>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Application Category</Label>
+                  <Select value={appType} onValueChange={setAppType}>
                     <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-transparent">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
                       <SelectItem value="website_topup">Website (Topup)</SelectItem>
                       <SelectItem value="website_appprem">Website (App Prem)</SelectItem>
-                      <SelectItem value="bot">Automation Bot</SelectItem>
+                      <SelectItem value="bot_topup">Automation Bot (Topup)</SelectItem>
+                      <SelectItem value="bot_appprem">Automation Bot (App Prem)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {appType === "bot" && (
+                {needsBotToken && (
                   <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Access Token</Label>
                     <div className="relative">
@@ -210,7 +214,7 @@ export function AppKeyManagement() {
                   </div>
                 )}
 
-                {appType === "website_appprem" && (
+                {needsMongo && (
                   <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Connection URI (Atlas)</Label>
@@ -230,7 +234,7 @@ export function AppKeyManagement() {
                          <div className="relative">
                             <Database className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
-                              placeholder="test" 
+                              placeholder="db_name" 
                               value={mongoDb} 
                               onChange={(e) => setMongoDb(e.target.value)}
                               className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
@@ -274,7 +278,7 @@ export function AppKeyManagement() {
                   <Button 
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
                     onClick={handleGenerateKey}
-                    disabled={isGenerating || !newAppName || (appType === "bot" && !botToken) || (appType === "website_appprem" && (!mongoUri || !mongoDb || !mongoCol))}
+                    disabled={isGenerating || !newAppName || (needsBotToken && !botToken) || (needsMongo && (!mongoUri || !mongoDb || !mongoCol))}
                   >
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
                     Create Activation Key
@@ -335,9 +339,9 @@ export function AppKeyManagement() {
                     <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">{item.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                        <div className="flex justify-center">
-                          {item.type === "bot" ? (
+                          {item.type.startsWith("bot") ? (
                             <Badge variant="outline" className="border-purple-500/20 text-purple-600 bg-purple-500/5 gap-1.5 h-6 rounded-md">
-                               <Bot className="w-3 h-3" /> Bot
+                               <Bot className="w-3 h-3" /> Bot {item.type.includes('appprem') ? 'Prem' : 'Topup'}
                             </Badge>
                           ) : item.type === "website_topup" ? (
                             <Badge variant="outline" className="border-blue-500/20 text-blue-600 bg-blue-500/5 gap-1.5 h-6 rounded-md">

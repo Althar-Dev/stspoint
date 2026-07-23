@@ -44,7 +44,7 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot"] },
+        "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot", "bot_topup", "bot_appprem"] },
         "token": { "type": "string" },
         "activationKey": { "type": "string" },
         "mongoUri": { "type": "string", "description": "Full MongoDB Connection String." },
@@ -128,7 +128,7 @@
       "properties": {
         "key": { "type": "string" },
         "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot"] },
+        "type": { "type": "string", "enum": ["website_topup", "website_appprem", "bot", "bot_topup", "bot_appprem"] },
         "token": { "type": "string" },
         "mongoUri": { "type": "string", "description": "Full MongoDB Connection String." },
         "mongoDb": { "type": "string" },

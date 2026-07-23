@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -57,8 +58,10 @@ export default function ClientDashboardPage() {
     );
   }
 
-  // Both dashboards now feature the Balance/Finance module as per user request
-  if (app?.type === "website_appprem") {
+  // Use Premium layout for any appprem type (website or bot)
+  const isPremiumApp = app?.type?.includes("appprem");
+
+  if (isPremiumApp) {
     return <V2Dashboard profile={profile} stspaySvc={stspaySvc} isLoading={isLoading} />;
   }
 

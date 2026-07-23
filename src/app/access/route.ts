@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase/core';
 import { doc, getDoc } from 'firebase/firestore';
@@ -42,8 +43,8 @@ export async function GET(request: Request) {
       }, { status: 403 });
     }
 
-    // 2. Validate Type & Token
-    if (data.type === 'bot') {
+    // 2. Validate Type & Token (Covers bot, bot_topup, bot_appprem)
+    if (data.type.startsWith('bot')) {
       if (!token) {
         return NextResponse.json({ 
           access: false, 

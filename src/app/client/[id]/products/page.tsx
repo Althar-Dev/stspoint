@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,12 +50,14 @@ export default function ClientProductsPage() {
 
   const { data: app, loading: appLoading } = useDoc(appRef);
 
+  const isPremiumApp = useMemo(() => app?.type?.includes("appprem"), [app]);
+
   const fetchProducts = async () => {
     if (appLoading || !app) return;
     
     setLoading(true);
     try {
-      if (app.type === 'website_appprem') {
+      if (isPremiumApp) {
         const res = await getMongoProducts(user!.uid, appId);
         if (res.success) {
           setProducts(res.data);
@@ -174,7 +177,7 @@ export default function ClientProductsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Katalog <span className="text-primary">Produk</span></h1>
-            {app?.type === 'website_appprem' && (
+            {isPremiumApp && (
               <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[9px] font-bold uppercase h-5 px-2 hidden sm:flex">
                 <Cloud className="w-3 h-3 mr-1" /> Database Live
               </Badge>
@@ -236,7 +239,7 @@ export default function ClientProductsPage() {
            </div>
            <p className="text-sm font-medium text-muted-foreground italic">Produk tidak ditemukan atau katalog masih kosong.</p>
         </div>
-      ) : app?.type === 'website_appprem' ? (
+      ) : isPremiumApp ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
            {filteredProducts.map((product) => (
              <MongoProductCard key={product.id || product._id} product={product} />
