@@ -9,7 +9,7 @@ export const BotPremPackageSchema = z.object({
   id: z.string(),
   name: z.string(),
   price: z.number(),
-  accounts: z.array(z.string()).default([]), // For bot delivery
+  stock: z.array(z.string()).default([]), // Standardized to 'stock'
 });
 
 export const BotPremProductSchema = z.object({

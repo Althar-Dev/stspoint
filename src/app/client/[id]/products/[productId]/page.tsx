@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
@@ -102,8 +101,8 @@ export default function ProductDetailPage() {
     if (cleanedProduct.packages) {
       cleanedProduct.packages = cleanedProduct.packages.map((pkg: any) => ({
         ...pkg,
+        // Only keep non-empty strings in stock
         stock: Array.isArray(pkg.stock) ? pkg.stock.filter((s: string) => s.trim() !== "") : [],
-        accounts: Array.isArray(pkg.accounts) ? pkg.accounts.filter((a: string) => a.trim() !== "") : []
       }));
     }
 
@@ -140,8 +139,7 @@ export default function ProductDetailPage() {
         id: `pkg-${Date.now()}`,
         name: "Paket Baru",
         price: 0,
-        stock: [],
-        accounts: []
+        stock: []
       };
       return { ...prev, packages: [...(prev.packages || []), newPackage] };
     });
@@ -442,16 +440,15 @@ export default function ProductDetailPage() {
                         <div className="sm:col-span-12 space-y-1.5">
                           <Label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Data Stok (Pemisah Baris)</Label>
                           <Textarea 
-                            value={Array.isArray(pkg.stock) ? pkg.stock.join('\n') : (Array.isArray(pkg.accounts) ? pkg.accounts.join('\n') : '')} 
+                            value={Array.isArray(pkg.stock) ? pkg.stock.join('\n') : ''} 
                             onChange={(e) => {
                               const val = e.target.value.split('\n');
                               updatePackage(idx, 'stock', val);
-                              updatePackage(idx, 'accounts', val);
                             }}
                             placeholder="akun1@email.com pass123&#10;akun2@email.com pass456"
                             className="min-h-[80px] rounded-xl bg-background border-border text-[11px] font-mono leading-relaxed"
                           />
-                          <p className="text-[8px] text-muted-foreground uppercase font-bold ml-1">Tersisa <span className="text-primary">{(pkg.stock?.filter((s: string) => s.trim() !== "")?.length || pkg.accounts?.filter((a: string) => a.trim() !== "")?.length || 0)}</span> data aktif</p>
+                          <p className="text-[8px] text-muted-foreground uppercase font-bold ml-1">Tersisa <span className="text-primary">{(pkg.stock?.filter((s: string) => s.trim() !== "")?.length || 0)}</span> data aktif</p>
                         </div>
                       </div>
                     </div>
