@@ -12,6 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
   ChevronLeft, 
   Save, 
   Loader2, 
@@ -71,7 +78,10 @@ export default function ProductDetailPage() {
     try {
       const res = await getMongoProductById(user!.uid, appId, productId);
       if (res.success) {
-        setProduct(res.data);
+        // Ensure packages is at least an empty array
+        const data = res.data;
+        if (!data.packages) data.packages = [];
+        setProduct(data);
       } else {
         toast({ variant: "destructive", title: "Gagal memuat produk", description: res.message });
         router.back();
@@ -86,8 +96,19 @@ export default function ProductDetailPage() {
   const handleSave = async () => {
     if (!user?.uid || !product) return;
     setIsSaving(true);
+    
+    // Clean up empty stock lines before saving
+    const cleanedProduct = { ...product };
+    if (cleanedProduct.packages) {
+      cleanedProduct.packages = cleanedProduct.packages.map((pkg: any) => ({
+        ...pkg,
+        stock: Array.isArray(pkg.stock) ? pkg.stock.filter((s: string) => s.trim() !== "") : [],
+        accounts: Array.isArray(pkg.accounts) ? pkg.accounts.filter((a: string) => a.trim() !== "") : []
+      }));
+    }
+
     try {
-      const res = await updateMongoProduct(user.uid, appId, productId, product);
+      const res = await updateMongoProduct(user.uid, appId, productId, cleanedProduct);
       if (res.success) {
         toast({ title: "Berhasil!", description: "Data produk telah diperbarui di MongoDB." });
       } else {
@@ -104,24 +125,33 @@ export default function ProductDetailPage() {
 
   // --- Premium Package Helpers ---
   const updatePackage = (idx: number, field: string, value: any) => {
-    const newPackages = [...product.packages];
-    newPackages[idx] = { ...newPackages[idx], [field]: value };
-    updateField('packages', newPackages);
+    setProduct((prev: any) => {
+      if (!prev || !prev.packages) return prev;
+      const newPackages = [...prev.packages];
+      newPackages[idx] = { ...newPackages[idx], [field]: value };
+      return { ...prev, packages: newPackages };
+    });
   };
 
   const addPackage = () => {
-    const newPackage = {
-      id: `pkg-${Date.now()}`,
-      name: "Paket Baru",
-      price: 0,
-      stock: []
-    };
-    updateField('packages', [...(product.packages || []), newPackage]);
+    setProduct((prev: any) => {
+      if (!prev) return prev;
+      const newPackage = {
+        id: `pkg-${Date.now()}`,
+        name: "Paket Baru",
+        price: 0,
+        stock: [],
+        accounts: []
+      };
+      return { ...prev, packages: [...(prev.packages || []), newPackage] };
+    });
   };
 
   const removePackage = (idx: number) => {
-    const newPackages = product.packages.filter((_: any, i: number) => i !== idx);
-    updateField('packages', newPackages);
+    setProduct((prev: any) => {
+      if (!prev || !prev.packages) return prev;
+      return { ...prev, packages: prev.packages.filter((_: any, i: number) => i !== idx) };
+    });
   };
 
   if (loading || appLoading) {
@@ -414,14 +444,14 @@ export default function ProductDetailPage() {
                           <Textarea 
                             value={Array.isArray(pkg.stock) ? pkg.stock.join('\n') : (Array.isArray(pkg.accounts) ? pkg.accounts.join('\n') : '')} 
                             onChange={(e) => {
-                              const val = e.target.value.split('\n').filter(line => line.trim() !== "");
+                              const val = e.target.value.split('\n');
                               updatePackage(idx, 'stock', val);
                               updatePackage(idx, 'accounts', val);
                             }}
                             placeholder="akun1@email.com pass123&#10;akun2@email.com pass456"
                             className="min-h-[80px] rounded-xl bg-background border-border text-[11px] font-mono leading-relaxed"
                           />
-                          <p className="text-[8px] text-muted-foreground uppercase font-bold ml-1">Tersisa <span className="text-primary">{pkg.stock?.length || pkg.accounts?.length || 0}</span> data aktif</p>
+                          <p className="text-[8px] text-muted-foreground uppercase font-bold ml-1">Tersisa <span className="text-primary">{(pkg.stock?.filter((s: string) => s.trim() !== "")?.length || pkg.accounts?.filter((a: string) => a.trim() !== "")?.length || 0)}</span> data aktif</p>
                         </div>
                       </div>
                     </div>
@@ -434,4 +464,3 @@ export default function ProductDetailPage() {
     </div>
   );
 }
-
