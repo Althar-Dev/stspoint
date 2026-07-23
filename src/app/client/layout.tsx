@@ -77,17 +77,22 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // Check if we are on the "Select Application" screen
+  // Check if we are on the "Select Application" screen or global pages like subscribe
   const isSelectAppPage = useMemo(() => {
     const cleanPath = pathname.replace(/^\/client/, "");
     const hostname = typeof window !== "undefined" ? window.location.hostname : "";
     const isPartnerSubdomain = hostname.startsWith("partner.");
     
+    // If it's a global client page like subscribe, it's not a "Select App" page but it shouldn't show app sidebar
+    if (pathname.includes('/subscribe')) return false;
+
     if (isPartnerSubdomain) {
       return pathname === "/" || pathname === "";
     }
     return cleanPath === "" || cleanPath === "/";
   }, [pathname]);
+
+  const isGlobalPage = pathname.includes('/subscribe');
 
   useEffect(() => {
     if (!authLoading && !profileLoading) {
@@ -104,19 +109,20 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       const isInternalRoot = pathname.startsWith('/client');
       const idFromPath = isInternalRoot ? segments[1] : segments[0];
 
-      if (idFromPath && !['orders', 'finance', 'settings', 'products'].includes(idFromPath)) {
+      // Added 'subscribe' to exclusion list so it's not treated as an App ID
+      if (idFromPath && !['orders', 'finance', 'settings', 'products', 'subscribe'].includes(idFromPath)) {
         localStorage.setItem("sts_selected_app_id", idFromPath);
         setAppSelected(idFromPath);
       } else {
         const storedId = localStorage.getItem("sts_selected_app_id");
         setAppSelected(storedId);
 
-        if (!storedId && !isSelectAppPage) {
+        if (!storedId && !isSelectAppPage && !isGlobalPage) {
           router.push("/client");
         }
       }
     }
-  }, [user, profile, authLoading, profileLoading, router, pathname, isSelectAppPage]);
+  }, [user, profile, authLoading, profileLoading, router, pathname, isSelectAppPage, isGlobalPage]);
 
   const handleLogout = async () => {
     if (!auth) return;
@@ -160,6 +166,24 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     return (
       <div className="fixed top-0 left-0 right-0 z-[100] h-0.5 bg-muted overflow-hidden">
         <div className="animate-loading-bar" style={{ width: '40%' }}></div>
+      </div>
+    );
+  }
+
+  // Global pages (like subscribe) in partner portal use the inset layout but without the app sidebar
+  if (isGlobalPage) {
+    return (
+      <div className="flex h-screen w-full bg-background overflow-hidden">
+        <SidebarInset className="flex flex-col flex-1 bg-background min-w-0 overflow-hidden">
+          <MainHeader 
+            showNotifications={false}
+            showProfile={false}
+            showSubscription={true}
+          />
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-10">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
     );
   }

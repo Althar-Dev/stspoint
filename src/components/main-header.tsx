@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -18,6 +19,7 @@ import {
   XCircle
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,6 +59,7 @@ export function MainHeader({
   const { user } = useUser();
   const db = useFirestore();
   const auth = useAuth();
+  const pathname = usePathname();
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -64,6 +67,12 @@ export function MainHeader({
   }, [db, user?.uid]);
   
   const { data: profile } = useDoc(profileRef);
+
+  // Determine subpath for links based on current portal context
+  const subPath = useMemo(() => {
+    const isPartner = pathname.startsWith('/client') || (typeof window !== "undefined" && window.location.hostname.startsWith('partner.'));
+    return isPartner ? '/client' : '/console';
+  }, [pathname]);
 
   // Fetch Notifications
   const notificationsQuery = useMemoFirebase(() => {
@@ -203,14 +212,14 @@ export function MainHeader({
             <DropdownMenuSeparator />
             {showProfile && (
               <DropdownMenuItem asChild>
-                <Link href="/console/setting" className="cursor-pointer gap-2 py-2.5 rounded-xl">
+                <Link href={`${subPath}/setting`} className="cursor-pointer gap-2 py-2.5 rounded-xl">
                   <User className="w-4 h-4" /> Profile
                 </Link>
               </DropdownMenuItem>
             )}
             {showSubscription && (
               <DropdownMenuItem asChild>
-                <Link href="/console/subscribe" className="cursor-pointer gap-2 py-2.5 rounded-xl">
+                <Link href={`${subPath}/subscribe`} className="cursor-pointer gap-2 py-2.5 rounded-xl">
                   <CreditCard className="w-4 h-4" /> Subscription
                 </Link>
               </DropdownMenuItem>
@@ -223,13 +232,13 @@ export function MainHeader({
                 <DropdownMenuSubContent className="rounded-xl p-2 border-border">
                   <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer gap-2 py-2 rounded-lg">
                     <Sun className="w-4 h-4" /> Light
-                  </DropdownMenuItem>
+                  </SelectItem>
                   <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer gap-2 py-2 rounded-lg">
                     <Moon className="w-4 h-4" /> Dark
-                  </DropdownMenuItem>
+                  </SelectItem>
                   <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer gap-2 py-2 rounded-lg">
                     <Monitor className="w-4 h-4" /> System
-                  </DropdownMenuItem>
+                  </SelectItem>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
