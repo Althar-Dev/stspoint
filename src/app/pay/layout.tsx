@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -104,7 +105,7 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
     if (!authLoading && !profileLoading) {
       if (!user) {
         router.push("/signin");
-      } else if (profile && profile.role !== 'merchant' && !profile.dev) {
+      } else if (profile && !!profile.partner && !profile.dev) {
         router.push("/client");
       }
     }
@@ -194,7 +195,7 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
+    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
@@ -243,7 +244,7 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
 
       <SidebarInset className="flex flex-col flex-1 bg-background">
         <MainHeader searchPlaceholder="Cari data transaksi STSPay..." showSidebarTrigger={false} />
-        <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto">
           {children}
         </main>
       </SidebarInset>

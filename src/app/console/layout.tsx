@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -103,7 +104,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
     if (!authLoading && !profileLoading) {
       if (!user) {
         router.push("/signin");
-      } else if (profile && profile.role === 'client' && !profile.dev) {
+      } else if (profile && !!profile.partner && !profile.dev) {
         router.push("/client");
       }
     }
@@ -188,7 +189,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
                       <span>{subItem.title}</span>
                     </Link>
                   </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
+                </SidebarMenuItem>
               ))}
             </SidebarMenuSub>
           </CollapsibleContent>

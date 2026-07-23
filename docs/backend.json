@@ -9,7 +9,8 @@
         "uid": { "type": "string" },
         "name": { "type": "string" },
         "email": { "type": "string" },
-        "role": { "type": "string", "enum": ["client", "merchant"] },
+        "role": { "type": "string", "enum": ["merchant"] },
+        "partner": { "type": "boolean", "description": "Flag for Partner Portal access." },
         "clientKey": { "type": "string" },
         "merchantId": { "type": "string" },
         "secretKey": { "type": "string" },
@@ -21,7 +22,7 @@
         "payoutAccountName": { "type": "string" },
         "payoutAccountStatus": { "type": "string", "enum": ["PENDING", "VERIFIED"] }
       },
-      "required": ["uid", "name", "email", "role", "createdAt", "secretKey"]
+      "required": ["uid", "name", "email", "createdAt", "secretKey"]
     },
     "Notification": {
       "title": "Notification",

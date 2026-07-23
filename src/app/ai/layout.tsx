@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -78,7 +79,7 @@ function AiLayoutInner({ children }: { children: ReactNode }) {
     if (!authLoading && !profileLoading) {
       if (!user) {
         router.push("/signin");
-      } else if (profile && profile.role !== 'merchant' && !profile.dev) {
+      } else if (profile && !!profile.partner && !profile.dev) {
         router.push("/client");
       }
     }
@@ -95,7 +96,7 @@ function AiLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
+    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       {isDocsPage ? (
         <SidebarDocs />
       ) : (
@@ -163,8 +164,13 @@ function AiLayoutInner({ children }: { children: ReactNode }) {
       )}
 
       <SidebarInset className="flex flex-col flex-1 bg-background">
-        <MainHeader showSidebarTrigger={false} />
-        <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+        <MainHeader 
+          showNotifications={true}
+          showProfile={true}
+          showSubscription={true}
+          showSidebarTrigger={false} 
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 max-w-7xl mx-auto w-full">
           {children}
         </main>
       </SidebarInset>

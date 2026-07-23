@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,6 +61,7 @@ export default function UserManagementPage() {
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-foreground text-base">{user.name}</h3>
                       {user.dev && <Badge className="bg-primary text-primary-foreground border-none text-[8px] uppercase px-2 h-4 font-bold">DevRoot</Badge>}
+                      {!!user.partner && <Badge className="bg-blue-500 text-white border-none text-[8px] uppercase px-2 h-4 font-bold">Partner</Badge>}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">

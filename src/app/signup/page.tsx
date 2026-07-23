@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -55,8 +56,9 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (!authLoading && existingUser && !profileLoading && profile) {
-      const targetPath = profile.role === 'client' ? "/client" : "/console";
-      const targetSub = profile.role === 'client' ? 'partner' : 'console';
+      const isPartner = !!profile.partner;
+      const targetPath = isPartner ? "/client" : "/console";
+      const targetSub = isPartner ? 'partner' : 'console';
       
       const hostname = window.location.hostname;
       const isDev = 
@@ -110,7 +112,6 @@ export default function SignUpPage() {
     setError("");
     
     try {
-      // PERBAIKAN: Gunakan 'partner' sesuai state, bukan 'client'
       if (role === 'partner') {
         const cleanKey = licenseKey.trim();
         if (!cleanKey) {
@@ -149,17 +150,22 @@ export default function SignUpPage() {
       const secretKey = generateSecretKey();
       
       const userRef = doc(db, 'users', user.uid);
-      const userData = {
+      const userData: any = {
         uid: user.uid,
         name,
         email,
-        role: role === 'partner' ? 'client' : 'merchant',
         clientKey: role === 'partner' ? licenseKey.trim() : "",
         merchantId: role === 'merchant' ? merchantId : "",
         secretKey: secretKey,
         balance: 0,
         createdAt: serverTimestamp(),
       };
+
+      if (role === 'partner') {
+        userData.partner = true;
+      } else {
+        userData.role = 'merchant';
+      }
 
       await setDoc(userRef, userData);
 
@@ -345,7 +351,7 @@ export default function SignUpPage() {
                   <Input 
                     id="password" 
                     type="password" 
-                    placeholder="••••••••"
+                    placeholder="••••••••" 
                     required 
                     minLength={6}
                     className="pl-10 h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"

@@ -99,7 +99,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       if (!user) {
         router.push("/signin");
         return;
-      } else if (profile && profile.role !== 'client' && !profile.dev) {
+      } else if (profile && !profile.partner && !profile.dev) {
         router.push("/console");
         return;
       }
@@ -160,7 +160,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     });
   }, [appSelected]);
 
-  const isAuthorized = profile?.role === 'client' || profile?.dev === true;
+  const isAuthorized = !!profile?.partner || profile?.dev === true;
 
   if (authLoading || profileLoading || !user || !isAuthorized) {
     return (

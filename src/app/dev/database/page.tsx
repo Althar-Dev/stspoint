@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -105,7 +106,8 @@ function ManagementContent() {
   const view = (searchParams.get("view") as ManagementView) || "gateway";
   const [search, setSearch] = useState("");
   
-  const [isChannelDialogOpen, setIsChannelDialogOpen] = useState(false);
+  const [isChannelDialogOpen] = useState(false);
+  const [isChannelDialogOpenLocal, setIsChannelDialogOpenLocal] = useState(false);
   const [editingChannel, setEditingChannel] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [channelForm, setChannelForm] = useState({
@@ -267,7 +269,7 @@ function ManagementContent() {
     
     if (view === "clients") {
       return users
-        .filter(u => u.role === 'client')
+        .filter(u => !!u.partner)
         .filter(u => u.name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s));
     }
     
@@ -412,7 +414,7 @@ function ManagementContent() {
 
       await setDoc(doc(db, "payment_channels", channelId), data);
       toast({ title: "Success", description: `Channel ${name} has been saved.` });
-      setIsChannelDialogOpen(false);
+      setIsChannelDialogOpenLocal(false);
       setEditingChannel(null);
     } catch (e) {
       toast({ variant: "destructive", title: "Error", description: "Failed to save channel." });
@@ -528,7 +530,7 @@ function ManagementContent() {
   const openAddChannel = () => {
     setEditingChannel(null);
     setChannelForm({ id: "", name: "", provider: "Xendit", group: "VA", fee: "", minPay: "", status: true, logo: "", settlement: "T+1" });
-    setIsChannelDialogOpen(true);
+    setIsChannelDialogOpenLocal(true);
   };
 
   const openEditChannel = (channel: any) => {
@@ -545,7 +547,7 @@ function ManagementContent() {
       settlement: dbEntry?.settlement || channel.settlement || "T+1",
       status: dbEntry?.status !== 'inactive'
     });
-    setIsChannelDialogOpen(true);
+    setIsChannelDialogOpenLocal(true);
   };
 
   const getLogoPreview = (channel: any) => {
@@ -580,7 +582,7 @@ function ManagementContent() {
   const getViewHeader = () => {
      switch(view) {
        case 'gateway': return { title: 'Infrastructure Gateways', icon: Globe2, color: 'text-emerald-500' };
-       case 'clients': return { title: 'Clients Registry', icon: UserCircle, color: 'text-blue-500' };
+       case 'clients': return { title: 'Partners Registry', icon: UserCircle, color: 'text-blue-500' };
        case 'merchants': return { title: 'Merchants Registry', icon: Building2, color: 'text-primary' };
        case 'bank-accounts': return { title: 'Rekening Bank', icon: Landmark, color: 'text-emerald-500' };
        case 'withdrawals': return { title: 'Withdrawal Requester', icon: Banknote, color: 'text-amber-500' };
@@ -602,7 +604,7 @@ function ManagementContent() {
           </div>
 
           {view === 'channels' && (
-            <Dialog open={isChannelDialogOpen} onOpenChange={setIsChannelDialogOpen}>
+            <Dialog open={isChannelDialogOpenLocal} onOpenChange={setIsChannelDialogOpenLocal}>
               <DialogTrigger asChild>
                 <Button 
                   onClick={openAddChannel}
@@ -1116,8 +1118,8 @@ function ManagementContent() {
                           <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{item.email}</td>
                           <td className="px-6 py-4 font-mono text-[9px] text-muted-foreground/60 whitespace-nowrap uppercase">{item.merchantId || item.clientKey || "N/A"}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                             <Badge variant="outline" className={`${item.dev ? 'border-primary text-primary' : item.role === 'client' ? 'border-blue-500 text-blue-600' : 'border-border text-muted-foreground'} text-[8px] uppercase font-bold px-2 py-0.5`}>
-                               {item.dev ? 'Developer' : item.role === 'client' ? 'Client' : 'Merchant'}
+                             <Badge variant="outline" className={`${item.dev ? 'border-primary text-primary' : !!item.partner ? 'border-blue-500 text-blue-600' : 'border-border text-muted-foreground'} text-[8px] uppercase font-bold px-2 py-0.5`}>
+                               {item.dev ? 'Developer' : !!item.partner ? 'Partner' : 'Merchant'}
                              </Badge>
                           </td>
                           <td className="px-6 py-4 text-right font-bold text-emerald-600 whitespace-nowrap">Rp {(item.balance || 0).toLocaleString('id-ID')}</td>

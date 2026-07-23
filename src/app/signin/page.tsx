@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,8 +38,9 @@ export default function SignInPage() {
 
   useEffect(() => {
     if (!authLoading && user && !profileLoading && profile) {
-      const targetPath = profile.role === 'client' ? "/client" : "/console";
-      const targetSub = profile.role === 'client' ? 'partner' : 'console';
+      const isPartner = !!profile.partner;
+      const targetPath = isPartner ? "/client" : "/console";
+      const targetSub = isPartner ? 'partner' : 'console';
       
       const hostname = window.location.hostname;
       const isDev = 

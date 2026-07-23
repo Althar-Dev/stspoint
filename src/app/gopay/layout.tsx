@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -54,9 +55,9 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
     if (!authLoading && !profileLoading) {
       if (!user) {
         router.push("/signin");
-      } else if (profile && profile.role !== 'merchant' && !profile.dev) {
-        // Redirect clients to their own portal
-        router.push(profile.role === 'client' ? "/client" : "/console");
+      } else if (profile && !!profile.partner && !profile.dev) {
+        // Redirect partners to their own portal
+        router.push("/client");
       }
     }
   }, [user, profile, authLoading, profileLoading, router]);
@@ -72,7 +73,7 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-background overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card shadow-sm z-40 transition-all duration-300 ease-in-out"
@@ -133,7 +134,7 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
 
       <SidebarInset className="flex flex-col flex-1">
         <MainHeader showSidebarTrigger={false} />
-        <main className="flex-1 p-6 md:p-8 bg-background">
+        <main className="flex-1 p-6 md:p-8 bg-background overflow-y-auto">
           {children}
         </main>
       </SidebarInset>
