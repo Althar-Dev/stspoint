@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -52,9 +53,6 @@ const mainMenuItems = [
     icon: Package,
     items: [
       { title: "PPOB", url: "/console/services/ppob" },
-      // Hidden for now
-      // { title: "SMM Panel", url: "/console/services/smm" },
-      // { title: "OTP", url: "/console/services/nokos" },
     ]
   },
   {
@@ -211,7 +209,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card shadow-sm z-40 transition-all duration-300 ease-in-out"
@@ -249,9 +247,9 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1 min-w-0">
+      <SidebarInset className="flex flex-col flex-1 min-w-0 bg-background">
         <MainHeader searchPlaceholder="Search features..." showSidebarTrigger={false} />
-        <main className="flex-1 p-4 md:p-8 bg-background min-w-0 overflow-hidden">
+        <main className="flex-1 min-w-0 overflow-y-auto p-4 md:p-8">
           {children}
         </main>
       </SidebarInset>

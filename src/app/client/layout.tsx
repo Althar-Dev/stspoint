@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -77,7 +78,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
   // Check if we are on the "Select Application" screen
-  // On subdomain partner.stspoint.id, the root is "/" which internally is "/client"
   const isSelectAppPage = useMemo(() => {
     const cleanPath = pathname.replace(/^\/client/, "");
     return cleanPath === "" || cleanPath === "/";
@@ -95,8 +95,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
       // Extract ID from path to keep selection in sync
       const segments = pathname.split('/').filter(Boolean);
-      // If we're on localhost:9002/client/ID/..., ID is at index 1
-      // If we're on partner.stspoint.id/ID/..., ID is at index 0
       const isInternalRoot = pathname.startsWith('/client');
       const idFromPath = isInternalRoot ? segments[1] : segments[0];
 
@@ -135,15 +133,12 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes("partner.");
     
     return adminMenuItems.map(item => {
-      // Base URL should be relative to the ID
       let finalUrl = item.url === "/client" 
         ? `/client/${selectedId}` 
         : item.url.replace('/client/', `/client/${selectedId}/`);
 
-      // Clean double slashes
       finalUrl = finalUrl.replace(/\/+/g, '/');
 
-      // If on subdomain, strip the /client prefix for cleaner routing
       if (isSubdomain) {
         finalUrl = finalUrl.replace('/client', '');
         if (finalUrl === '') finalUrl = '/';
@@ -163,13 +158,12 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     );
   }
 
-  // If no app selected or on root, show the selection screen without sidebar
   if (isSelectAppPage || !appSelected) {
     return <div className="w-full min-w-0">{children}</div>;
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
+    <div className="flex h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       <Sidebar collapsible="icon" className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out">
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href={appSelected ? (pathname.startsWith('/client') ? `/client/${appSelected}` : `/${appSelected}`) : "/client"} className="flex items-center gap-2 group shrink-0">
@@ -235,7 +229,7 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
       <SidebarInset className="flex flex-col flex-1 bg-background min-w-0">
         <MainHeader searchPlaceholder="Search portal..." />
-        <main className="flex-1 p-4 md:p-10 min-w-0 overflow-x-hidden">
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-10">
           {children}
         </main>
       </SidebarInset>

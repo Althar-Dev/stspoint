@@ -109,7 +109,7 @@ export function MainHeader({
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-30">
+    <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
       <div className="flex items-center gap-4 flex-1">
         <div className="flex items-center gap-2">
           <SidebarTrigger className="text-muted-foreground hover:text-primary" />
