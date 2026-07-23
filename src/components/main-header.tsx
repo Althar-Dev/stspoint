@@ -120,11 +120,13 @@ export function MainHeader({
     }
   };
 
+  const isSubscriptionPage = pathname.includes('/subscribe');
+
   return (
     <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
       <div className="flex items-center gap-4 flex-1">
         <div className="flex items-center gap-2">
-          {isPartnerPortal ? (
+          {isSubscriptionPage ? (
             <Button 
               variant="ghost" 
               size="icon" 
