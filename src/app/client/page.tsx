@@ -97,6 +97,7 @@ export default function SelectAppPage() {
         mongoUri: keyData.mongoUri || '',
         mongoDb: keyData.mongoDb || '',
         mongoCol: keyData.mongoCol || '',
+        mongoUserCol: keyData.mongoUserCol || '',
         activationKey: activationKey.trim(),
         status: 'active',
         createdAt: serverTimestamp()

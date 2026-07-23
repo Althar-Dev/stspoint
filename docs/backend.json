@@ -50,7 +50,8 @@
         "activationKey": { "type": "string" },
         "mongoUri": { "type": "string", "description": "Full MongoDB Connection String." },
         "mongoDb": { "type": "string" },
-        "mongoCol": { "type": "string" },
+        "mongoCol": { "type": "string", "description": "Products collection name." },
+        "mongoUserCol": { "type": "string", "description": "Users collection name." },
         "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
@@ -133,7 +134,8 @@
         "token": { "type": "string" },
         "mongoUri": { "type": "string", "description": "Full MongoDB Connection String." },
         "mongoDb": { "type": "string" },
-        "mongoCol": { "type": "string" },
+        "mongoCol": { "type": "string", "description": "Products collection name." },
+        "mongoUserCol": { "type": "string", "description": "Users collection name." },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
