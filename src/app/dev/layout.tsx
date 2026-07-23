@@ -300,7 +300,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1 bg-transparent min-w-0">
-        <MainHeader searchPlaceholder="Search Root Console..." showSidebarTrigger={false} />
+        <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
           {children}
         </main>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -229,7 +228,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
       <SidebarInset className="flex flex-col flex-1 bg-background min-w-0">
         <MainHeader 
-          searchPlaceholder="Search portal..." 
           showNotifications={false}
           showProfile={false}
           showSubscription={false}

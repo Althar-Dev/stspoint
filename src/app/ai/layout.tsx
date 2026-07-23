@@ -163,7 +163,7 @@ function AiLayoutInner({ children }: { children: ReactNode }) {
       )}
 
       <SidebarInset className="flex flex-col flex-1 bg-background">
-        <MainHeader searchPlaceholder="Search AI tools..." showSidebarTrigger={false} />
+        <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
           {children}
         </main>

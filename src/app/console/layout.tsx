@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -38,7 +37,7 @@ import { ReactNode, useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
-import { doc, updateDoc, deleteField, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -248,7 +247,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1 min-w-0 bg-background">
-        <MainHeader searchPlaceholder="Search features..." showSidebarTrigger={false} />
+        <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 min-w-0 overflow-y-auto p-4 md:p-8">
           {children}
         </main>

@@ -132,7 +132,7 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1">
-        <MainHeader searchPlaceholder="Search GoPay features..." showSidebarTrigger={false} />
+        <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 p-6 md:p-8 bg-background">
           {children}
         </main>
