@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -253,7 +252,7 @@ export function MainHeader({
               onClick={handleLogout}
               className="text-red-500 hover:text-red-600 focus:text-red-600 focus:bg-red-500/10 cursor-pointer gap-2 py-2.5 rounded-xl"
             >
-              <LogOut className="w-4 h-4 /> Logout
+              <LogOut className="w-4 h-4" /> Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
