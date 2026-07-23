@@ -81,6 +81,12 @@ export function DocsStsPay() {
                        <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Customer email address for identification.</td>
                     </tr>
+                    <tr>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">success_url</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String (URL)</td>
+                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Redirect target after successful payment on checkout page.</td>
+                    </tr>
                  </tbody>
               </table>
            </div>
@@ -113,7 +119,8 @@ export function DocsStsPay() {
     "type": "payment_link",
     "amount": 50000,
     "payer_email": "customer@email.com",
-    "description": "Digital Product Purchase"
+    "description": "Digital Product Purchase",
+    "success_url": "https://your-store.com/success"
   }'`}
               />
             </TabsContent>
@@ -134,7 +141,8 @@ export function DocsStsPay() {
     type: 'payment_link',
     amount: 50000,
     payer_email: 'customer@email.com',
-    description: 'Digital Product Purchase'
+    description: 'Digital Product Purchase',
+    success_url: 'https://your-store.com/success'
   })
 });
 
@@ -159,7 +167,8 @@ payload = {
     "type": "payment_link",
     "amount": 50000,
     "payer_email": "customer@email.com",
-    "description": "Digital Product Purchase"
+    "description": "Digital Product Purchase",
+    "success_url": "https://your-store.com/success"
 }
 
 response = requests.post(url, json=payload, headers=headers)
@@ -179,7 +188,8 @@ $payload = [
     "type" => "payment_link",
     "amount" => 50000,
     "payer_email" => "customer@email.com",
-    "description" => "Digital Product Purchase"
+    "description" => "Digital Product Purchase",
+    "success_url" => "https://your-store.com/success"
 ];
 
 $ch = curl_init($url);
