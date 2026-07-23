@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       payer_email, 
       description,
       success_url,
+      external_id: custom_external_id,
       type = 'payment_link' 
     } = body;
 
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Persiapkan Identitas Transaksi
-    const external_id = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const external_id = custom_external_id || `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     
     const host = request.headers.get('host') || 'stspoint.id';
     const isDev = host.includes('localhost') || host.includes('cloudworkstations.dev') || host.includes('firebaseapp.com');

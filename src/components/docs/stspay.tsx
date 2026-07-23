@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -82,6 +83,12 @@ export function DocsStsPay() {
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Customer email address for identification.</td>
                     </tr>
                     <tr>
+                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">external_id</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
+                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
+                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Custom unique ID for this transaction. Generated automatically if not provided.</td>
+                    </tr>
+                    <tr>
                        <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">success_url</td>
                        <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String (URL)</td>
                        <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
@@ -116,6 +123,7 @@ export function DocsStsPay() {
   -d '{
     "merchant_id": "STS-XXXXXXXX",
     "secret_key": "STS-Key-XXXXXXXX",
+    "external_id": "ORDER-9921",
     "type": "payment_link",
     "amount": 50000,
     "payer_email": "customer@email.com",
@@ -138,6 +146,7 @@ export function DocsStsPay() {
   body: JSON.stringify({
     merchant_id: 'STS-XXXXXXXX',
     secret_key: 'STS-Key-XXXXXXXX',
+    external_id: 'ORDER-9921',
     type: 'payment_link',
     amount: 50000,
     payer_email: 'customer@email.com',
@@ -164,6 +173,7 @@ headers = {
 payload = {
     "merchant_id": "STS-XXXXXXXX",
     "secret_key": "STS-Key-XXXXXXXX",
+    "external_id": "ORDER-9921",
     "type": "payment_link",
     "amount": 50000,
     "payer_email": "customer@email.com",
@@ -185,6 +195,7 @@ $url = "https://api.stspoint.id/payments/create";
 $payload = [
     "merchant_id" => "STS-XXXXXXXX",
     "secret_key" => "STS-Key-XXXXXXXX",
+    "external_id" => "ORDER-9921",
     "type" => "payment_link",
     "amount" => 50000,
     "payer_email" => "customer@email.com",
@@ -220,8 +231,8 @@ echo $response;
                 code={`{
   "success": true,
   "data": {
-    "external_id": "PAY-12345",
-    "checkout_url": "https://api.stspoint.id/checkout/PAY-12345",
+    "external_id": "ORDER-9921",
+    "checkout_url": "https://api.stspoint.id/checkout/ORDER-9921",
     "status": "PENDING",
     "amount": 50000
   }
@@ -236,7 +247,7 @@ echo $response;
                 code={`{
   "success": true,
   "data": {
-    "external_id": "PAY-12345",
+    "external_id": "ORDER-9921",
     "qr_string": "00020101021226660011ID.CO.XENDIT.WWW...",
     "status": "PENDING",
     "amount": 50000
@@ -268,7 +279,7 @@ echo $response;
           code={`{
   "success": true,
   "data": {
-    "external_id": "PAY-12345",
+    "external_id": "ORDER-9921",
     "status": "PAID",
     "amount": 50000,
     "payer_email": "customer@email.com",

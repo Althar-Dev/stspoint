@@ -766,14 +766,6 @@ export default function CustomCheckoutPage() {
                       <span className="text-slate-500 font-medium">{T[lang].baseAmount}</span>
                       <span className="font-bold">IDR {displayAmount.toLocaleString('id-ID')}</span>
                    </div>
-                   {transaction.fee_amount > 0 && (
-                     <div className="flex items-center justify-between text-[10px] italic text-muted-foreground animate-in slide-in-from-top-1">
-                        <span className="flex items-center gap-1.5">
-                          {T[lang].fee} 
-                        </span>
-                        <span>- IDR {transaction.fee_amount.toLocaleString('id-ID')}</span>
-                     </div>
-                   )}
                 </div>
 
                 <div className="border-t-2 border-dashed border-slate-400 my-8" />
