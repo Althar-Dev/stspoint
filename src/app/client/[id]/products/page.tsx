@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +16,10 @@ import {
   ChevronRight,
   ChevronLeft,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Bot,
+  Zap,
+  ShoppingBag
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { getOrderkuotaPPOBPricelist } from "@/service/orderkuota";
@@ -49,15 +53,20 @@ export default function ClientProductsPage() {
 
   const { data: app, loading: appLoading } = useDoc(appRef);
 
-  // Bot Topup now also counts as using MongoDB if it has the type bot_topup
-  const isPremiumApp = useMemo(() => app?.type?.includes("appprem") || app?.type === "bot_topup", [app]);
+  // Determine if this app uses MongoDB management
+  const usesMongo = useMemo(() => {
+    if (!app?.type) return false;
+    return app.type.includes("appprem") || app.type === "bot_topup";
+  }, [app]);
+
+  const isTopupType = useMemo(() => app?.type?.includes("topup"), [app]);
 
   const fetchProducts = async () => {
     if (appLoading || !app) return;
     
     setLoading(true);
     try {
-      if (isPremiumApp) {
+      if (usesMongo) {
         const res = await getMongoProducts(user!.uid, appId);
         if (res.success) {
           setProducts(res.data);
@@ -85,8 +94,8 @@ export default function ClientProductsPage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const name = (p.product_name || p.product || "").toLowerCase();
-      const sku = (p.buyer_sku_code || p.id || "").toLowerCase();
+      const name = (p.product_name || p.product || p.name || "").toLowerCase();
+      const sku = (p.buyer_sku_code || p.id || p._id || p.sku || "").toLowerCase();
       const brand = (p.brand || "").toLowerCase();
       const s = search.toLowerCase();
       
@@ -112,30 +121,48 @@ export default function ClientProductsPage() {
     return Array.from(cats).sort();
   }, [products]);
 
-  const MongoProductCard = ({ product }: { product: any }) => (
-    <Link href={`/client/${appId}/products/${product.id || product._id}`}>
-      <Card className="group border-border shadow-sm rounded-[1.5rem] md:rounded-3xl overflow-hidden bg-card hover:border-primary/20 transition-all flex flex-col h-full cursor-pointer">
-        <div className="relative aspect-square w-full overflow-hidden bg-muted">
-           {product.imageUrl ? (
-             <img src={product.imageUrl} alt={product.product} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
-           ) : (
-             <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
-                <Package className="w-10 h-10 md:w-12 md:h-12" />
-             </div>
-           )}
-           <div className="absolute top-2 left-2 md:top-4 md:left-4">
-              <Badge className="bg-black/60 backdrop-blur-md border-none text-[7px] md:text-[8px] font-bold uppercase tracking-widest text-white px-2 py-0.5">{product.category}</Badge>
-           </div>
-        </div>
-        <CardContent className="p-3 md:p-5">
-           <h3 className="font-headline font-bold text-xs md:text-lg leading-tight group-hover:text-primary transition-colors line-clamp-1">{product.product}</h3>
-           <p className="text-[9px] md:text-[10px] text-muted-foreground mt-1 flex items-center justify-between">
-              Manage Details <ChevronRight className="w-2.5 h-2.5 md:w-3 md:h-3" />
-           </p>
-        </CardContent>
-      </Card>
-    </Link>
-  );
+  const MongoProductCard = ({ product }: { product: any }) => {
+    const name = product.product || product.name || "Unnamed Product";
+    const categoryLabel = product.category || "General";
+    const isTopup = isTopupType;
+
+    return (
+      <Link href={`/client/${appId}/products/${product.id || product._id}`}>
+        <Card className="group border-border shadow-sm rounded-[1.5rem] md:rounded-3xl overflow-hidden bg-card hover:border-primary/20 transition-all flex flex-col h-full cursor-pointer">
+          <div className="relative aspect-square w-full overflow-hidden bg-muted">
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt={name} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/20 space-y-2">
+                  {isTopup ? <Zap className="w-10 h-10 md:w-12 md:h-12" /> : <Package className="w-10 h-10 md:w-12 md:h-12" />}
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{isTopup ? 'SKU FOCUS' : 'PREMIUM'}</span>
+              </div>
+            )}
+            <div className="absolute top-2 left-2 md:top-4 md:left-4">
+                <Badge className="bg-black/60 backdrop-blur-md border-none text-[7px] md:text-[8px] font-bold uppercase tracking-widest text-white px-2 py-0.5">{categoryLabel}</Badge>
+            </div>
+          </div>
+          <CardContent className="p-3 md:p-5 flex flex-col flex-1 justify-between">
+            <div className="space-y-1">
+              <h3 className="font-headline font-bold text-xs md:text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">{name}</h3>
+              {isTopup && (
+                <p className="text-[9px] font-mono text-muted-foreground font-bold">SKU: {product.sku || product.buyer_sku_code || '---'}</p>
+              )}
+            </div>
+            
+            <div className="pt-3 mt-auto border-t border-border/50 flex items-center justify-between">
+              {isTopup ? (
+                <p className="text-[11px] font-bold text-primary">Rp {(product.sellPrice || product.price || 0).toLocaleString('id-ID')}</p>
+              ) : (
+                <p className="text-[9px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Manage Details</p>
+              )}
+              <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    );
+  };
 
   const FlatProductCard = ({ p }: { p: any }) => (
     <Card className="group border-border shadow-sm rounded-xl md:rounded-2xl overflow-hidden bg-card hover:border-primary/20 transition-all shadow-none">
@@ -177,7 +204,7 @@ export default function ClientProductsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight text-foreground">Katalog <span className="text-primary">Produk</span></h1>
-            {isPremiumApp && (
+            {usesMongo && (
               <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[9px] font-bold uppercase h-5 px-2 hidden sm:flex">
                 <Cloud className="w-3 h-3 mr-1" /> Database Live
               </Badge>
@@ -239,9 +266,9 @@ export default function ClientProductsPage() {
            </div>
            <p className="text-sm font-medium text-muted-foreground italic">Produk tidak ditemukan atau katalog masih kosong.</p>
         </div>
-      ) : isPremiumApp ? (
+      ) : usesMongo ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
-           {filteredProducts.map((product) => (
+           {paginatedProducts.map((product) => (
              <MongoProductCard key={product.id || product._id} product={product} />
            ))}
         </div>
@@ -252,33 +279,34 @@ export default function ClientProductsPage() {
                <FlatProductCard key={`${p.buyer_sku_code}-${p.provider}`} p={p} />
              ))}
           </div>
+        </div>
+      )}
 
-          {totalPages > 1 && (
-            <div className="px-4 py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6">
-              <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                Showing <span className="text-foreground">{startRange}</span> to <span className="text-foreground">{endRange}</span> of <span className="text-foreground">{filteredProducts.length.toLocaleString()}</span>
-              </p>
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
-                  <ChevronsLeft className="w-3.5 h-3.5" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </Button>
-                <div className="px-3 md:px-4 h-8 flex items-center justify-center bg-background border border-border rounded-lg min-w-[70px] md:min-w-[80px]">
-                  <span className="text-[9px] md:text-[10px] font-bold">Page {currentPage} of {totalPages}</span>
-                </div>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
-                  <ChevronsRight className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+      {!loading && filteredProducts.length > itemsPerPage && (
+        <div className="px-4 py-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6">
+          <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            Showing <span className="text-foreground">{startRange}</span> to <span className="text-foreground">{endRange}</span> of <span className="text-foreground">{filteredProducts.length.toLocaleString()}</span>
+          </p>
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+              <ChevronsLeft className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </Button>
+            <div className="px-3 md:px-4 h-8 flex items-center justify-center bg-background border border-border rounded-lg min-w-[70px] md:min-w-[80px]">
+              <span className="text-[9px] md:text-[10px] font-bold">Page {currentPage} of {totalPages}</span>
             </div>
-          )}
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-background" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+              <ChevronsRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
