@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -79,6 +80,12 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   // Check if we are on the "Select Application" screen
   const isSelectAppPage = useMemo(() => {
     const cleanPath = pathname.replace(/^\/client/, "");
+    const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+    const isPartnerSubdomain = hostname.startsWith("partner.");
+    
+    if (isPartnerSubdomain) {
+      return pathname === "/" || pathname === "";
+    }
     return cleanPath === "" || cleanPath === "/";
   }, [pathname]);
 
@@ -226,11 +233,11 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1 bg-background min-w-0">
+      <SidebarInset className="flex flex-col flex-1 bg-background min-w-0 overflow-hidden">
         <MainHeader 
           showNotifications={false}
           showProfile={false}
-          showSubscription={false}
+          showSubscription={true}
         />
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-10">
           {children}
