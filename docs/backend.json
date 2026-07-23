@@ -117,6 +117,7 @@
         "payerEmail": { "type": "string" },
         "description": { "type": "string" },
         "invoiceUrl": { "type": "string" },
+        "successUrl": { "type": "string", "description": "URL to redirect after successful payment." },
         "userId": { "type": "string", "description": "Owner of this transaction (Merchant)." },
         "type": { "type": "string", "enum": ["payment", "payout"] },
         "createdAt": { "type": "string", "format": "date-time" }

@@ -474,6 +474,14 @@ export default function CustomCheckoutPage() {
     toast({ title: T[lang].copySuccess, description: T[lang].copyDesc(label) });
   };
 
+  const handleFinalRedirect = () => {
+    if (transaction?.successUrl) {
+      window.location.href = transaction.successUrl;
+    } else {
+      router.back();
+    }
+  };
+
   if (loading || !mounted) {
     return (
       <div className="light min-h-screen bg-[#F9FAFB] flex flex-col">
@@ -554,7 +562,7 @@ export default function CustomCheckoutPage() {
               <div className="w-32 h-32 mx-auto"><Player autoplay loop src="/assets/lottie/success.json" /></div>
               <h2 className="text-xl md:text-2xl font-bold">{T[lang].paidTitle}</h2>
               <p className="text-sm text-slate-500">{T[lang].paidDesc}</p>
-              <Button onClick={() => router.back()} className="bg-indigo-600 hover:bg-indigo-700 h-12 px-10">{T[lang].finish}</Button>
+              <Button onClick={handleFinalRedirect} className="bg-indigo-600 hover:bg-indigo-700 h-12 px-10">{T[lang].finish}</Button>
             </div>
           ) : isExpired ? (
             <div className="max-w-md mx-auto py-10 text-center space-y-6 animate-in zoom-in-95">

@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase/core';
 import { 
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
       amount, 
       payer_email, 
       description,
+      success_url,
       type = 'payment_link' 
     } = body;
 
@@ -149,6 +151,7 @@ export async function POST(request: Request) {
       status: 'PENDING',
       payerEmail: payer_email,
       description: description || 'STSPay Payment',
+      successUrl: success_url || null,
       userId: merchantUid,
       type: 'payment',
       mode: type,
