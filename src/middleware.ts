@@ -47,7 +47,6 @@ export function middleware(request: NextRequest) {
     '/qris-string',
     '/terms-of-service',
     '/privacy-policy',
-    '/auth',
     '/manifest.json',
     '/robots.txt',
     '/sitemap.xml',
