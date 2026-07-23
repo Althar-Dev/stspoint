@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -85,7 +84,8 @@ export function AppKeyManagement() {
   };
 
   const needsBotToken = appType.startsWith('bot');
-  const needsMongo = appType.includes('appprem');
+  // Now both bot_topup and all appprem types need/can have Mongo
+  const needsMongo = appType.includes('appprem') || appType === 'bot_topup';
 
   const handleGenerateKey = async () => {
     if (!newAppName) {
@@ -99,7 +99,7 @@ export function AppKeyManagement() {
     }
 
     if (needsMongo && (!mongoUri || !mongoDb || !mongoCol)) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Premium applications require MongoDB configuration." });
+      toast({ variant: "destructive", title: "Missing Fields", description: "Applications in this category require MongoDB configuration." });
       return;
     }
 

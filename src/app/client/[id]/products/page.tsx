@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,7 +49,8 @@ export default function ClientProductsPage() {
 
   const { data: app, loading: appLoading } = useDoc(appRef);
 
-  const isPremiumApp = useMemo(() => app?.type?.includes("appprem"), [app]);
+  // Bot Topup now also counts as using MongoDB if it has the type bot_topup
+  const isPremiumApp = useMemo(() => app?.type?.includes("appprem") || app?.type === "bot_topup", [app]);
 
   const fetchProducts = async () => {
     if (appLoading || !app) return;

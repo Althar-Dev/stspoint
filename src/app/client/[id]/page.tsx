@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -58,8 +57,8 @@ export default function ClientDashboardPage() {
     );
   }
 
-  // Use Premium layout for any appprem type (website or bot)
-  const isPremiumApp = app?.type?.includes("appprem");
+  // Use Premium layout for appprem types or bot_topup as it now supports MongoDB
+  const isPremiumApp = app?.type?.includes("appprem") || app?.type === "bot_topup";
 
   if (isPremiumApp) {
     return <V2Dashboard profile={profile} stspaySvc={stspaySvc} isLoading={isLoading} />;
