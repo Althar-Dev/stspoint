@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -189,7 +188,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
                       <span>{subItem.title}</span>
                     </Link>
                   </SidebarMenuSubButton>
-                </SidebarMenuItem>
+                </SidebarMenuSubItem>
               ))}
             </SidebarMenuSub>
           </CollapsibleContent>
