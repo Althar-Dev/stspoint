@@ -232,13 +232,13 @@ export function MainHeader({
                 <DropdownMenuSubContent className="rounded-xl p-2 border-border">
                   <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer gap-2 py-2 rounded-lg">
                     <Sun className="w-4 h-4" /> Light
-                  </SelectItem>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer gap-2 py-2 rounded-lg">
                     <Moon className="w-4 h-4" /> Dark
-                  </SelectItem>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer gap-2 py-2 rounded-lg">
                     <Monitor className="w-4 h-4" /> System
-                  </SelectItem>
+                  </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuPortal>
             </DropdownMenuSub>
