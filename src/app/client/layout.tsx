@@ -228,7 +228,12 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1 bg-background min-w-0">
-        <MainHeader searchPlaceholder="Search portal..." />
+        <MainHeader 
+          searchPlaceholder="Search portal..." 
+          showNotifications={false}
+          showProfile={false}
+          showSubscription={false}
+        />
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-10">
           {children}
         </main>

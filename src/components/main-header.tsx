@@ -47,11 +47,17 @@ import React, { useMemo } from "react";
 interface MainHeaderProps {
   searchPlaceholder?: string;
   showSidebarTrigger?: boolean;
+  showNotifications?: boolean;
+  showProfile?: boolean;
+  showSubscription?: boolean;
 }
 
 export function MainHeader({ 
   searchPlaceholder = "Search features...",
-  showSidebarTrigger = true 
+  showSidebarTrigger = true,
+  showNotifications = true,
+  showProfile = true,
+  showSubscription = true
 }: MainHeaderProps) {
   const { setTheme } = useTheme();
   const { user } = useUser();
@@ -85,7 +91,7 @@ export function MainHeader({
   const handleLogout = async () => {
     if (!auth) return;
     try {
-      await fetch("/api/auth/session", { method: "DELETE" });
+      await fetch("/api/auth/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ logout: true }) }).catch(() => {});
       await signOut(auth);
       toast({ 
         title: "Logged Out", 
@@ -126,59 +132,61 @@ export function MainHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent relative">
-              <Bell className="w-4 h-4 text-muted-foreground" />
-              {hasUnread && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="center" 
-            className="w-[400px] rounded-2xl p-2 border-border"
-          >
-            <DropdownMenuLabel className="font-headline font-bold text-xs uppercase tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
-              Notifications
-              {hasUnread && <Badge variant="secondary" className="bg-red-50 text-red-600 border-none text-[8px] px-1.5 h-4">New</Badge>}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="max-h-[300px] overflow-y-auto">
-              {notifLoading ? (
-                <div className="py-8 text-center text-xs text-muted-foreground animate-pulse">Synchronizing...</div>
-              ) : notifications.length === 0 ? (
-                <div className="py-8 text-center">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
-                    <Bell className="w-4 h-4 text-muted-foreground/30" />
-                  </div>
-                  <p className="text-[10px] font-bold text-muted-foreground tracking-widest">No notifications found.</p>
-                </div>
-              ) : (
-                notifications.map((n) => (
-                  <div key={n.id} className={`p-3 rounded-xl mb-1 flex items-start gap-3 transition-colors ${n.isRead ? 'opacity-60' : 'bg-muted/30'}`}>
-                    <div className="mt-0.5 shrink-0">
-                      {getNotifIcon(n.type)}
+        {showNotifications && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent relative">
+                <Bell className="w-4 h-4 text-muted-foreground" />
+                {hasUnread && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="center" 
+              className="w-[400px] rounded-2xl p-2 border-border"
+            >
+              <DropdownMenuLabel className="font-headline font-bold text-xs uppercase tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
+                Notifications
+                {hasUnread && <Badge variant="secondary" className="bg-red-50 text-red-600 border-none text-[8px] px-1.5 h-4">New</Badge>}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="max-h-[300px] overflow-y-auto">
+                {notifLoading ? (
+                  <div className="py-8 text-center text-xs text-muted-foreground animate-pulse">Synchronizing...</div>
+                ) : notifications.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                      <Bell className="w-4 h-4 text-muted-foreground/30" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold leading-tight">{n.title}</p>
-                      <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2 mt-0.5">{n.message}</p>
-                      <p className="text-[8px] text-muted-foreground/40 font-bold uppercase mt-1">
-                        {n.createdAt ? format(n.createdAt.toDate ? n.createdAt.toDate() : new Date(n.createdAt), "dd MMM HH:mm") : '...'}
-                      </p>
-                    </div>
+                    <p className="text-[10px] font-bold text-muted-foreground tracking-widest">No notifications found.</p>
                   </div>
-                ))
+                ) : (
+                  notifications.map((n) => (
+                    <div key={n.id} className={`p-3 rounded-xl mb-1 flex items-start gap-3 transition-colors ${n.isRead ? 'opacity-60' : 'bg-muted/30'}`}>
+                      <div className="mt-0.5 shrink-0">
+                        {getNotifIcon(n.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold leading-tight">{n.title}</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2 mt-0.5">{n.message}</p>
+                        <p className="text-[8px] text-muted-foreground/40 font-bold uppercase mt-1">
+                          {n.createdAt ? format(n.createdAt.toDate ? n.createdAt.toDate() : new Date(n.createdAt), "dd MMM HH:mm") : '...'}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <Button variant="ghost" className="w-full h-8 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5">
+                    View All Activity
+                  </Button>
+                </>
               )}
-            </div>
-            {notifications.length > 0 && (
-               <>
-                <DropdownMenuSeparator />
-                <Button variant="ghost" className="w-full h-8 text-[10px] font-bold uppercase tracking-widest text-primary hover:bg-primary/5">
-                  View All Activity
-                </Button>
-               </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -208,16 +216,20 @@ export function MainHeader({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/console/setting" className="cursor-pointer gap-2 py-2.5 rounded-xl">
-                <User className="w-4 h-4" /> Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/console/subscribe" className="cursor-pointer gap-2 py-2.5 rounded-xl">
-                <CreditCard className="w-4 h-4" /> Subscription
-              </Link>
-            </DropdownMenuItem>
+            {showProfile && (
+              <DropdownMenuItem asChild>
+                <Link href="/console/setting" className="cursor-pointer gap-2 py-2.5 rounded-xl">
+                  <User className="w-4 h-4" /> Profile
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {showSubscription && (
+              <DropdownMenuItem asChild>
+                <Link href="/console/subscribe" className="cursor-pointer gap-2 py-2.5 rounded-xl">
+                  <CreditCard className="w-4 h-4" /> Subscription
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="cursor-pointer gap-2 py-2.5 rounded-xl">
                 <SunMoon className="w-4 h-4" /> Appearance
@@ -241,7 +253,7 @@ export function MainHeader({
               onClick={handleLogout}
               className="text-red-500 hover:text-red-600 focus:text-red-600 focus:bg-red-500/10 cursor-pointer gap-2 py-2.5 rounded-xl"
             >
-              <LogOut className="w-4 h-4" /> Logout
+              <LogOut className="w-4 h-4 /> Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
