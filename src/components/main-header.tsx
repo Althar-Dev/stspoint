@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -16,10 +15,11 @@ import {
   Info,
   CheckCircle2,
   AlertCircle,
-  XCircle
+  XCircle,
+  ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,19 +47,22 @@ interface MainHeaderProps {
   showNotifications?: boolean;
   showProfile?: boolean;
   showSubscription?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function MainHeader({ 
   showSidebarTrigger = true,
   showNotifications = true,
   showProfile = true,
-  showSubscription = true
+  showSubscription = true,
+  searchPlaceholder = "Search portal..."
 }: MainHeaderProps) {
   const { setTheme } = useTheme();
   const { user } = useUser();
   const db = useFirestore();
   const auth = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -68,13 +71,14 @@ export function MainHeader({
   
   const { data: profile } = useDoc(profileRef);
 
-  // Determine subpath for links based on current portal context
-  const subPath = useMemo(() => {
-    const isPartner = pathname.startsWith('/client') || (typeof window !== "undefined" && window.location.hostname.startsWith('partner.'));
-    return isPartner ? '/client' : '/console';
+  const isPartnerPortal = useMemo(() => {
+    return pathname.startsWith('/client') || (typeof window !== "undefined" && window.location.hostname.startsWith('partner.'));
   }, [pathname]);
 
-  // Fetch Notifications
+  const subPath = useMemo(() => {
+    return isPartnerPortal ? '/client' : '/console';
+  }, [isPartnerPortal]);
+
   const notificationsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -120,7 +124,18 @@ export function MainHeader({
     <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
       <div className="flex items-center gap-4 flex-1">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className="text-muted-foreground hover:text-primary" />
+          {isPartnerPortal ? (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => router.back()}
+              className="h-8 w-8 text-muted-foreground hover:text-primary rounded-md"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          ) : (
+            <SidebarTrigger className="text-muted-foreground hover:text-primary" />
+          )}
           {showSidebarTrigger && <div className="h-4 w-[1px] bg-border hidden md:block"></div>}
         </div>
       </div>
