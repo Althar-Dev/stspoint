@@ -19,22 +19,14 @@ import {
 import { 
   Terminal, 
   Activity, 
-  ShieldAlert,
   LogOut,
   Layers,
-  Users,
   ChevronDown,
-  LayoutGrid,
+  Layout,
   Package,
-  Settings,
-  Zap,
-  Lock,
-  ArrowLeft,
   Handshake,
-  Landmark,
-  Banknote,
   Key,
-  Layout
+  Lock
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -44,7 +36,7 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 import { ThemeProvider } from "next-themes";
-import { ReactNode, useEffect, Suspense, useState } from "react";
+import { ReactNode, useEffect, Suspense, useState, useMemo } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
@@ -139,6 +131,90 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
     }
   };
 
+  const isUrlActive = (itemUrl: string) => {
+    const cleanItemUrl = itemUrl.split('?')[0];
+    // Support both /dev/xxx and /xxx (subdomain)
+    return pathname === cleanItemUrl || pathname === cleanItemUrl.replace('/dev', '');
+  };
+
+  const renderMenuItem = (group: any) => {
+    if (group.url) {
+      const isActive = isUrlActive(group.url);
+      return (
+        <SidebarMenuItem key={group.title}>
+          <SidebarMenuButton 
+            asChild
+            isActive={isActive}
+            tooltip={group.title}
+            className={`h-10 transition-all rounded-md ${
+              isActive 
+                ? "bg-accent text-accent-foreground font-bold" 
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+          >
+            <Link href={group.url}>
+              <group.icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-accent-foreground" : "text-muted-foreground"}`} />
+              <span className="text-sm group-data-[collapsible=icon]:hidden">{group.title}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      );
+    }
+
+    const isGroupActive = group.items?.some((item: any) => isUrlActive(item.url));
+    
+    return (
+      <Collapsible 
+        key={group.title} 
+        asChild 
+        defaultOpen={isGroupActive}
+        className="group/collapsible"
+      >
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton 
+              tooltip={group.title}
+              isActive={isGroupActive}
+              className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${
+                isGroupActive ? "text-foreground font-bold" : "text-muted-foreground"
+              }`}
+            >
+              <group.icon className="w-4 h-4 shrink-0" />
+              <span className="text-sm group-data-[collapsible=icon]:hidden">{group.title}</span>
+              <ChevronDown className="ml-auto w-3 h-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 group-data-[collapsible=icon]:hidden" />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
+            <SidebarMenuSub className="border-border">
+              {group.items.map((subItem: any) => {
+                const currentView = searchParams.get('view') || 'gateway';
+                const isActive = isUrlActive(subItem.url) && (subItem.view ? currentView === subItem.view : true);
+                
+                return (
+                  <SidebarMenuSubItem key={subItem.title}>
+                    <SidebarMenuSubButton 
+                      asChild 
+                      isActive={isActive}
+                      className={`rounded-lg transition-all duration-200 ${
+                        isActive 
+                          ? "bg-accent/50 text-foreground font-bold" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Link href={subItem.url}>
+                        <span>{subItem.title}</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                );
+              })}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
+      </Collapsible>
+    );
+  };
+
   if (isAuthPage) {
     return <div className="w-full min-h-screen bg-background">{children}</div>;
   }
@@ -179,84 +255,6 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  const renderMenuItem = (group: any) => {
-    if (group.url) {
-      const isActive = pathname === group.url;
-      return (
-        <SidebarMenuItem key={group.title}>
-          <SidebarMenuButton 
-            asChild
-            isActive={isActive}
-            tooltip={group.title}
-            className={`h-10 transition-all rounded-md ${
-              isActive 
-                ? "bg-accent text-accent-foreground font-bold" 
-                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-            }`}
-          >
-            <Link href={group.url}>
-              <group.icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-accent-foreground" : "text-muted-foreground"}`} />
-              <span className="text-sm group-data-[collapsible=icon]:hidden">{group.title}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      );
-    }
-
-    const isGroupActive = group.items?.some((item: any) => pathname === item.url.split('?')[0]);
-    
-    return (
-      <Collapsible 
-        key={group.title} 
-        asChild 
-        defaultOpen={isGroupActive}
-        className="group/collapsible"
-      >
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton 
-              tooltip={group.title}
-              isActive={isGroupActive}
-              className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${
-                isGroupActive ? "text-foreground font-bold" : "text-muted-foreground"
-              }`}
-            >
-              <group.icon className="w-4 h-4 shrink-0" />
-              <span className="text-sm group-data-[collapsible=icon]:hidden">{group.title}</span>
-              <ChevronDown className="ml-auto w-3 h-3 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 group-data-[collapsible=icon]:hidden" />
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
-            <SidebarMenuSub className="border-border">
-              {group.items.map((subItem: any) => {
-                const currentView = searchParams.get('view') || 'gateway';
-                const isActive = pathname === subItem.url.split('?')[0] && (subItem.view ? currentView === subItem.view : true);
-                
-                return (
-                  <SidebarMenuSubItem key={subItem.title}>
-                    <SidebarMenuSubButton 
-                      asChild 
-                      isActive={isActive}
-                      className={`rounded-lg transition-all duration-200 ${
-                        isActive 
-                          ? "bg-accent/50 text-foreground font-bold" 
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Link href={subItem.url}>
-                        <span>{subItem.title}</span>
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                );
-              })}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
-    );
-  };
 
   return (
     <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">

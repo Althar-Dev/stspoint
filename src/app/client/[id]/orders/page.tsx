@@ -132,7 +132,7 @@ export default function ClientOrdersPage() {
             </h1>
             {usesMongo && (
               <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 text-[9px] font-bold uppercase h-5 px-2">
-                <Database className="w-3 h-3 mr-1" /> MongoDB Live
+                <Database className="w-3 h-3 mr-1" /> Server Live
               </Badge>
             )}
           </div>

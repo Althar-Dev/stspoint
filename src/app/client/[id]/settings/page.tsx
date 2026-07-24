@@ -191,7 +191,7 @@ export default function ClientSettingsPage() {
         <div className="flex items-center gap-2">
            {isAppPrem && (
               <Badge variant="outline" className="bg-blue-500/5 text-blue-600 border-blue-500/20 font-bold text-[9px] uppercase h-6 px-2 gap-1.5">
-                <Database className="w-3 h-3" /> MongoDB Connected
+                <Database className="w-3 h-3" /> Server Live
               </Badge>
            )}
            <Button 

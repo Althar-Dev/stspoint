@@ -8,7 +8,7 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const host = request.headers.get('host') || '';
-  const { pathname } = url;
+  const { pathname, search } = url;
 
   // 1. CEK LINGKUNGAN PENGEMBANGAN
   const isDev = 
@@ -72,37 +72,30 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (isPublicPath) {
-      return NextResponse.next();
-    }
-
-    if (isApiRoute) {
+    if (isPublicPath || isApiRoute) {
       return NextResponse.next();
     }
 
     // LOGIKA KHUSUS SUBDOMAIN CONSOLE (Merchant Suite)
     if (sub === 'console') {
-      // Jika mengakses layanan saudara (orkut, gopay, dll), jangan tambahkan awalan /console
       const isServicePath = MERCHANT_SERVICE_PATHS.some(p => pathname === p || pathname.startsWith(`${p}/`));
       if (isServicePath) {
-        return NextResponse.next(); // Biarkan Next.js mengakses root folder /orkut, /gopay, dll
+        return NextResponse.next(); 
       }
 
-      // Redirect jika path diawali dengan folder internal /console (Pembersihan URL)
       if (pathname.startsWith('/console')) {
         const cleanPath = pathname.replace('/console', '') || '/';
-        return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
+        return NextResponse.redirect(new URL(`https://${host}${cleanPath}${search}`, request.url));
       }
 
-      // Default: Masukkan ke folder /console secara transparan
       url.pathname = `/console${pathname}`;
       return NextResponse.rewrite(url);
     }
 
-    // LOGIKA UNTUK SUBDOMAIN LAIN (partner, docs, api, etc)
+    // LOGIKA UNTUK SUBDOMAIN LAIN (partner, docs, dev, api, etc)
     if (pathname.startsWith(config.internal)) {
       const cleanPath = pathname.replace(config.internal, '') || '/';
-      return NextResponse.redirect(new URL(`https://${host}${cleanPath}`, request.url));
+      return NextResponse.redirect(new URL(`https://${host}${cleanPath}${search}`, request.url));
     }
 
     url.pathname = `${config.internal}${pathname}`;
@@ -122,7 +115,7 @@ export function middleware(request: NextRequest) {
       const config = mappings[key];
       if (pathname === config.internal || pathname.startsWith(`${config.internal}/`)) {
         const cleanPath = pathname.replace(config.internal, '') || '/';
-        return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}`, request.url));
+        return NextResponse.redirect(new URL(`https://${config.subdomain}.${rootDomain}${cleanPath}${search}`, request.url));
       }
     }
     
