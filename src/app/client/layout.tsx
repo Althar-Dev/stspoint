@@ -189,7 +189,11 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
   }
 
   if (isSelectAppPage || !appSelected) {
-    return <div className="w-full min-w-0">{children}</div>;
+    return (
+      <div className="w-full min-w-0 min-h-screen bg-background text-foreground">
+        {children}
+      </div>
+    );
   }
 
   return (

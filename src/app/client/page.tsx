@@ -156,9 +156,9 @@ export default function SelectAppPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex flex-col w-full text-foreground selection:bg-primary/10">
+    <div className="min-h-screen bg-background flex flex-col w-full text-foreground selection:bg-primary/10">
       {/* Mini Header */}
-      <header className="h-16 px-6 md:px-10 flex items-center justify-between border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="h-16 px-6 md:px-10 flex items-center justify-between border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Logo className="w-8 h-8" />
           <h1 className="font-headline font-bold text-lg tracking-tight">Partner <span className="text-primary/40">Hub</span></h1>
@@ -188,7 +188,7 @@ export default function SelectAppPage() {
           {/* Action: Activate New App */}
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border-2 border-dashed border-border bg-white hover:bg-muted/30 hover:border-primary/20 transition-all group min-h-[220px]"
+            className="flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] border-2 border-dashed border-border bg-card hover:bg-muted/30 hover:border-primary/20 transition-all group min-h-[220px]"
           >
             <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <Plus className="w-7 h-7" />
@@ -218,7 +218,7 @@ export default function SelectAppPage() {
               <button 
                 key={app.id} 
                 onClick={() => handleSelectApp(app.id)}
-                className="flex flex-col p-8 rounded-[2rem] border border-border bg-white shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all group text-left min-h-[220px]"
+                className="flex flex-col p-8 rounded-[2rem] border border-border bg-card shadow-sm hover:shadow-xl hover:border-primary/20 hover:-translate-y-1 transition-all group text-left min-h-[220px]"
               >
                 <div className={`w-14 h-14 rounded-2xl ${typeInfo.bg} flex items-center justify-center ${typeInfo.color} mb-6 group-hover:bg-primary group-hover:text-white transition-all`}>
                   <typeInfo.icon className="w-7 h-7" />
