@@ -25,7 +25,8 @@ import {
   Database,
   ShieldCheck,
   Zap,
-  Globe2
+  Globe2,
+  CreditCard
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
@@ -153,6 +154,31 @@ export default function ClientSettingsPage() {
     }
   };
 
+  /**
+   * Helper: Handle Exclusive Payment Module Selection
+   */
+  const handlePaymentToggle = (module: 'stspay' | 'orkut' | 'gopay', value: boolean) => {
+    if (module === 'stspay') {
+      setUseStspay(value);
+      if (value) {
+        setUseOrderkuota(false);
+        setUseGomerchant(false);
+      }
+    } else if (module === 'orkut') {
+      setUseOrderkuota(value);
+      if (value) {
+        setUseStspay(false);
+        setUseGomerchant(false);
+      }
+    } else if (module === 'gopay') {
+      setUseGomerchant(value);
+      if (value) {
+        setUseStspay(false);
+        setUseOrderkuota(false);
+      }
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -224,6 +250,7 @@ export default function ClientSettingsPage() {
                   className="rounded-xl border-border h-12 pl-11 bg-muted/20 focus:bg-background transition-all font-mono text-[11px]"
                 />
               </div>
+              <p className="text-[9px] text-muted-foreground ml-1">Logo ini akan muncul di Sidebar Dashboard dan Halaman Checkout pelanggan Anda.</p>
             </div>
 
             <div className="space-y-2">
@@ -335,8 +362,8 @@ export default function ClientSettingsPage() {
         <Card className="border-border shadow-sm rounded-3xl bg-card overflow-hidden">
           <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
             <CardTitle className="text-xs font-bold flex items-center gap-2 uppercase tracking-[0.2em] text-muted-foreground">
-              <Zap className="w-4 h-4 text-primary" />
-              Modul & Fitur Aktif
+              {isAppPrem ? <CreditCard className="w-4 h-4 text-primary" /> : <Zap className="w-4 h-4 text-primary" />}
+              {isAppPrem ? 'Metode Pembayaran Aktif' : 'Modul & Fitur Aktif'}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 divide-y divide-border">
@@ -352,7 +379,10 @@ export default function ClientSettingsPage() {
                       <p className="text-[10px] text-muted-foreground max-w-xs leading-relaxed">Aktifkan pembayaran otomatis via QRIS & VA melalui bridge STSPay.</p>
                     </div>
                   </div>
-                  <Switch checked={useStspay} onCheckedChange={setUseStspay} />
+                  <Switch 
+                    checked={useStspay} 
+                    onCheckedChange={(val) => handlePaymentToggle('stspay', val)} 
+                  />
                 </div>
                 <div className="px-8 py-6 flex items-center justify-between hover:bg-muted/10 transition-colors">
                   <div className="flex items-start gap-4">
@@ -364,7 +394,10 @@ export default function ClientSettingsPage() {
                       <p className="text-[10px] text-muted-foreground max-w-xs leading-relaxed">Gunakan saldo Orderkuota Anda untuk rekonsiliasi pembayaran.</p>
                     </div>
                   </div>
-                  <Switch checked={useOrderkuota} onCheckedChange={setUseOrderkuota} />
+                  <Switch 
+                    checked={useOrderkuota} 
+                    onCheckedChange={(val) => handlePaymentToggle('orkut', val)} 
+                  />
                 </div>
                 <div className="px-8 py-6 flex items-center justify-between hover:bg-muted/10 transition-colors">
                   <div className="flex items-start gap-4">
@@ -376,7 +409,10 @@ export default function ClientSettingsPage() {
                       <p className="text-[10px] text-muted-foreground max-w-xs leading-relaxed">Otomatisasi pengecekan mutasi melalui akun GoPay Merchant.</p>
                     </div>
                   </div>
-                  <Switch checked={useGomerchant} onCheckedChange={setUseGomerchant} />
+                  <Switch 
+                    checked={useGomerchant} 
+                    onCheckedChange={(val) => handlePaymentToggle('gopay', val)} 
+                  />
                 </div>
               </>
             ) : (
