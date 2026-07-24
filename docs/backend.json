@@ -52,6 +52,8 @@
         "mongoDb": { "type": "string" },
         "mongoCol": { "type": "string", "description": "Products collection name." },
         "mongoUserCol": { "type": "string", "description": "Users collection name." },
+        "mongoTrxCol": { "type": "string", "description": "Transactions collection name." },
+        "mongoSettingsCol": { "type": "string", "description": "Settings collection name." },
         "status": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       }
@@ -137,6 +139,8 @@
         "mongoDb": { "type": "string" },
         "mongoCol": { "type": "string", "description": "Products collection name." },
         "mongoUserCol": { "type": "string", "description": "Users collection name." },
+        "mongoTrxCol": { "type": "string", "description": "Transactions collection name." },
+        "mongoSettingsCol": { "type": "string", "description": "Settings collection name." },
         "status": { "type": "string", "enum": ["unused", "used"] },
         "usedBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }

@@ -22,7 +22,9 @@ import {
   Database,
   Link2,
   Table as TableIcon,
-  Users as UsersIcon
+  Users as UsersIcon,
+  History,
+  Settings
 } from "lucide-react";
 import { 
   Dialog, 
@@ -58,6 +60,8 @@ export function AppKeyManagement() {
   const [mongoDb, setMongoDb] = useState("");
   const [mongoCol, setMongoCol] = useState("");
   const [mongoUserCol, setMongoUserCol] = useState("");
+  const [mongoTrxCol, setMongoTrxCol] = useState("");
+  const [mongoSettingsCol, setMongoSettingsCol] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -87,7 +91,7 @@ export function AppKeyManagement() {
   };
 
   const needsBotToken = appType.startsWith('bot');
-  const needsMongo = appType.includes('appprem') || appType === 'bot_topup';
+  const needsMongo = appType.includes('appprem') || appType === 'bot_topup' || appType === 'bot_appprem';
 
   const handleGenerateKey = async () => {
     if (!newAppName) {
@@ -100,8 +104,8 @@ export function AppKeyManagement() {
       return;
     }
 
-    if (needsMongo && (!mongoUri || !mongoDb || !mongoCol || !mongoUserCol)) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Applications in this category require complete MongoDB configuration." });
+    if (needsMongo && (!mongoUri || !mongoDb || !mongoCol || !mongoUserCol || !mongoTrxCol || !mongoSettingsCol)) {
+      toast({ variant: "destructive", title: "Missing Fields", description: "Applications in this category require complete MongoDB configuration (All Collections)." });
       return;
     }
 
@@ -122,6 +126,8 @@ export function AppKeyManagement() {
       mongoDb: needsMongo ? mongoDb.trim() : "",
       mongoCol: needsMongo ? mongoCol.trim() : "",
       mongoUserCol: needsMongo ? mongoUserCol.trim() : "",
+      mongoTrxCol: needsMongo ? mongoTrxCol.trim() : "",
+      mongoSettingsCol: needsMongo ? mongoSettingsCol.trim() : "",
       status: 'unused',
       createdAt: serverTimestamp(),
     };
@@ -162,6 +168,8 @@ export function AppKeyManagement() {
               setMongoDb("");
               setMongoCol("");
               setMongoUserCol("");
+              setMongoTrxCol("");
+              setMongoSettingsCol("");
             }
           }}>
             <DialogTrigger asChild>
@@ -170,7 +178,7 @@ export function AppKeyManagement() {
                 Generate Activation Key
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[94%] sm:max-w-[425px] rounded-[2rem] border-border p-8 max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[94%] sm:max-w-xl rounded-[2rem] border-border p-8 max-h-[95vh] overflow-y-auto">
               <DialogHeader className="space-y-2">
                 <DialogTitle className="font-headline font-bold text-2xl">New Application Key</DialogTitle>
                 <DialogDescription className="text-xs">
@@ -219,7 +227,7 @@ export function AppKeyManagement() {
                 )}
 
                 {needsMongo && (
-                  <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-5 animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">MongoDB Connection URI (Atlas)</Label>
                       <div className="relative">
@@ -232,7 +240,7 @@ export function AppKeyManagement() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                        <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Database Name</Label>
                           <div className="relative">
@@ -245,26 +253,56 @@ export function AppKeyManagement() {
                              />
                           </div>
                        </div>
-                       <div className="space-y-2">
+                       <div className="space-y-3">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Collection Structures</Label>
-                          <div className="grid grid-cols-2 gap-3">
-                             <div className="relative">
-                                <TableIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input 
-                                  placeholder="Products Col" 
-                                  value={mongoCol} 
-                                  onChange={(e) => setMongoCol(e.target.value)}
-                                  className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
-                                />
+                          <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-1.5">
+                                <p className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Products</p>
+                                <div className="relative">
+                                   <TableIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                   <Input 
+                                     placeholder="products" 
+                                     value={mongoCol} 
+                                     onChange={(e) => setMongoCol(e.target.value)}
+                                     className="rounded-xl h-11 pl-9 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                                   />
+                                </div>
                              </div>
-                             <div className="relative">
-                                <UsersIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input 
-                                  placeholder="Users Col" 
-                                  value={mongoUserCol} 
-                                  onChange={(e) => setMongoUserCol(e.target.value)}
-                                  className="rounded-xl h-11 pl-10 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
-                                />
+                             <div className="space-y-1.5">
+                                <p className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Users</p>
+                                <div className="relative">
+                                   <UsersIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                   <Input 
+                                     placeholder="users" 
+                                     value={mongoUserCol} 
+                                     onChange={(e) => setMongoUserCol(e.target.value)}
+                                     className="rounded-xl h-11 pl-9 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                                   />
+                                </div>
+                             </div>
+                             <div className="space-y-1.5">
+                                <p className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Transactions</p>
+                                <div className="relative">
+                                   <History className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                   <Input 
+                                     placeholder="transactions" 
+                                     value={mongoTrxCol} 
+                                     onChange={(e) => setMongoTrxCol(e.target.value)}
+                                     className="rounded-xl h-11 pl-9 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                                   />
+                                </div>
+                             </div>
+                             <div className="space-y-1.5">
+                                <p className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Settings</p>
+                                <div className="relative">
+                                   <Settings className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                   <Input 
+                                     placeholder="settings" 
+                                     value={mongoSettingsCol} 
+                                     onChange={(e) => setMongoSettingsCol(e.target.value)}
+                                     className="rounded-xl h-11 pl-9 focus:ring-primary/20 bg-muted/30 border-transparent font-mono text-xs"
+                                   />
+                                </div>
                              </div>
                           </div>
                        </div>
@@ -296,7 +334,7 @@ export function AppKeyManagement() {
                   <Button 
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
                     onClick={handleGenerateKey}
-                    disabled={isGenerating || !newAppName || (needsBotToken && !botToken) || (needsMongo && (!mongoUri || !mongoDb || !mongoCol || !mongoUserCol))}
+                    disabled={isGenerating || !newAppName || (needsBotToken && !botToken) || (needsMongo && (!mongoUri || !mongoDb || !mongoCol || !mongoUserCol || !mongoTrxCol || !mongoSettingsCol))}
                   >
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
                     Create Activation Key
