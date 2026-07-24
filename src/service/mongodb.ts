@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview MongoDB Product & Transaction Service for Web App Prem.
@@ -170,5 +169,62 @@ export async function getMongoTransactions(userId: string, appId: string) {
   } catch (error: any) {
     console.error("MongoDB Fetch Transactions Error:", error);
     return { success: false, message: `Gagal memuat transaksi: ${error.message}` };
+  }
+}
+
+/**
+ * Mengambil pengaturan aplikasi dari MongoDB
+ */
+export async function getMongoSettings(userId: string, appId: string) {
+  try {
+    const { client, dbName, colName } = await getMongoClient(userId, appId, 'mongoSettingsCol');
+    await client.connect();
+    
+    const database = client.db(dbName);
+    const collection = database.collection(colName);
+    
+    let settings = await collection.findOne({ id: "payment_config" });
+    await client.close();
+
+    if (!settings) {
+      return { success: false, message: "Konfigurasi pengaturan tidak ditemukan di MongoDB." };
+    }
+
+    return { 
+      success: true, 
+      data: { ...settings, _id: settings._id.toString() } 
+    };
+  } catch (error: any) {
+    console.error("MongoDB Fetch Settings Error:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Memperbarui pengaturan aplikasi di MongoDB
+ */
+export async function updateMongoSettings(userId: string, appId: string, data: any) {
+  try {
+    const { client, dbName, colName } = await getMongoClient(userId, appId, 'mongoSettingsCol');
+    await client.connect();
+    
+    const database = client.db(dbName);
+    const collection = database.collection(colName);
+
+    const { _id, ...updateData } = data;
+    updateData.updatedAt = new Date().toISOString();
+
+    const result = await collection.updateOne(
+      { id: "payment_config" }, 
+      { $set: updateData },
+      { upsert: true }
+    );
+
+    await client.close();
+
+    return { success: true, message: "Pengaturan berhasil diperbarui di MongoDB." };
+  } catch (error: any) {
+    console.error("MongoDB Update Settings Error:", error);
+    return { success: false, message: error.message };
   }
 }
