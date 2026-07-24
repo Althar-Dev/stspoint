@@ -77,13 +77,20 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
+  // Ambil data aplikasi yang sedang dipilih untuk cek tipe (App Prem vs Topup)
+  const appDataRef = useMemoFirebase(() => {
+    if (!db || !user?.uid || !appSelected) return null;
+    return doc(db, "users", user.uid, "apps", appSelected);
+  }, [db, user?.uid, appSelected]);
+
+  const { data: currentApp } = useDoc(appDataRef);
+
   // Check if we are on the "Select Application" screen or global pages like subscribe
   const isSelectAppPage = useMemo(() => {
     const cleanPath = pathname.replace(/^\/client/, "");
     const hostname = typeof window !== "undefined" ? window.location.hostname : "";
     const isPartnerSubdomain = hostname.startsWith("partner.");
     
-    // If it's a global client page like subscribe, it's not a "Select App" page but it shouldn't show app sidebar
     if (pathname.includes('/subscribe')) return false;
 
     if (isPartnerSubdomain) {
@@ -104,12 +111,10 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Extract ID from path to keep selection in sync
       const segments = pathname.split('/').filter(Boolean);
       const isInternalRoot = pathname.startsWith('/client');
       const idFromPath = isInternalRoot ? segments[1] : segments[0];
 
-      // Added 'subscribe' to exclusion list so it's not treated as an App ID
       if (idFromPath && !['orders', 'finance', 'settings', 'products', 'subscribe'].includes(idFromPath)) {
         localStorage.setItem("sts_selected_app_id", idFromPath);
         setAppSelected(idFromPath);
@@ -144,21 +149,29 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     const selectedId = appSelected || "";
     const isSubdomain = typeof window !== "undefined" && window.location.hostname.includes("partner.");
     
-    return adminMenuItems.map(item => {
-      let finalUrl = item.url === "/client" 
-        ? `/client/${selectedId}` 
-        : item.url.replace('/client/', `/client/${selectedId}/`);
+    // Filter menu Finance: Jangan tampilkan jika tipe aplikasi adalah App Prem
+    const isAppPrem = currentApp?.type?.includes("appprem");
+    
+    return adminMenuItems
+      .filter(item => {
+        if (item.title === "Finance" && isAppPrem) return false;
+        return true;
+      })
+      .map(item => {
+        let finalUrl = item.url === "/client" 
+          ? `/client/${selectedId}` 
+          : item.url.replace('/client/', `/client/${selectedId}/`);
 
-      finalUrl = finalUrl.replace(/\/+/g, '/');
+        finalUrl = finalUrl.replace(/\/+/g, '/');
 
-      if (isSubdomain) {
-        finalUrl = finalUrl.replace('/client', '');
-        if (finalUrl === '') finalUrl = '/';
-      }
+        if (isSubdomain) {
+          finalUrl = finalUrl.replace('/client', '');
+          if (finalUrl === '') finalUrl = '/';
+        }
 
-      return { ...item, url: finalUrl };
-    });
-  }, [appSelected]);
+        return { ...item, url: finalUrl };
+      });
+  }, [appSelected, currentApp]);
 
   const isAuthorized = !!profile?.partner || profile?.dev === true;
 
@@ -170,7 +183,6 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
     );
   }
 
-  // Global pages (like subscribe) in partner portal use the inset layout but without the app sidebar
   if (isGlobalPage) {
     return (
       <div className="flex h-screen w-full bg-background overflow-hidden">
