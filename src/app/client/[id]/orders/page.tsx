@@ -16,7 +16,9 @@ import {
   Download,
   Database,
   RefreshCcw,
-  Mail
+  Mail,
+  Key,
+  Send
 } from "lucide-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
@@ -95,7 +97,8 @@ export default function ClientOrdersPage() {
     const idMatch = (tx.id || tx.external_id || "").toLowerCase().includes(s);
     const descMatch = (tx.itemName || tx.description || "").toLowerCase().includes(s);
     const payerMatch = (tx.customer || tx.payer_email || "").toLowerCase().includes(s);
-    return idMatch || descMatch || payerMatch;
+    const productNameMatch = (tx.productName || "").toLowerCase().includes(s);
+    return idMatch || descMatch || payerMatch || productNameMatch;
   });
 
   const formatDate = (dateInput: any) => {
@@ -171,12 +174,12 @@ export default function ClientOrdersPage() {
         </CardHeader>
         
         <div className="w-full overflow-x-auto block">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
+          <table className="w-full text-left border-collapse min-w-[1100px]">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">ID Pesanan</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Produk / Keterangan</th>
-                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Pelanggan / Target</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap">Pelanggan & Credentials</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground whitespace-nowrap text-right">Nominal</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-center whitespace-nowrap">Status</th>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-muted-foreground text-right whitespace-nowrap">Waktu</th>
@@ -197,14 +200,25 @@ export default function ClientOrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-bold text-xs truncate max-w-[250px]">{order.itemName || order.description}</p>
-                      <p className="text-[9px] text-muted-foreground uppercase">{order.provider || order.gameName || "Internal"}</p>
+                      <p className="text-[9px] text-muted-foreground uppercase flex items-center gap-1.5 mt-0.5">
+                        {order.provider || order.gameName || "Internal"}
+                        {order.fulfilledAt && <span className="text-[8px] bg-green-500/10 text-green-600 px-1 rounded-sm">FULFILLED</span>}
+                      </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Mail className="w-3 h-3 text-muted-foreground" />
                         <p className="font-medium text-foreground/80 text-xs truncate max-w-[180px]">{order.customer || order.payer_email || order.userId || "-"}</p>
+                        {order.emailSent && <Send className="w-2.5 h-2.5 text-blue-500" title="Email sent to customer" />}
                       </div>
-                      {order.zoneId && <p className="text-[9px] text-muted-foreground uppercase ml-4.5">Zone: {order.zoneId}</p>}
+                      {order.credentials ? (
+                        <div className="mt-1 flex items-center gap-1.5 ml-4.5">
+                          <Key className="w-2.5 h-2.5 text-amber-500" />
+                          <p className="text-[9px] font-mono text-amber-600 font-bold truncate max-w-[150px]" title={order.credentials}>{order.credentials}</p>
+                        </div>
+                      ) : order.zoneId ? (
+                        <p className="text-[9px] text-muted-foreground uppercase ml-4.5">Zone: {order.zoneId}</p>
+                      ) : null}
                     </td>
                     <td className="px-6 py-4 font-bold text-primary text-xs whitespace-nowrap text-right">
                       Rp {(order.priceAmount || order.amount || 0).toLocaleString('id-ID')}

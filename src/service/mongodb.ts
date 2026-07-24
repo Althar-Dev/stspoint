@@ -154,7 +154,8 @@ export async function getMongoTransactions(userId: string, appId: string) {
       ...t,
       _id: t._id.toString(),
       id: t.external_id || t.id || t._id.toString(),
-      itemName: t.description || t.itemName || "Digital Purchase",
+      // Mapping ke structure baru
+      itemName: t.productName ? `${t.productName} - ${t.packageName || 'Regular'}` : (t.description || t.itemName || "Digital Purchase"),
       priceAmount: t.amount || t.priceAmount || 0,
       customer: t.payer_email || t.userId || "-",
       status: t.status || "PENDING",
