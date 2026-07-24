@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,15 +18,31 @@ import {
 import React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { format, isValid, parseISO } from "date-fns";
 
 interface V1DashboardProps {
   profile: any;
   stspaySvc: any;
   isLoading: boolean;
+  stats: {
+    successCount: number;
+    volume: number;
+    recentActivity: any[];
+  };
 }
 
-export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps) {
+export function V1Dashboard({ profile, stspaySvc, isLoading, stats }: V1DashboardProps) {
   const { id: appId } = useParams();
+
+  const formatTime = (time: any) => {
+    if (!time) return "---";
+    if (time.toDate) return format(time.toDate(), "HH:mm");
+    try {
+      const date = typeof time === 'string' ? parseISO(time) : new Date(time);
+      if (isValid(date)) return format(date, "HH:mm");
+    } catch (e) {}
+    return "Recently";
+  };
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 w-full min-w-0">
@@ -71,9 +88,11 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                  <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
                     <ShoppingCart className="w-5 h-5" />
                  </div>
-                 <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Hari Ini</Badge>
+                 <Badge variant="secondary" className="bg-green-50/10 text-green-600 border-none font-bold text-[10px]">Total</Badge>
               </div>
-              <h4 className="text-xl md:text-2xl font-headline font-bold">124</h4>
+              <h4 className="text-xl md:text-2xl font-headline font-bold">
+                {isLoading ? <Skeleton className="h-7 w-12" /> : stats.successCount.toLocaleString()}
+              </h4>
               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Pesanan Sukses</p>
            </Card>
            <Card className="border-border shadow-sm rounded-xl bg-card p-5 md:p-6 flex flex-col justify-center hover:border-primary/20 transition-all group">
@@ -81,9 +100,11 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
                  <div className={`p-2.5 rounded-xl bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all`}>
                     <TrendingUp className="w-5 h-5" />
                  </div>
-                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Real-time</Badge>
+                 <Badge variant="secondary" className="bg-primary/10 text-primary border-none font-bold text-[10px]">Volume</Badge>
               </div>
-              <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">Rp 1.250.000</h4>
+              <h4 className="text-xl md:text-2xl font-headline font-bold text-primary">
+                {isLoading ? <Skeleton className="h-7 w-24" /> : `Rp ${stats.volume.toLocaleString('id-ID')}`}
+              </h4>
               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Volume Transaksi</p>
            </Card>
         </div>
@@ -107,18 +128,23 @@ export function V1Dashboard({ profile, stspaySvc, isLoading }: V1DashboardProps)
             </CardHeader>
             <div className="w-full overflow-x-auto block">
                <div className="divide-y divide-border min-w-[600px]">
-                  {[
-                    { item: 'Diamond MLBB 86', status: 'Success', time: '2 menit lalu', amount: 'Rp 19.500' },
-                    { item: 'Pulsa Telkomsel 10k', status: 'Success', time: '15 menit lalu', amount: 'Rp 10.250' },
-                    { item: 'PLN Token 50k', status: 'Process', time: '22 menit lalu', amount: 'Rp 50.000' },
-                    { item: 'Free Fire 70 Diamonds', status: 'Success', time: '1 jam lalu', amount: 'Rp 9.000' },
-                  ].map((log, i) => (
+                  {isLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="px-6 py-5"><Skeleton className="h-8 w-full" /></div>
+                    ))
+                  ) : stats.recentActivity.length === 0 ? (
+                    <div className="px-8 py-20 text-center text-muted-foreground italic text-xs">Belum ada aktivitas transaksi.</div>
+                  ) : stats.recentActivity.map((log, i) => (
                     <div key={i} className="px-6 md:px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className={`shrink-0 w-2 h-2 rounded-full ${log.status === 'Success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]'}`}></div>
+                          <div className={`shrink-0 w-2 h-2 rounded-full ${
+                            log.status === 'Success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 
+                            log.status === 'Process' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 
+                            'bg-red-500'
+                          }`}></div>
                           <div className="min-w-0">
                              <p className="text-xs md:text-sm font-bold truncate max-w-[140px] sm:max-w-xs">{log.item}</p>
-                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{log.time}</p>
+                             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{formatTime(log.time)}</p>
                           </div>
                        </div>
                        <div className="text-right whitespace-nowrap ml-4">
