@@ -64,10 +64,10 @@ export function V2Dashboard({ profile, stspaySvc, isLoading, stats }: V2Dashboar
           <CardContent className="p-6 md:p-8 space-y-6 relative z-10 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                <div className="space-y-1">
-                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Pendapatan Toko</p>
+                 <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Total Pendapatan</p>
                  {isLoading ? <Skeleton className="h-10 w-32 bg-white/20" /> : (
                    <h2 className="text-2xl md:text-3xl font-headline font-bold">
-                     Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}
+                     Rp {(stats.volume || 0).toLocaleString('id-ID')}
                    </h2>
                  )}
                </div>
@@ -77,7 +77,7 @@ export function V2Dashboard({ profile, stspaySvc, isLoading, stats }: V2Dashboar
             </div>
             <div className="flex gap-2">
               <Button asChild className="flex-1 bg-white text-amber-600 hover:bg-white/90 font-bold rounded-lg h-10 text-[10px] uppercase tracking-wider border-none shadow-lg shadow-black/5 transition-all active:scale-95">
-                <Link href={`/client/${appId}/finance`}>Tarik Dana</Link>
+                <Link href={`/client/${appId}/finance`}>Laporan Keuangan</Link>
               </Button>
             </div>
           </CardContent>
