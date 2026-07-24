@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview MongoDB Product Service for Web App Prem.
+ * @fileOverview MongoDB Product & Transaction Service for Web App Prem.
  * Handles secure connection using a direct URI input for Atlas compatibility.
  */
 
@@ -9,7 +9,11 @@ import { MongoClient, ObjectId } from 'mongodb';
 import { initializeFirebase } from '@/firebase/core';
 import { doc, getDoc } from 'firebase/firestore';
 
-async function getMongoClient(userId: string, appId: string) {
+async function getMongoClient(
+  userId: string, 
+  appId: string, 
+  colKey: 'mongoCol' | 'mongoUserCol' | 'mongoTrxCol' | 'mongoSettingsCol' = 'mongoCol'
+) {
   const { firestore } = initializeFirebase();
   const appRef = doc(firestore, 'users', userId, 'apps', appId);
   const appSnap = await getDoc(appRef);
@@ -19,10 +23,15 @@ async function getMongoClient(userId: string, appId: string) {
   }
 
   const appData = appSnap.data();
-  const { mongoUri, mongoDb, mongoCol } = appData;
+  const { mongoUri, mongoDb } = appData;
+  const colName = appData[colKey];
 
   if (!mongoUri) {
     throw new Error("Kredensial MongoDB (URI) belum dikonfigurasi untuk aplikasi ini.");
+  }
+
+  if (!colName) {
+    throw new Error(`Koleksi '${colKey}' belum dikonfigurasi untuk aplikasi ini.`);
   }
 
   const client = new MongoClient(mongoUri, {
@@ -30,12 +39,15 @@ async function getMongoClient(userId: string, appId: string) {
     socketTimeoutMS: 30000,
   });
 
-  return { client, dbName: mongoDb || 'test', colName: mongoCol || 'products' };
+  return { client, dbName: mongoDb || 'test', colName };
 }
 
+/**
+ * Mengambil daftar produk dari MongoDB
+ */
 export async function getMongoProducts(userId: string, appId: string) {
   try {
-    const { client, dbName, colName } = await getMongoClient(userId, appId);
+    const { client, dbName, colName } = await getMongoClient(userId, appId, 'mongoCol');
     await client.connect();
     
     const database = client.db(dbName);
@@ -56,20 +68,22 @@ export async function getMongoProducts(userId: string, appId: string) {
       message: `Berhasil mengambil ${serializedData.length} produk dari MongoDB.`
     };
   } catch (error: any) {
-    console.error("MongoDB Fetch Error:", error);
+    console.error("MongoDB Fetch Products Error:", error);
     return { success: false, message: `Gagal terhubung ke MongoDB: ${error.message}` };
   }
 }
 
+/**
+ * Mengambil satu produk berdasarkan ID dari MongoDB
+ */
 export async function getMongoProductById(userId: string, appId: string, productId: string) {
   try {
-    const { client, dbName, colName } = await getMongoClient(userId, appId);
+    const { client, dbName, colName } = await getMongoClient(userId, appId, 'mongoCol');
     await client.connect();
     
     const database = client.db(dbName);
     const collection = database.collection(colName);
     
-    // We try to find by string ID or custom id field if provided
     let product = await collection.findOne({ id: productId });
     
     if (!product && ObjectId.isValid(productId)) {
@@ -89,22 +103,21 @@ export async function getMongoProductById(userId: string, appId: string, product
   }
 }
 
+/**
+ * Memperbarui data produk di MongoDB
+ */
 export async function updateMongoProduct(userId: string, appId: string, productId: string, data: any) {
   try {
-    const { client, dbName, colName } = await getMongoClient(userId, appId);
+    const { client, dbName, colName } = await getMongoClient(userId, appId, 'mongoCol');
     await client.connect();
     
     const database = client.db(dbName);
     const collection = database.collection(colName);
 
-    // Remove _id from data to avoid update error
     const { _id, ...updateData } = data;
-    
-    // Always update updatedAt
     updateData.updatedAt = new Date().toISOString();
 
     let result;
-    // Try update by custom 'id' field first
     result = await collection.updateOne({ id: productId }, { $set: updateData });
 
     if (result.matchedCount === 0 && ObjectId.isValid(productId)) {
@@ -117,7 +130,44 @@ export async function updateMongoProduct(userId: string, appId: string, productI
 
     return { success: true, message: "Produk berhasil diperbarui di MongoDB." };
   } catch (error: any) {
-    console.error("MongoDB Update Error:", error);
+    console.error("MongoDB Update Product Error:", error);
     return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Mengambil riwayat transaksi dari MongoDB
+ */
+export async function getMongoTransactions(userId: string, appId: string) {
+  try {
+    const { client, dbName, colName } = await getMongoClient(userId, appId, 'mongoTrxCol');
+    await client.connect();
+    
+    const database = client.db(dbName);
+    const collection = database.collection(colName);
+    
+    // Ambil transaksi, urutkan dari yang terbaru
+    const transactions = await collection.find({}).sort({ createdAt: -1 }).limit(500).toArray();
+    await client.close();
+
+    const serializedData = transactions.map(t => ({
+      ...t,
+      _id: t._id.toString(),
+      id: t.external_id || t.id || t._id.toString(),
+      itemName: t.description || t.itemName || "Digital Purchase",
+      priceAmount: t.amount || t.priceAmount || 0,
+      customer: t.payer_email || t.userId || "-",
+      status: t.status || "PENDING",
+      createdAt: t.createdAt // ISO String
+    }));
+
+    return { 
+      success: true, 
+      data: serializedData,
+      message: `Berhasil memuat ${serializedData.length} transaksi dari MongoDB.`
+    };
+  } catch (error: any) {
+    console.error("MongoDB Fetch Transactions Error:", error);
+    return { success: false, message: `Gagal memuat transaksi: ${error.message}` };
   }
 }
