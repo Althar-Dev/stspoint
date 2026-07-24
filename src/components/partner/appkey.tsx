@@ -24,7 +24,8 @@ import {
   Table as TableIcon,
   Users as UsersIcon,
   History,
-  Settings
+  Settings,
+  Edit2
 } from "lucide-react";
 import { 
   Dialog, 
@@ -53,6 +54,8 @@ export function AppKeyManagement() {
   const db = useFirestore();
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+
   const [newAppName, setNewAppName] = useState("");
   const [appType, setAppType] = useState<string>("website_topup");
   const [botToken, setBotToken] = useState("");
@@ -93,7 +96,22 @@ export function AppKeyManagement() {
   const needsBotToken = appType.startsWith('bot');
   const needsMongo = appType.includes('appprem') || appType === 'bot_topup' || appType === 'bot_appprem';
 
-  const handleGenerateKey = async () => {
+  const openEditDialog = (item: any) => {
+    setEditingItem(item);
+    setNewAppName(item.name || "");
+    setAppType(item.type || "website_topup");
+    setBotToken(item.token || "");
+    setMongoUri(item.mongoUri || "");
+    setMongoDb(item.mongoDb || "");
+    setMongoCol(item.mongoCol || "");
+    setMongoUserCol(item.mongoUserCol || "");
+    setMongoTrxCol(item.mongoTrxCol || "");
+    setMongoSettingsCol(item.mongoSettingsCol || "");
+    setGeneratedKey(item.key || "");
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveKey = async () => {
     if (!newAppName) {
       toast({ variant: "destructive", title: "Name Required", description: "Please enter the application name." });
       return;
@@ -105,20 +123,24 @@ export function AppKeyManagement() {
     }
 
     if (needsMongo && (!mongoUri || !mongoDb || !mongoCol || !mongoUserCol || !mongoTrxCol || !mongoSettingsCol)) {
-      toast({ variant: "destructive", title: "Missing Fields", description: "Applications in this category require complete MongoDB configuration (All Collections)." });
+      toast({ variant: "destructive", title: "Missing Fields", description: "Applications in this category require complete MongoDB configuration." });
       return;
     }
 
     setIsGenerating(true);
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let randomPart = '';
-    for (let i = 0; i < 12; i++) {
-      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const key = `STS-App_${randomPart}`;
     
-    const keyData = {
-      key: key,
+    let keyToUse = generatedKey;
+    if (!editingItem && !keyToUse) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let randomPart = '';
+      for (let i = 0; i < 12; i++) {
+        randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      keyToUse = `STS-App_${randomPart}`;
+    }
+    
+    const keyData: any = {
+      key: keyToUse,
       name: newAppName,
       type: appType,
       token: needsBotToken ? botToken.trim() : "",
@@ -128,22 +150,34 @@ export function AppKeyManagement() {
       mongoUserCol: needsMongo ? mongoUserCol.trim() : "",
       mongoTrxCol: needsMongo ? mongoTrxCol.trim() : "",
       mongoSettingsCol: needsMongo ? mongoSettingsCol.trim() : "",
-      status: 'unused',
-      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     };
 
-    if (!db) return;
-    const keyRef = doc(db, "Application_Keys", key);
+    if (!editingItem) {
+      keyData.status = 'unused';
+      keyData.createdAt = serverTimestamp();
+    } else {
+      keyData.status = editingItem.status;
+      keyData.createdAt = editingItem.createdAt;
+      if (editingItem.usedBy) keyData.usedBy = editingItem.usedBy;
+    }
 
-    setDoc(keyRef, keyData)
+    if (!db) return;
+    const keyRef = doc(db, "Application_Keys", keyToUse);
+
+    setDoc(keyRef, keyData, { merge: true })
       .then(() => {
-        setGeneratedKey(key);
-        toast({ title: "Key Generated", description: "The new Application Activation Key has been saved." });
+        setGeneratedKey(keyToUse);
+        toast({ 
+          title: editingItem ? "Key Updated" : "Key Generated", 
+          description: editingItem ? "Application configuration has been updated." : "The new Application Activation Key has been saved." 
+        });
+        if (editingItem) setIsDialogOpen(false);
       })
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: keyRef.path,
-          operation: 'create',
+          operation: 'write',
           requestResourceData: keyData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
@@ -160,6 +194,7 @@ export function AppKeyManagement() {
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open);
             if (!open) { 
+              setEditingItem(null);
               setGeneratedKey(""); 
               setNewAppName(""); 
               setAppType("website_topup");
@@ -180,9 +215,11 @@ export function AppKeyManagement() {
             </DialogTrigger>
             <DialogContent className="w-[94%] sm:max-w-xl rounded-[2rem] border-border p-8 max-h-[95vh] overflow-y-auto">
               <DialogHeader className="space-y-2">
-                <DialogTitle className="font-headline font-bold text-2xl">New Application Key</DialogTitle>
+                <DialogTitle className="font-headline font-bold text-2xl">
+                  {editingItem ? "Edit Application Key" : "New Application Key"}
+                </DialogTitle>
                 <DialogDescription className="text-xs">
-                  Create an activation key for a partner to launch their app instance.
+                  {editingItem ? "Update the configuration for this active license key." : "Create an activation key for a partner to launch their app instance."}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-6">
@@ -310,7 +347,7 @@ export function AppKeyManagement() {
                   </div>
                 )}
 
-                {generatedKey && (
+                {!editingItem && generatedKey && (
                   <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-3 animate-in zoom-in-95 duration-300">
                     <div className="space-y-1">
                       <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-600">Generated Activation Key:</p>
@@ -330,14 +367,14 @@ export function AppKeyManagement() {
                 )}
               </div>
               <DialogFooter>
-                {!generatedKey ? (
+                {!generatedKey || editingItem ? (
                   <Button 
                     className="w-full h-14 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-blue-600/10"
-                    onClick={handleGenerateKey}
+                    onClick={handleSaveKey}
                     disabled={isGenerating || !newAppName || (needsBotToken && !botToken) || (needsMongo && (!mongoUri || !mongoDb || !mongoCol || !mongoUserCol || !mongoTrxCol || !mongoSettingsCol))}
                   >
                     {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <KeyIcon className="w-4 h-4 mr-2" />}
-                    Create Activation Key
+                    {editingItem ? "Update Application Key" : "Create Activation Key"}
                   </Button>
                 ) : (
                   <Button 
@@ -420,6 +457,14 @@ export function AppKeyManagement() {
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-md hover:bg-muted"
+                          onClick={() => openEditDialog(item)}
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
