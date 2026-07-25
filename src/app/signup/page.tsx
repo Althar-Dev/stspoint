@@ -170,17 +170,17 @@ export default function SignUpPage() {
       await setDoc(userRef, userData);
 
       // Inisialisasi Layanan
-      const providers = ['orderkuota', 'gomerchant', 'stspay'];
+      const providers = ['orderkuota', 'gomerchant', 'stspay', 'shopeepay'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
         await setDoc(providerRef, {
           id: "",
-          username: providerId === 'stspay' ? email : "",
+          username: (providerId === 'stspay' || providerId === 'shopeepay') ? email : "",
           token: "",
           refreshToken: "",
           baseQr: "",
           balance: 0,
-          quota: providerId === 'stspay' ? 999999 : 0,
+          quota: (providerId === 'stspay' || providerId === 'shopeepay') ? 999999 : 0,
           autoWithdrawEnabled: false,
           minWithdrawAmount: 1000,
           withdrawInterval: 5,

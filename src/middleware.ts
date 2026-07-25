@@ -35,7 +35,7 @@ export function middleware(request: NextRequest) {
   };
 
   // MERCHANT CLUSTER: Rute yang merupakan saudara kandung /console tapi harus diakses di subdomain console.
-  const MERCHANT_SERVICE_PATHS = ['/orkut', '/gopay', '/pay', '/ai'];
+  const MERCHANT_SERVICE_PATHS = ['/orkut', '/gopay', '/pay', '/ai', '/shopeepay'];
 
   // 3. Rute Publik & File Sistem Global
   const PUBLIC_PATHS = [

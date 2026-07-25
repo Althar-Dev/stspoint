@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -61,6 +62,7 @@ const mainMenuItems = [
       { title: "STSPay", url: "/pay" },
       { title: "OrderKuota", url: "/orkut" },
       { title: "GoMerchant", url: "/gopay" },
+      { title: "ShopeePay", url: "/shopeepay" },
     ]
   },
   {

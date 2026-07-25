@@ -18,26 +18,23 @@ import {
   LayoutDashboard, 
   History, 
   Settings, 
-  LogOut,
-  Loader2
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
-import Image from "next/image";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Logo } from "@/components/logo";
+import { Icon } from "@iconify/react";
 
-const gopayMenuItems = [
-  { title: "Dashboard", icon: LayoutDashboard, url: "/gopay" },
-  { title: "Transaction History", icon: History, url: "/gopay/transactions" },
-  // { title: "Settings", icon: Settings, url: "/gopay/settings" },
+const shopeepayMenuItems = [
+  { title: "Dashboard", icon: LayoutDashboard, url: "/shopeepay" },
+  { title: "Transaction History", icon: History, url: "/shopeepay/transactions" },
 ];
 
-function GopayLayoutInner({ children }: { children: ReactNode }) {
+function ShopeepayLayoutInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { setOpen, isMobile } = useSidebar();
@@ -56,7 +53,6 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
       if (!user) {
         router.push("/signin");
       } else if (profile && !!profile.partner && !profile.dev) {
-        // Redirect partners to their own portal
         router.push("/client");
       }
     }
@@ -76,27 +72,23 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen w-full bg-background overflow-hidden">
       <Sidebar 
         collapsible="icon" 
-        className="border-r border-border bg-card shadow-sm z-40 transition-all duration-300 ease-in-out"
+        className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
         onMouseEnter={() => !isMobile && setOpen(true)}
         onMouseLeave={() => !isMobile && setOpen(false)}
       >
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
-          <Link href="/gopay" className="flex items-center gap-2 group shrink-0">
-            <Image 
-              src="/assets/img/gopay.png" 
-              alt="GoPay Logo" 
-              width={32} 
-              height={32} 
-              className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0 object-contain"
-            />
-            <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">GoMerchant</span>
+          <Link href="/shopeepay" className="flex items-center gap-2 group shrink-0">
+            <div className="w-8 h-8 bg-[#EE4D2D] rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+               <Icon icon="simple-icons:shopee" className="text-white w-5 h-5" />
+            </div>
+            <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">ShopeePay</span>
           </Link>
         </SidebarHeader>
         
         <SidebarContent className="px-2 group-data-[state=expanded]:px-3 group-data-[collapsible=icon]:px-0">
           <SidebarGroup>
             <SidebarMenu className="group-data-[collapsible=icon]:items-center">
-              {gopayMenuItems.map((item) => (
+              {shopeepayMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild
@@ -104,7 +96,7 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
                     tooltip={item.title}
                     className={`h-10 transition-colors ${
                       pathname === item.url 
-                        ? "bg-[#00AED6] text-white font-bold hover:bg-[#00AED6]/90" 
+                        ? "bg-[#EE4D2D] text-white font-bold hover:bg-[#EE4D2D]/90" 
                         : "hover:bg-accent hover:text-accent-foreground"
                     }`}
                   >
@@ -142,7 +134,7 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
   );
 }
 
-export default function GopayLayout({ children }: { children: ReactNode }) {
+export default function ShopeepayLayout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
@@ -151,7 +143,7 @@ export default function GopayLayout({ children }: { children: ReactNode }) {
       disableTransitionOnChange
     >
       <SidebarProvider defaultOpen={false}>
-        <GopayLayoutInner>{children}</GopayLayoutInner>
+        <ShopeepayLayoutInner>{children}</ShopeepayLayoutInner>
       </SidebarProvider>
     </ThemeProvider>
   );
