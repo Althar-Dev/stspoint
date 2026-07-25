@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -74,6 +75,15 @@ export function middleware(request: NextRequest) {
 
     if (isPublicPath || isApiRoute) {
       return NextResponse.next();
+    }
+
+    // REDIRECT CROSS-SUBDOMAIN: Jika path milik subdomain lain (misal: /docs diakses dari console.stspoint.id)
+    for (const key in mappings) {
+      const otherConf = mappings[key];
+      if (otherConf.subdomain !== sub && (pathname === otherConf.internal || pathname.startsWith(`${otherConf.internal}/`))) {
+        const cleanPath = pathname.replace(otherConf.internal, '') || '/';
+        return NextResponse.redirect(new URL(`https://${otherConf.subdomain}.${rootDomain}${cleanPath}${search}`, request.url));
+      }
     }
 
     // LOGIKA KHUSUS SUBDOMAIN CONSOLE (Merchant Suite)

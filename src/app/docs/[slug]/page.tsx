@@ -28,7 +28,7 @@ export default function DocsSlugPage({ params }: DocsSlugPageProps) {
       hostname.includes("cloudworkstations.dev") || 
       hostname.includes("firebaseapp.com");
 
-    if (!isDev && (hostname === "stspoint.id" || hostname === "www.stspoint.id")) {
+    if (!isDev && hostname !== "docs.stspoint.id") {
       window.location.href = `https://docs.stspoint.id/${slug}`;
     }
   }, [slug]);
