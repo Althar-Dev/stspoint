@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -170,17 +169,17 @@ export default function SignUpPage() {
       await setDoc(userRef, userData);
 
       // Inisialisasi Layanan
-      const providers = ['orderkuota', 'gomerchant', 'stspay', 'shopeepay'];
+      const providers = ['orderkuota', 'gomerchant', 'stspay', 'shopeepay', 'ovo'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
         await setDoc(providerRef, {
           id: "",
-          username: (providerId === 'stspay' || providerId === 'shopeepay') ? email : "",
+          username: (['stspay', 'shopeepay', 'ovo'].includes(providerId)) ? email : "",
           token: "",
           refreshToken: "",
           baseQr: "",
           balance: 0,
-          quota: (providerId === 'stspay' || providerId === 'shopeepay') ? 999999 : 0,
+          quota: (['stspay', 'shopeepay', 'ovo'].includes(providerId)) ? 999999 : 0,
           autoWithdrawEnabled: false,
           minWithdrawAmount: 1000,
           withdrawInterval: 5,

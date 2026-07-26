@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -9,9 +8,9 @@ import {
   SidebarMenu, 
   SidebarMenuButton, 
   SidebarMenuItem, 
-  SidebarHeader,
-  SidebarFooter,
-  SidebarInset,
+  SidebarHeader, 
+  SidebarFooter, 
+  SidebarInset, 
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
@@ -63,6 +62,7 @@ const mainMenuItems = [
       { title: "OrderKuota", url: "/orkut" },
       { title: "GoMerchant", url: "/gopay" },
       { title: "ShopeePay", url: "/shopeepay" },
+      { title: "OVO", url: "/ovo" },
     ]
   },
   {
