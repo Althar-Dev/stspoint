@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
@@ -50,8 +51,8 @@ function CheckoutContent() {
   const { user } = useUser();
   const db = useFirestore();
 
-  const serviceId = searchParams.get("service") || "";
-  const planId = searchParams.get("plan") || "";
+  const serviceId = (searchParams.get("service") || "").toLowerCase();
+  const planId = (searchParams.get("plan") || "").toLowerCase();
   const refId = searchParams.get("ref") || "";
 
   // Get profile to check for dev status
@@ -63,6 +64,7 @@ function CheckoutContent() {
   const isDev = profile?.dev === true;
 
   const plan = useMemo(() => {
+    if (!serviceId || !planId) return null;
     const basePlan = PLAN_DETAILS[serviceId]?.[planId];
     if (!basePlan) return null;
     
@@ -219,9 +221,15 @@ function CheckoutContent() {
   if (!plan) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <p className="text-muted-foreground font-medium">Subscription plan not found.</p>
-        <Button onClick={() => router.push("/console/subscribe")} variant="outline" className="rounded-xl font-bold">
-          Back to Dashboard
+        <div className="p-4 rounded-full bg-destructive/10 text-destructive mb-2">
+           <AlertCircle className="w-10 h-10" />
+        </div>
+        <div className="space-y-1 text-center">
+          <p className="text-foreground font-bold">Plan or Service mismatch.</p>
+          <p className="text-muted-foreground text-xs">Missing required parameters: service={serviceId}, plan={planId}</p>
+        </div>
+        <Button onClick={() => router.push("/console/subscribe")} variant="outline" className="rounded-xl font-bold h-11 px-8">
+          Back to Subscriptions
         </Button>
       </div>
     );
@@ -360,7 +368,7 @@ function CheckoutContent() {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground font-medium">Plan Price</span>
                     <span className={isDev ? "text-muted-foreground line-through" : "font-bold"}>
-                      Rp {PLAN_DETAILS[serviceId]?.[planId]?.price.toLocaleString('id-ID')}
+                      Rp {PLAN_DETAILS[serviceId]?.[planId]?.price?.toLocaleString('id-ID') || 0}
                     </span>
                   </div>
                   {isDev && (

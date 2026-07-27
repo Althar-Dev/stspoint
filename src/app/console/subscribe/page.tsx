@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, Crown, Building2, Briefcase, X, Loader2, ShieldCheck } from "lucide-react";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -115,6 +116,19 @@ const servicePlans = {
 export default function SubscriptionPage() {
   const { user } = useUser();
   const db = useFirestore();
+  const [refId, setRefId] = useState("");
+  const [basePath, setBasePath] = useState("/console/subscribe/checkout");
+
+  useEffect(() => {
+    // Generate stable ref ID on mount to avoid hydration mismatch
+    const randomRef = `STS${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    setRefId(randomRef);
+
+    // Adjust path for subdomain production
+    if (window.location.hostname.startsWith("console.")) {
+      setBasePath("/subscribe/checkout");
+    }
+  }, []);
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -126,13 +140,13 @@ export default function SubscriptionPage() {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "orderkuota");
   }, [db, user?.uid]);
-  const { data: orkutSvc, loading: orkutLoading } = useDoc(orkutRef);
+  const { data: orkutSvc } = useDoc(orkutRef);
 
   const gmRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "gomerchant");
   }, [db, user?.uid]);
-  const { data: gmSvc, loading: gmLoading } = useDoc(gmRef);
+  const { data: gmSvc } = useDoc(gmRef);
 
   const isDev = profile?.dev === true;
 
@@ -269,14 +283,14 @@ export default function SubscriptionPage() {
                             ? 'bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-none' 
                             : 'border-border bg-card'
                           }`}
-                          disabled={isCurrent}
+                          disabled={isCurrent || !refId}
                         >
                           {isCurrent ? (
                              <span className="flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4" /> Currently Active
                              </span>
                           ) : (
-                            <Link href={`/console/subscribe/checkout?service=${serviceId}&plan=${plan.id}&ref=STS${Math.random().toString(36).substring(2, 9).toUpperCase()}`}>
+                            <Link href={`${basePath}?service=${serviceId}&plan=${plan.id}&ref=${refId}`}>
                               {plan.button}
                             </Link>
                           )}
