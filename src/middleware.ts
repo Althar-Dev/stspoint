@@ -33,8 +33,8 @@ export function middleware(request: NextRequest) {
     'api': { internal: '/api', subdomain: 'api' },
   };
 
-  // MERCHANT CLUSTER: Rute yang merupakan saudara kandung /console tapi harus diakses di subdomain console.
-  const MERCHANT_SERVICE_PATHS = ['/orkut', '/gopay', '/pay', '/ai', '/shopeepay', '/ovo'];
+  // MERCHANT CLUSTER: Rute yang harus selalu diakses melalui subdomain console.
+  const MERCHANT_SERVICE_PATHS = ['/orkut', '/gopay', '/pay', '/ai', '/shopeepay', '/ovo', '/subscribe', '/setting', '/transactions'];
 
   // 3. Rute Publik & File Sistem Global
   const PUBLIC_PATHS = [
@@ -72,11 +72,17 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // CROSS-SUBDOMAIN REDIRECTS: Jika path milik layanan merchant diakses di subdomain non-console
+    const isMerchantService = MERCHANT_SERVICE_PATHS.some(p => pathname === p || pathname.startsWith(`${p}/`));
+    if (isMerchantService && sub !== 'console') {
+      return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}${search}`, request.url));
+    }
+
     if (isPublicPath || isApiRoute) {
       return NextResponse.next();
     }
 
-    // REDIRECT CROSS-SUBDOMAIN: Jika path milik subdomain lain (misal: /docs diakses dari console.stspoint.id)
+    // REDIRECT CROSS-SUBDOMAIN: Jika path internal subdomain lain diakses secara eksplisit
     for (const key in mappings) {
       const otherConf = mappings[key];
       if (otherConf.subdomain !== sub && (pathname === otherConf.internal || pathname.startsWith(`${otherConf.internal}/`))) {
@@ -131,7 +137,7 @@ export function middleware(request: NextRequest) {
     // Cek juga untuk merchant services di domain root
     for (const p of MERCHANT_SERVICE_PATHS) {
       if (pathname === p || pathname.startsWith(`${p}/`)) {
-        return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}`, request.url));
+        return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}${search}`, request.url));
       }
     }
   }

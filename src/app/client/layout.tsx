@@ -1,4 +1,3 @@
-
 "use client";
 
 import { 
@@ -107,7 +106,14 @@ function ClientLayoutInner({ children }: { children: ReactNode }) {
         router.push("/signin");
         return;
       } else if (profile && !profile.partner && !profile.dev) {
-        router.push("/console");
+        // Redirection for Merchants who are not Partners (Production Subdomain Support)
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        const isProd = host.includes('stspoint.id') && !host.includes('localhost');
+        if (isProd) {
+          window.location.href = "https://console.stspoint.id/";
+        } else {
+          router.push("/console");
+        }
         return;
       }
 

@@ -71,13 +71,22 @@ export function MainHeader({
   
   const { data: profile } = useDoc(profileRef);
 
+  /**
+   * Helper: Get Central Hub Link (console subdomain in production)
+   */
+  const getCentralLink = (path: string) => {
+    if (typeof window === 'undefined') return path;
+    const host = window.location.hostname;
+    const isProd = host.includes('stspoint.id') && !host.includes('localhost');
+    if (isProd) return `https://console.stspoint.id${path}`;
+    
+    // In dev environment, we use /console prefix
+    return `/console${path}`;
+  };
+
   const isPartnerPortal = useMemo(() => {
     return pathname.startsWith('/client') || (typeof window !== "undefined" && window.location.hostname.startsWith('partner.'));
   }, [pathname]);
-
-  const subPath = useMemo(() => {
-    return isPartnerPortal ? '/client' : '/console';
-  }, [isPartnerPortal]);
 
   const notificationsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -229,14 +238,14 @@ export function MainHeader({
             <DropdownMenuSeparator />
             {showProfile && (
               <DropdownMenuItem asChild>
-                <Link href={`${subPath}/setting`} className="cursor-pointer gap-2 py-2.5 rounded-xl">
+                <Link href={getCentralLink("/setting")} className="cursor-pointer gap-2 py-2.5 rounded-xl">
                   <User className="w-4 h-4" /> Profile
                 </Link>
               </DropdownMenuItem>
             )}
             {showSubscription && (
               <DropdownMenuItem asChild>
-                <Link href={`${subPath}/subscribe`} className="cursor-pointer gap-2 py-2.5 rounded-xl">
+                <Link href={getCentralLink("/subscribe")} className="cursor-pointer gap-2 py-2.5 rounded-xl">
                   <CreditCard className="w-4 h-4" /> Subscription
                 </Link>
               </DropdownMenuItem>
