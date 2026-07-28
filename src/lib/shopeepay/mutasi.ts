@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Library untuk menarik data mutasi transaksi dari ShopeePay Merchant Portal.
- * Diperbarui untuk menangani potensi respon non-JSON dan menggunakan rute /api/mutasi yang lebih stabil.
+ * Diperbarui untuk menggunakan rute /shopee/mutasi (POST) sesuai dokumentasi terbaru.
  */
 
 import { SHOPEE_BRIDGE_URL, SHOPEE_BRIDGE_KEY } from './init';
@@ -42,8 +42,8 @@ export interface GetShopeeMutationsParams {
  */
 export async function getShopeeMutations(params: GetShopeeMutationsParams): Promise<ShopeeMutationResponse> {
   try {
-    // Menggunakan rute /api/mutasi yang seringkali lebih stabil pada bridge
-    const url = `${SHOPEE_BRIDGE_URL}api/mutasi`;
+    // Menggunakan rute /shopee/mutasi yang direkomendasikan
+    const url = `${SHOPEE_BRIDGE_URL}/shopee/mutasi`;
 
     const payload = {
       secret_key: SHOPEE_BRIDGE_KEY,
@@ -57,19 +57,18 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'stspointkey': SHOPEE_BRIDGE_KEY, // Kirim key di header juga sebagai fallback
-        'User-Agent': 'STSPoint-Infrastructure/1.2 (ShopeePay-Bridge)'
+        'stspointkey': SHOPEE_BRIDGE_KEY,
+        'User-Agent': 'STSPoint-Infrastructure/1.2'
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(30000),
       cache: 'no-store'
     });
 
-    // Cek apakah respon adalah JSON
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const textError = await response.text();
-      console.error("Non-JSON Response received:", textError.substring(0, 200));
+      console.error("Non-JSON Response from Shopee Bridge:", textError.substring(0, 200));
       return {
         success: false,
         message: `Server Bridge mengembalikan format tidak valid (HTML/Text). Pastikan URL dan API Key benar.`,
@@ -79,7 +78,7 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
 
     const result = await response.json();
 
-    // Penanganan khusus jika token expired atau unauthorized
+    // Penanganan status 401 atau code -1 (Expired)
     if (response.status === 401 || result.code === -1 || result.success === false && result.message?.toLowerCase().includes("expired")) {
       return {
         success: false,

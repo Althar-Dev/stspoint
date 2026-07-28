@@ -12,10 +12,10 @@ export interface ShopeeConfigResponse {
 }
 
 /**
- * Mengambil status konfigurasi aktif dari server bridge.
+ * Mengambil status koneksi dengan melakukan hit ke endpoint mutasi dengan token kosong.
  */
 export async function getShopeeStatus(): Promise<ShopeeConfigResponse> {
-  const url = `${SHOPEE_BRIDGE_URL}api/mutasi`;
+  const url = `${SHOPEE_BRIDGE_URL}/shopee/mutasi`;
 
   try {
     const response = await fetch(url, {
@@ -35,7 +35,7 @@ export async function getShopeeStatus(): Promise<ShopeeConfigResponse> {
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: "Bridge mengembalikan respon non-JSON." };
+      return { success: false, message: "Bridge mengembalikan respon non-JSON (HTML/Text)." };
     }
 
     const result = await response.json();
