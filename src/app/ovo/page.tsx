@@ -89,27 +89,33 @@ export default function OvoDashboardPage() {
   const isConnected = !!ovo?.token;
   const isLoading = authLoading || serviceLoading;
 
-  // Helper to extract numeric values safely from OVO API
+  /**
+   * Helper: Parse numeric values safely from OVO string/object formats
+   */
   const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
     if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
     if (typeof val === 'object') {
+      // Handle card_balance structure from documentation
       return parseNumericValue(val.card_balance || val.amount || val.value || 0);
     }
     return 0;
   };
 
-  // Data Fetching Logic - Aligned with latest Documentation
+  /**
+   * Data Fetching Logic - Aligned 100% with API Docs
+   */
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
       setDataLoading(true);
       try {
         const [balanceRes, mutationRes] = await Promise.all([
           getOvoBalance({ token: ovo.token, deviceId: ovo.deviceId }),
-          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 10 })
+          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 15 })
         ]);
 
+        // 1. Map Balance (data.cash.card_balance)
         if (balanceRes.success && balanceRes.data) {
           setBalances({
             cash: parseNumericValue(balanceRes.data.cash),
@@ -117,14 +123,14 @@ export default function OvoDashboardPage() {
           });
         }
 
-        // According to documentation, array of orders is in res.data.orders
+        // 2. Map Mutations (data.orders array)
         if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
           setMutations(mutationRes.data.orders);
         } else {
           setMutations([]);
         }
       } catch (error) {
-        console.error("OVO Data Sync Error:", error);
+        console.error("OVO Sync Error:", error);
         setMutations([]);
       } finally {
         setDataLoading(false);
@@ -140,7 +146,7 @@ export default function OvoDashboardPage() {
 
   const handleManualRefresh = () => {
     setRefreshKey(prev => prev + 1);
-    toast({ title: "Syncing...", description: "Memperbarui saldo dan log mutasi dari OVO Bridge." });
+    toast({ title: "Syncing...", description: "Fetching latest data from OVO Bridge." });
   };
 
   // --- Auth Handlers ---
@@ -152,13 +158,13 @@ export default function OvoDashboardPage() {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
         setRefId(res.data.otp_refId);
+        toast({ title: "OTP Sent", description: res.message });
         setStep(2);
-        toast({ title: "OTP Sent", description: res.message || "Silakan cek WhatsApp Anda." });
       } else {
-        throw new Error(res.message || "Gagal meminta OTP.");
+        throw new Error(res.message || "Failed to send OTP.");
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: "Login Error", description: error.message });
     } finally {
       setIsProcessing(false);
     }
@@ -170,13 +176,13 @@ export default function OvoDashboardPage() {
     try {
       const res = await verifyOvoOtp({ refId, otp: otpCode });
       if (res.success) {
+        toast({ title: "OTP Verified", description: "Please enter your OVO PIN." });
         setStep(3);
-        toast({ title: "OTP Verified", description: "Silakan masukkan PIN OVO." });
       } else {
-        throw new Error(res.message || "Kode OTP tidak valid.");
+        throw new Error(res.message || "Invalid OTP code.");
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: "Verification Error", description: error.message });
     } finally {
       setIsProcessing(false);
     }
@@ -188,9 +194,9 @@ export default function OvoDashboardPage() {
     try {
       const res = await verifyOvoPin({ refId, pin: pinCode });
       if (res.success && res.data && ovoRef) {
-        // Save the final Token and DeviceId from server response
+        // Save the final persistent Token and DeviceId as per Docs Step 3
         await setDoc(ovoRef, {
-          username: phone || ovo?.username || "OVO User",
+          username: phone || "OVO User",
           token: res.data.token,
           refreshToken: res.data.refreshToken,
           deviceId: res.data.deviceId,
@@ -202,13 +208,13 @@ export default function OvoDashboardPage() {
         setPhone("");
         setOtpCode("");
         setPinCode("");
-        toast({ title: "Connected!", description: "Akun OVO berhasil terhubung." });
+        toast({ title: "Welcome!", description: "Account successfully connected." });
         setRefreshKey(prev => prev + 1);
       } else {
-        throw new Error(res.message || "PIN salah atau sesi kedaluwarsa.");
+        throw new Error(res.message || "Invalid PIN or session expired.");
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: "Access Denied", description: error.message });
     } finally {
       setIsProcessing(false);
     }
@@ -222,7 +228,7 @@ export default function OvoDashboardPage() {
         baseQr: baseQrInput,
         updatedAt: serverTimestamp()
       }, { merge: true });
-      toast({ title: "Settings Saved", description: "Konfigurasi OVO diperbarui." });
+      toast({ title: "Settings Saved", description: "OVO configuration updated." });
       setIsSettingsOpen(false);
     } finally {
       setIsProcessing(false);
@@ -237,13 +243,13 @@ export default function OvoDashboardPage() {
         username: "",
         token: "",
         refreshToken: "",
-        balance: 0,
         deviceId: "",
+        balance: 0,
         updatedAt: serverTimestamp()
       }, { merge: true });
       setMutations([]);
       setBalances({ cash: 0, points: 0 });
-      toast({ title: "Disconnected", description: "Akun OVO telah dilepas." });
+      toast({ title: "Disconnected", description: "Your OVO account has been unlinked." });
     } finally {
       setIsProcessing(false);
     }
@@ -252,6 +258,7 @@ export default function OvoDashboardPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Balance Card */}
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#4C2B9A]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
@@ -271,26 +278,26 @@ export default function OvoDashboardPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-bold text-lg">OVO Bridge Inactive</h3>
-                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">Hubungkan akun OVO untuk monitoring saldo dan mutasi otomatis.</p>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">Connect your OVO account to automate mutations and balance checks.</p>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={(open) => {
                   setIsDialogOpen(open);
                   if (!open) { setStep(1); setOtpCode(""); setPinCode(""); }
                 }}>
                   <DialogTrigger asChild>
-                    <Button className="bg-[#4C2B9A] hover:bg-[#4C2B9A]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#4C2B9A]/10">
-                      Hubungkan Sekarang
+                    <Button className="bg-[#4C2B9A] hover:bg-[#4C2B9A]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#4C2B9A]/10 transition-all active:scale-95">
+                      Connect Account
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-[2rem] border-border w-[94vw] md:max-w-sm p-8">
-                    <DialogHeader className="space-y-3">
+                  <DialogContent className="rounded-[2.5rem] border-border w-[94vw] md:max-w-sm p-8">
+                    <DialogHeader className="space-y-2">
                       <DialogTitle className="font-headline font-bold text-2xl text-center">
-                        {step === 1 ? "Login OVO" : step === 2 ? "Verify OTP" : "Enter PIN"}
+                        {step === 1 ? "OVO Login" : step === 2 ? "OTP Code" : "OVO PIN"}
                       </DialogTitle>
                       <DialogDescription className="text-xs text-center">
-                        {step === 1 ? "Masukkan nomor OVO untuk menerima kode OTP." : 
-                         step === 2 ? "Masukkan kode yang dikirim ke nomor WhatsApp Anda." :
-                         "Langkah terakhir, masukkan 6 digit PIN OVO Anda."}
+                        {step === 1 ? "Enter your phone number to receive a WhatsApp OTP." : 
+                         step === 2 ? "Enter the 6-digit code received on WhatsApp." :
+                         "Enter your 6-digit OVO security PIN."}
                       </DialogDescription>
                     </DialogHeader>
                     
@@ -298,7 +305,7 @@ export default function OvoDashboardPage() {
                       {step === 1 && (
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor Handphone</Label>
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
                             <div className="relative">
                               <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <Input 
@@ -327,8 +334,8 @@ export default function OvoDashboardPage() {
                               maxLength={6}
                             />
                           </div>
-                          <Button onClick={handleVerifyOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !otpCode || !refId}>
-                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verifikasi OTP"}
+                          <Button onClick={handleVerifyOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !otpCode}>
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify OTP"}
                           </Button>
                         </div>
                       )}
@@ -336,7 +343,7 @@ export default function OvoDashboardPage() {
                       {step === 3 && (
                         <div className="space-y-4">
                           <div className="space-y-2 text-center">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Security PIN</Label>
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">PIN Code</Label>
                             <Input 
                               type="password"
                               placeholder="••••••" 
@@ -346,8 +353,8 @@ export default function OvoDashboardPage() {
                               maxLength={6}
                             />
                           </div>
-                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !pinCode || !refId}>
-                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify PIN & Connect"}
+                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !pinCode}>
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Authorize & Connect"}
                           </Button>
                         </div>
                       )}
@@ -367,7 +374,7 @@ export default function OvoDashboardPage() {
                             Rp {balances.cash.toLocaleString('id-ID')}
                           </h2>
                         )}
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Connected</Badge>
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Sync Active</Badge>
                       </div>
                     </div>
                     <div className="space-y-0.5">
@@ -377,19 +384,19 @@ export default function OvoDashboardPage() {
                        </p>
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
+                  <div className="w-16 h-16 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
                     <img src="/assets/main/ovo.png" alt="OVO" className="w-12 h-12 object-contain" />
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
                   <Button 
                     variant="outline" 
-                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider gap-2 shadow-sm" 
+                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider gap-2" 
                     onClick={handleManualRefresh}
                     disabled={dataLoading}
                   >
                     {dataLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
-                    Refresh Data
+                    Refresh
                   </Button>
                 </div>
               </>
@@ -397,31 +404,32 @@ export default function OvoDashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Info Column */}
         <Card className="lg:col-span-1 border border-border shadow-sm rounded-3xl p-0 overflow-hidden bg-card flex flex-col">
           <div className="p-6 flex-1 space-y-6">
             {!isConnected && !isLoading ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
                 <ShieldAlert className="w-6 h-6" />
-                <p className="text-[10px] font-bold uppercase tracking-widest text-center">System Offline</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest">Node Offline</p>
               </div>
             ) : isConnected ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Node</h4>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Active Node</h4>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase">
-                        <PowerOff className="w-3 h-3 mr-1" /> Putuskan
+                        <PowerOff className="w-3 h-3 mr-1" /> Disconnect
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="rounded-3xl border-border">
                       <AlertDialogHeader>
-                        <AlertDialogTitle className="font-headline font-bold">Putuskan Sesi OVO?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">Anda harus melakukan login ulang untuk mengaktifkan kembali.</AlertDialogDescription>
+                        <AlertDialogTitle className="font-headline font-bold">Disconnect Account?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">This will clear your OVO session token and stop automation.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDisconnect} className="bg-red-600 text-white rounded-xl">Ya, Putuskan</AlertDialogAction>
+                        <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDisconnect} className="bg-red-600 text-white rounded-xl">Confirm</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -431,8 +439,8 @@ export default function OvoDashboardPage() {
                   <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border">
                     <UserIcon className="w-5 h-5 text-[#4C2B9A]" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{ovo?.username || "OVO User"}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active Connection</p>
+                      <p className="text-sm font-bold truncate">{ovo?.username || "OVO Merchant"}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Standard Channel</p>
                     </div>
                   </div>
                   <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
@@ -444,22 +452,22 @@ export default function OvoDashboardPage() {
                     </DialogTrigger>
                     <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                       <DialogHeader>
-                        <DialogTitle className="font-headline font-bold">OVO Configuration</DialogTitle>
-                        <DialogDescription className="text-xs">Ubah master payload untuk generate QRIS otomatis.</DialogDescription>
+                        <DialogTitle className="font-headline font-bold">OVO Config</DialogTitle>
+                        <DialogDescription className="text-xs">Manage static QR payloads for dynamic generation.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Master QR Payload</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Master QR Payload</Label>
                           <Textarea 
-                            placeholder="Enter QRIS string..." 
+                            placeholder="Paste your OVO static QR string here..." 
                             value={baseQrInput} 
                             onChange={(e) => setBaseQrInput(e.target.value)}
-                            className="rounded-xl min-h-[120px] text-xs font-mono bg-muted/30 border-transparent focus:bg-background transition-all"
+                            className="rounded-xl min-h-[120px] text-xs font-mono bg-muted/30 border-transparent focus:bg-background transition-all break-all"
                           />
                         </div>
                         <Button onClick={handleSaveSettings} disabled={isProcessing} className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white">
                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                           Simpan Pengaturan
+                           Save Settings
                         </Button>
                       </div>
                     </DialogContent>
@@ -471,22 +479,23 @@ export default function OvoDashboardPage() {
         </Card>
       </div>
 
+      {/* Mutations Table */}
       <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
         <CardHeader className="px-8 py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
            <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
-              OVO Transaction Journal
+              OVO Activity Journal
            </CardTitle>
-           <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{Array.isArray(mutations) ? mutations.length : 0} Recent Records</Badge>
+           <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Transactions</Badge>
         </CardHeader>
         <div className="flex-1 overflow-auto w-full">
            <table className="w-full text-left text-xs">
               <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10">
                  <tr className="border-b border-border">
-                    <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest">Merchant / Desc</th>
-                    <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center">Amount</th>
-                    <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center">Status</th>
-                    <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right">Time</th>
+                    <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Source / Description</th>
+                    <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Amount</th>
+                    <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Type</th>
+                    <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Waktu</th>
                  </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -494,7 +503,7 @@ export default function OvoDashboardPage() {
                    Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                    ))
-                ) : (!Array.isArray(mutations) || mutations.length === 0) ? (
+                ) : mutations.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
                        <div className="flex flex-col items-center gap-3 opacity-20">
@@ -504,14 +513,16 @@ export default function OvoDashboardPage() {
                     </td>
                   </tr>
                 ) : mutations.map((item, i) => {
-                  const amtValue = parseNumericValue(item.transaction_amount || item.amount);
-                  const type = String(item.transaction_type || "").toUpperCase();
-                  const isTopup = type.includes("TOPUP") || type.includes("IN") || (item.emoney_topup && parseNumericValue(item.emoney_topup) > 0);
+                  const amtValue = parseNumericValue(item.transaction_amount);
+                  const isTopup = String(item.transaction_type || "").includes("TOPUP") || item.emoney_topup > 0;
                   
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-8 py-4 whitespace-nowrap font-bold text-foreground/80">
-                        {item.merchant_name || item.desc1 || "OVO Transaction"}
+                      <td className="px-8 py-4 whitespace-nowrap">
+                         <div className="flex flex-col">
+                            <span className="font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</span>
+                            <span className="text-[10px] text-muted-foreground italic truncate max-w-[200px]">{item.desc2}</span>
+                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className={`font-bold ${isTopup ? 'text-emerald-600' : 'text-rose-500'}`}>
@@ -519,14 +530,12 @@ export default function OvoDashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <Badge className={`${
-                          (item.status || "").toUpperCase() === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
-                        } border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm`}>
-                          {item.status || "SUCCESS"}
+                        <Badge variant="outline" className="border-border text-[8px] uppercase font-bold px-1.5 h-4">
+                          {item.transaction_type || "FINANCIAL"}
                         </Badge>
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
-                         {item.transaction_date || ""} {item.transaction_time || ""}
+                         {item.transaction_date} {item.transaction_time}
                       </td>
                     </tr>
                   )
@@ -536,7 +545,7 @@ export default function OvoDashboardPage() {
         </div>
       </Card>
       <div className="text-center pt-4 pb-8 opacity-20">
-         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint OVO Node ID: Node-04-JKT</p>
+         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint OVO Bridge v1.2.0 • Data Audited</p>
       </div>
     </div>
   );
