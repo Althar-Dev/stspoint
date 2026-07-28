@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Library Pengambilan Data Akun OVO (Mutasi, Saldo, Profil).
+ * Dilengkapi dengan validasi tipe konten respon.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
@@ -26,6 +27,11 @@ export async function getOvoMutations(params: OVODataParams & { page?: number; l
       cache: 'no-store'
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal menarik data mutasi: Respon server bukan JSON.' };
+    }
+
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -48,6 +54,11 @@ export async function getOvoBalance(params: OVODataParams) {
       cache: 'no-store'
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal cek saldo: Respon server bukan JSON.' };
+    }
+
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -69,6 +80,11 @@ export async function getOvoProfile(params: OVODataParams) {
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal ambil profil: Respon server bukan JSON.' };
+    }
 
     return await response.json();
   } catch (error: any) {

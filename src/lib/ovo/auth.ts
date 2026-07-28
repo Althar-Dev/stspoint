@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Library Autentikasi OVO (2FA & PIN).
+ * Dilengkapi dengan validasi tipe konten respon.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
@@ -20,6 +21,11 @@ export async function requestOvoLogin(params: { phone: string; channel?: 'WHATSA
       }),
       signal: AbortSignal.timeout(15000),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Server OVO Bridge mengembalikan format tidak valid (HTML/Text). Pastikan rute API benar.' };
+    }
 
     return await response.json();
   } catch (error: any) {
@@ -47,6 +53,11 @@ export async function verifyOvoOtp(params: {
       signal: AbortSignal.timeout(15000),
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Respon verifikasi OTP bukan JSON valid.' };
+    }
+
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -73,6 +84,11 @@ export async function verifyOvoPin(params: {
       }),
       signal: AbortSignal.timeout(15000),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Respon verifikasi PIN bukan JSON valid.' };
+    }
 
     return await response.json();
   } catch (error: any) {

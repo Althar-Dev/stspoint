@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview Library Transfer Saldo OVO & Rekening Bank.
+ * Dilengkapi dengan validasi tipe konten respon.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
@@ -25,6 +26,11 @@ export async function checkOvoNumber(params: OVOBaseParams & { phone: string; am
       signal: AbortSignal.timeout(15000),
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal cek nomor OVO: Respon server bukan JSON.' };
+    }
+
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -46,6 +52,11 @@ export async function transferToOvo(params: OVOBaseParams & { phone: string; amo
       signal: AbortSignal.timeout(30000),
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal transfer OVO: Respon server bukan JSON.' };
+    }
+
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -66,6 +77,11 @@ export async function getOvoBankList(params: OVOBaseParams) {
       }),
       signal: AbortSignal.timeout(15000),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal ambil daftar bank: Respon server bukan JSON.' };
+    }
 
     return await response.json();
   } catch (error: any) {
@@ -93,6 +109,11 @@ export async function bankInquiry(params: OVOBaseParams & {
       }),
       signal: AbortSignal.timeout(20000),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal inquiry bank: Respon server bukan JSON.' };
+    }
 
     return await response.json();
   } catch (error: any) {
@@ -123,6 +144,11 @@ export async function transferToBank(params: OVOBaseParams & {
       }),
       signal: AbortSignal.timeout(30000),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return { success: false, message: 'Gagal transfer bank: Respon server bukan JSON.' };
+    }
 
     return await response.json();
   } catch (error: any) {
