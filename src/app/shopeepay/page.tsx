@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +46,9 @@ import {
   User as UserIcon,
   Save,
   Settings as SettingsIcon,
-  Hash
+  Hash,
+  AlertCircle,
+  Key
 } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
@@ -56,6 +57,8 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { Icon } from "@iconify/react";
 import { format } from "date-fns";
+import { saveShopeeConfig, getShopeeStatus } from "@/lib/shopeepay/connect";
+import { getShopeeMutations, type ShopeeMutationItem } from "@/lib/shopeepay/mutasi";
 
 export default function ShopeepayDashboardPage() {
   const { user, loading: authLoading } = useUser();
@@ -63,13 +66,18 @@ export default function ShopeepayDashboardPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
 
   // Form states
-  const [phone, setPhone] = useState("");
-  const [otpCode, setOtpCode] = useState("");
+  const [innerToken, setInnerToken] = useState("");
   const [baseQrInput, setBaseQrInput] = useState("");
   const [digitSetting, setDigitSetting] = useState<string>("3");
+
+  // Live Data states
+  const [mutations, setMutations] = useState<ShopeeMutationItem[]>([]);
+  const [stats, setStats] = useState({ totalNetSales: 0, totalCount: 0 });
+  const [mutationsLoading, setMutationsLoading] = useState(false);
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const shopeepayRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -87,37 +95,81 @@ export default function ShopeepayDashboardPage() {
     }
   }, [shopeepay]);
 
-  const mutations = []; // Placeholder for live mutations
-  const mutationsLoading = false;
+  const fetchLiveMutations = useCallback(async () => {
+    if (isConnected && shopeepay?.token) {
+      setMutationsLoading(true);
+      try {
+        const res = await getShopeeMutations({ 
+          token: shopeepay.token,
+          limit: 20 
+        });
+
+        if (res.success) {
+          setMutations(res.data || []);
+          setStats({
+            totalNetSales: res.totalNetSales || 0,
+            totalCount: res.total || 0
+          });
+          setIsSessionExpired(false);
+        } else if (res.code === -1) {
+          setIsSessionExpired(true);
+          toast({ 
+            variant: "destructive", 
+            title: "Session Expired", 
+            description: "Sesi ShopeePay Anda telah berakhir. Harap hubungkan kembali." 
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch ShopeePay mutations:", error);
+      } finally {
+        setMutationsLoading(false);
+      }
+    }
+  }, [isConnected, shopeepay?.token]);
+
+  useEffect(() => {
+    fetchLiveMutations();
+  }, [fetchLiveMutations, refreshKey]);
 
   const handleManualRefresh = () => {
-    toast({ title: "Syncing data...", description: "Fetching latest mutations from ShopeePay." });
+    setRefreshKey(prev => prev + 1);
+    toast({ title: "Syncing data...", description: "Menghubungkan ke server ShopeePay Merchant." });
   };
 
-  const handleRequestOtp = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setStep(2);
-      setIsProcessing(false);
-      toast({ title: "OTP Sent", description: "Cek aplikasi Shopee Anda." });
-    }, 1500);
-  };
+  const handleConnectAccount = async () => {
+    if (!innerToken || !innerToken.startsWith("B:")) {
+      toast({ variant: "destructive", title: "Invalid Token", description: "Masukkan innerToken ShopeePay yang valid (mulai dengan B:)." });
+      return;
+    }
 
-  const handleVerifyOtp = async () => {
-    if (!shopeepayRef) return;
     setIsProcessing(true);
-    setTimeout(async () => {
-      await updateDoc(shopeepayRef, {
-        username: phone,
-        token: "SPP-SESSION-TOKEN-MOCK",
-        id: `SPP-${Date.now()}`,
-        updatedAt: serverTimestamp()
-      });
+    try {
+      // 1. Simpan ke bridge server
+      const bridgeRes = await saveShopeeConfig(innerToken);
+      
+      if (!bridgeRes.success) {
+        throw new Error(bridgeRes.message);
+      }
+
+      // 2. Simpan ke Firestore merchant
+      if (shopeepayRef) {
+        await updateDoc(shopeepayRef, {
+          username: "Shopee Merchant", // Diperbarui setelah sync profile pertama
+          token: innerToken,
+          updatedAt: serverTimestamp()
+        });
+      }
+
       setIsDialogOpen(false);
-      setStep(1);
+      setInnerToken("");
+      setIsSessionExpired(false);
+      setRefreshKey(prev => prev + 1);
+      toast({ title: "Connected!", description: "Akun ShopeePay berhasil terhubung ke Bridge." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Gagal Menghubungkan", description: error.message });
+    } finally {
       setIsProcessing(false);
-      toast({ title: "Connected!", description: "Akun ShopeePay berhasil terhubung." });
-    }, 1500);
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -147,16 +199,35 @@ export default function ShopeepayDashboardPage() {
         balance: 0,
         updatedAt: serverTimestamp()
       });
+      setMutations([]);
+      setStats({ totalNetSales: 0, totalCount: 0 });
       toast({ title: "Disconnected", description: "Akun ShopeePay telah dilepas." });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const isLoading = authLoading || serviceLoading || (!!user && !shopeepayRef);
+  const isLoading = authLoading || serviceLoading;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {isSessionExpired && (
+        <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600">
+                <ShieldAlert className="w-5 h-5" />
+             </div>
+             <div className="space-y-0.5">
+                <p className="text-sm font-bold text-red-900">Sesi Kedaluwarsa</p>
+                <p className="text-xs text-red-700">Token ShopeePay Anda tidak lagi valid. Harap perbarui token di pengaturan.</p>
+             </div>
+          </div>
+          <Button size="sm" onClick={() => setIsDialogOpen(true)} className="bg-red-600 hover:bg-red-700 text-white font-bold h-9 px-4 rounded-lg text-xs uppercase">
+            Perbarui Token
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#EE4D2D]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
@@ -170,6 +241,10 @@ export default function ShopeepayDashboardPage() {
                   </div>
                   <Skeleton className="w-12 h-12 rounded-2xl" />
                 </div>
+                <div className="flex gap-3 pt-6 border-t border-border">
+                  <Skeleton className="h-12 w-32 rounded-xl" />
+                  <Skeleton className="h-12 w-32 rounded-xl" />
+                </div>
               </div>
             ) : !isConnected ? (
               <div className="flex flex-col items-center justify-center text-center py-4 space-y-4 h-full">
@@ -179,64 +254,45 @@ export default function ShopeepayDashboardPage() {
                 <div className="space-y-1">
                   <h3 className="font-bold text-lg">ShopeePay Not Connected</h3>
                   <p className="text-xs text-muted-foreground max-w-xs">
-                    Hubungkan akun ShopeePay untuk mulai memantau mutasi otomatis.
+                    Hubungkan akun ShopeePay Merchant Anda untuk mengaktifkan otomatisasi mutasi.
                   </p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                  setIsDialogOpen(open);
-                  if (!open) setStep(1);
-                }}>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#EE4D2D]/10 transition-all active:scale-95">
-                      Hubungkan Akun
+                      Hubungkan Sekarang
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-sm">
+                  <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="font-headline font-bold">
-                        {step === 1 ? "Login Shopee" : "Verifikasi OTP"}
-                      </DialogTitle>
+                      <DialogTitle className="font-headline font-bold">Connect ShopeePay Bridge</DialogTitle>
+                      <DialogDescription className="text-xs">
+                        Masukkan innerToken ShopeePay yang didapatkan dari browser atau alat developer.
+                      </DialogDescription>
                     </DialogHeader>
-                    {step === 1 ? (
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor WhatsApp/Shopee</Label>
-                          <Input 
-                            placeholder="62812xxxx" 
-                            value={phone} 
-                            onChange={(e) => setPhone(e.target.value)}
-                            className="rounded-xl h-12 focus:ring-[#EE4D2D]/20 border-border"
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Shopee innerToken</Label>
+                        <div className="relative">
+                          <Key className="absolute left-3 top-4 w-4 h-4 text-muted-foreground" />
+                          <Textarea 
+                            placeholder="B:ESn12eqh..." 
+                            value={innerToken} 
+                            onChange={(e) => setInnerToken(e.target.value)}
+                            className="pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[120px] font-mono text-[10px]"
                           />
                         </div>
-                        <Button 
-                          onClick={handleRequestOtp} 
-                          className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] text-white" 
-                          disabled={isProcessing || !phone}
-                        >
-                          {isProcessing ? "Memproses..." : "Lanjut Verifikasi"}
-                        </Button>
+                        <p className="text-[9px] text-muted-foreground ml-1">Token ini digunakan untuk otorisasi akses data mutasi Anda secara aman.</p>
                       </div>
-                    ) : (
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2 text-center">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Masukkan Kode OTP</Label>
-                          <Input 
-                            placeholder="xxxx" 
-                            value={otpCode} 
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="h-14 text-center text-xl font-headline font-bold tracking-[0.5em] rounded-xl"
-                            maxLength={6}
-                          />
-                        </div>
-                        <Button 
-                          onClick={handleVerifyOtp} 
-                          className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] text-white" 
-                          disabled={isProcessing || !otpCode}
-                        >
-                          {isProcessing ? "Verifikasi..." : "Konfirmasi Koneksi"}
-                        </Button>
-                      </div>
-                    )}
+                      <Button 
+                        onClick={handleConnectAccount} 
+                        className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white gap-2" 
+                        disabled={isProcessing || !innerToken}
+                      >
+                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                        Simpan & Hubungkan
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
@@ -244,22 +300,40 @@ export default function ShopeepayDashboardPage() {
               <>
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Saldo ShopeePay</p>
+                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Total Net Sales (Hari Ini)</p>
                     <div className="flex items-baseline gap-2">
-                      <h2 className="text-4xl font-headline font-bold tracking-tighter">
-                        Rp {(shopeepay?.balance || 0).toLocaleString('id-ID')}
-                      </h2>
-                      <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Active</Badge>
+                      {mutationsLoading ? (
+                        <Skeleton className="h-10 w-48 mt-1" />
+                      ) : (
+                        <>
+                          <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                            Rp {stats.totalNetSales.toLocaleString('id-ID')}
+                          </h2>
+                          <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center border border-border group-hover:border-[#EE4D2D]/20 transition-colors">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors">
                     <Icon icon="simple-icons:shopee" className="text-[#EE4D2D] w-6 h-6" />
                   </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
-                  <Button variant="outline" className="border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider transition-all" onClick={handleManualRefresh}>
-                    Refresh Saldo
+                  <Button 
+                    className="bg-[#EE4D2D] text-white hover:bg-[#EE4D2D]/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-[#EE4D2D]/10 transition-all active:scale-95"
+                    onClick={handleManualRefresh}
+                    disabled={mutationsLoading}
+                  >
+                    {mutationsLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
+                    Refresh Mutasi
+                  </Button>
+                  <Button 
+                    asChild
+                    variant="outline" 
+                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider transition-all active:scale-95"
+                  >
+                    <Link href="/shopeepay/transactions">Lihat Semua</Link>
                   </Button>
                 </div>
               </>
@@ -269,15 +343,23 @@ export default function ShopeepayDashboardPage() {
 
         <Card className="lg:col-span-1 border border-border shadow-sm rounded-3xl p-0 overflow-hidden bg-card flex flex-col">
           <div className="p-6 flex-1 space-y-6">
-            {!isConnected ? (
+            {isLoading ? (
+              <div className="space-y-6">
+                <Skeleton className="h-4 w-24" />
+                <div className="space-y-4">
+                  <Skeleton className="h-14 w-full rounded-2xl" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              </div>
+            ) : !isConnected ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
                 <ShieldAlert className="w-6 h-6" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">Service Status: Offline</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-center">ShopeePay Bridge: Offline</p>
               </div>
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Connection Info</h4>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Node Info</h4>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase">
@@ -301,7 +383,7 @@ export default function ShopeepayDashboardPage() {
                   <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border">
                     <UserIcon className="w-5 h-5 text-[#EE4D2D]" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{shopeepay?.username}</p>
+                      <p className="text-sm font-bold truncate">{shopeepay?.username || "Connected Account"}</p>
                       <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Active ShopeePay Node</p>
                     </div>
                   </div>
@@ -310,12 +392,13 @@ export default function ShopeepayDashboardPage() {
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-[#EE4D2D]/20 transition-all">
                         <SettingsIcon className="w-3.5 h-3.5 text-[#EE4D2D]" />
-                        Settings
+                        Configuration
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                       <DialogHeader>
-                        <DialogTitle className="font-headline font-bold">ShopeePay Settings</DialogTitle>
+                        <DialogTitle className="font-headline font-bold">ShopeePay Config</DialogTitle>
+                        <DialogDescription className="text-xs">Sesuaikan payload QRIS dan kode nominal unik.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -324,10 +407,25 @@ export default function ShopeepayDashboardPage() {
                             placeholder="Enter QR payload..." 
                             value={baseQrInput} 
                             onChange={(e) => setBaseQrInput(e.target.value)}
-                            className="rounded-xl min-h-[120px] text-xs font-mono"
+                            className="rounded-xl min-h-[120px] text-xs font-mono break-all bg-muted/30 border-transparent focus:bg-background transition-all"
                           />
                         </div>
-                        <Button onClick={handleSaveSettings} className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] text-white">Simpan Konfigurasi</Button>
+                        <div className="space-y-2">
+                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Random Nominal Digit</Label>
+                           <Select value={digitSetting} onValueChange={setDigitSetting}>
+                             <SelectTrigger className="h-11 rounded-xl bg-muted/50 border-transparent">
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent className="rounded-xl">
+                               <SelectItem value="2" className="text-xs">2 Digits (10 - 99)</SelectItem>
+                               <SelectItem value="3" className="text-xs">3 Digits (100 - 999)</SelectItem>
+                             </SelectContent>
+                           </Select>
+                        </div>
+                        <Button onClick={handleSaveSettings} disabled={isProcessing} className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] text-white">
+                          {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                          Simpan Konfigurasi
+                        </Button>
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -338,20 +436,81 @@ export default function ShopeepayDashboardPage() {
         </Card>
       </div>
 
-      <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card h-[400px] flex flex-col">
-        <CardHeader className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
-           <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <RefreshCcw className="w-4 h-4 text-[#EE4D2D]" />
+      <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
+        <CardHeader className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between">
+           <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+              <RefreshCcw className={`w-4 h-4 text-[#EE4D2D] ${mutationsLoading ? 'animate-spin' : ''}`} />
               ShopeePay Transaction Log
            </CardTitle>
+           <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
+             {mutations.length} Data Terbaru
+           </Badge>
         </CardHeader>
-        <div className="flex-1 overflow-auto flex items-center justify-center">
-           <div className="text-center opacity-20">
-              <Clock className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-[10px] font-bold uppercase tracking-widest">No Recent Transactions</p>
-           </div>
+        <div className="flex-1 overflow-auto w-full">
+           <table className="w-full min-w-full text-xs text-left">
+              <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md">
+                <tr>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Transaction ID</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Amount</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {mutationsLoading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
+                      <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-6 py-4 text-right"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                    </tr>
+                  ))
+                ) : !isConnected ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-24 text-center text-muted-foreground">
+                       <div className="flex flex-col items-center gap-2 opacity-20">
+                          <LinkIcon className="w-10 h-10" />
+                          <p className="text-[10px] font-bold uppercase tracking-widest">Connect account to see logs</p>
+                       </div>
+                    </td>
+                  </tr>
+                ) : mutations.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-24 text-center text-muted-foreground opacity-20">
+                       <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada transaksi ditemukan</p>
+                    </td>
+                  </tr>
+                ) : (
+                  mutations.map((item) => (
+                    <tr key={item.transaction_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap uppercase">
+                         {item.created_at}
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase text-foreground/80">
+                         {item.transaction_id}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-[13px] whitespace-nowrap text-[#EE4D2D]">
+                         Rp {item.amount.toLocaleString('id-ID')}
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                         <Badge className={`${
+                           item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                         } border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm shadow-none`}>
+                           {item.status}
+                         </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+           </table>
         </div>
       </Card>
+
+      <div className="text-center py-6 opacity-20">
+         <p className="text-[9px] font-bold uppercase tracking-[0.4em]">STSPoint ShopeePay Engine v2.1-stable</p>
+      </div>
     </div>
   );
 }
