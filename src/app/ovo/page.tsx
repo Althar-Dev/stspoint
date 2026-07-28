@@ -89,7 +89,7 @@ export default function OvoDashboardPage() {
   const isConnected = !!ovo?.token;
   const isLoading = authLoading || serviceLoading;
 
-  // Helper to extract numeric values safely from OVO API (String or Object)
+  // Helper to extract numeric values safely from OVO API
   const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
@@ -100,14 +100,14 @@ export default function OvoDashboardPage() {
     return 0;
   };
 
-  // Data Fetching Logic
+  // Data Fetching Logic - Aligned with latest Documentation
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
       setDataLoading(true);
       try {
         const [balanceRes, mutationRes] = await Promise.all([
           getOvoBalance({ token: ovo.token, deviceId: ovo.deviceId }),
-          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 15 })
+          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 10 })
         ]);
 
         if (balanceRes.success && balanceRes.data) {
@@ -117,7 +117,7 @@ export default function OvoDashboardPage() {
           });
         }
 
-        // According to docs, array is in data.orders
+        // According to documentation, array of orders is in res.data.orders
         if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
           setMutations(mutationRes.data.orders);
         } else {
@@ -143,6 +143,8 @@ export default function OvoDashboardPage() {
     toast({ title: "Syncing...", description: "Memperbarui saldo dan log mutasi dari OVO Bridge." });
   };
 
+  // --- Auth Handlers ---
+
   const handleRequestOtp = async () => {
     if (!phone) return;
     setIsProcessing(true);
@@ -151,7 +153,7 @@ export default function OvoDashboardPage() {
       if (res.success && res.data) {
         setRefId(res.data.otp_refId);
         setStep(2);
-        toast({ title: "OTP Sent", description: "Silakan cek WhatsApp Anda." });
+        toast({ title: "OTP Sent", description: res.message || "Silakan cek WhatsApp Anda." });
       } else {
         throw new Error(res.message || "Gagal meminta OTP.");
       }
@@ -186,6 +188,7 @@ export default function OvoDashboardPage() {
     try {
       const res = await verifyOvoPin({ refId, pin: pinCode });
       if (res.success && res.data && ovoRef) {
+        // Save the final Token and DeviceId from server response
         await setDoc(ovoRef, {
           username: phone || ovo?.username || "OVO User",
           token: res.data.token,
@@ -502,7 +505,8 @@ export default function OvoDashboardPage() {
                   </tr>
                 ) : mutations.map((item, i) => {
                   const amtValue = parseNumericValue(item.transaction_amount || item.amount);
-                  const isTopup = String(item.transaction_type || "").toUpperCase().includes("TOPUP") || amtValue > 0;
+                  const type = String(item.transaction_type || "").toUpperCase();
+                  const isTopup = type.includes("TOPUP") || type.includes("IN") || (item.emoney_topup && parseNumericValue(item.emoney_topup) > 0);
                   
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
@@ -515,7 +519,11 @@ export default function OvoDashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">{item.status || "SUCCESS"}</Badge>
+                        <Badge className={`${
+                          (item.status || "").toUpperCase() === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                        } border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm`}>
+                          {item.status || "SUCCESS"}
+                        </Badge>
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
                          {item.transaction_date || ""} {item.transaction_time || ""}
@@ -533,4 +541,3 @@ export default function OvoDashboardPage() {
     </div>
   );
 }
-

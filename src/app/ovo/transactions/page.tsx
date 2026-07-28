@@ -175,7 +175,8 @@ export default function OvoTransactionsPage() {
               ) : (
                 filteredMutations.map((item, i) => {
                   const amtValue = parseNumericValue(item.transaction_amount || item.amount);
-                  const isTopup = String(item.transaction_type || "").toUpperCase().includes("TOPUP") || amtValue > 0;
+                  const type = String(item.transaction_type || "").toUpperCase();
+                  const isTopup = type.includes("TOPUP") || type.includes("IN") || (item.emoney_topup && parseNumericValue(item.emoney_topup) > 0);
 
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
