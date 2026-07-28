@@ -15,16 +15,19 @@ export interface ShopeeConfigResponse {
  * Mengambil status konfigurasi aktif dari server bridge.
  */
 export async function getShopeeStatus(): Promise<ShopeeConfigResponse> {
-  const baseUrl = SHOPEE_BRIDGE_URL.endsWith('/') ? SHOPEE_BRIDGE_URL.slice(0, -1) : SHOPEE_BRIDGE_URL;
-  const url = `${baseUrl}/api/get-config`;
+  const url = `${SHOPEE_BRIDGE_URL}/shopee/mutasi`;
 
   try {
     const response = await fetch(url, {
-      method: 'GET',
+      method: 'POST',
       headers: {
-        'stspointkey': SHOPEE_BRIDGE_KEY,
+        'Content-Type': 'application/json',
         'User-Agent': 'STSPoint-Infrastructure/1.2'
       },
+      body: JSON.stringify({
+        secret_key: SHOPEE_BRIDGE_KEY,
+        token: ""
+      }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
