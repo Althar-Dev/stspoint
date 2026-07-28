@@ -100,7 +100,7 @@ export default function OvoDashboardPage() {
     if (typeof val === 'number') return val;
     if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
     if (typeof val === 'object') {
-      return parseNumericValue(val.amount || val.card_balance || val.value || 0);
+      return parseNumericValue(val.card_balance || val.amount || val.value || 0);
     }
     return 0;
   };
@@ -116,6 +116,7 @@ export default function OvoDashboardPage() {
         ]);
 
         if (balanceRes.success && balanceRes.data) {
+          // Based on docs: data.cash.card_balance and data.point.card_balance
           setBalances({
             cash: parseNumericValue(balanceRes.data.cash),
             points: parseNumericValue(balanceRes.data.point)
@@ -140,13 +141,17 @@ export default function OvoDashboardPage() {
     fetchLiveData();
   }, [fetchLiveData, refreshKey]);
 
+  const handleManualRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    toast({ title: "Syncing...", description: "Memperbarui saldo dan log mutasi dari OVO Bridge." });
+  };
+
   const handleRequestOtp = async () => {
     if (!phone) return;
     setIsProcessing(true);
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        // Aligns with docs: data.otp_refId
         setRefId(res.data.otp_refId);
         setStep(2);
         toast({ title: "OTP Sent", description: res.message || "Silakan cek WhatsApp Anda." });
@@ -243,6 +248,8 @@ export default function OvoDashboardPage() {
       setIsProcessing(false);
     }
   };
+
+  const isLoading = authLoading || serviceLoading || (!!user && !ovoRef);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -368,11 +375,11 @@ export default function OvoDashboardPage() {
                     <div className="space-y-0.5">
                        <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO Points</p>
                        <p className="text-lg font-bold text-purple-600">
-                          {dataLoading ? "---" : balances.points.toLocaleString('id-ID')}
+                          {dataLoading ? "---" : `Rp ${balances.points.toLocaleString('id-ID')}`}
                        </p>
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
+                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors p-1">
                     <img src="/assets/main/ovo.png" alt="OVO" className="w-12 h-12 object-contain" />
                   </div>
                 </div>
@@ -380,7 +387,7 @@ export default function OvoDashboardPage() {
                   <Button 
                     variant="outline" 
                     className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider gap-2 shadow-sm" 
-                    onClick={() => { setRefreshKey(k => k + 1); toast({ title: "Refreshing...", description: "Sinkronisasi saldo & mutasi." }); }}
+                    onClick={handleManualRefresh}
                     disabled={dataLoading}
                   >
                     {dataLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
@@ -394,12 +401,12 @@ export default function OvoDashboardPage() {
 
         <Card className="lg:col-span-1 border border-border shadow-sm rounded-3xl p-0 overflow-hidden bg-card flex flex-col">
           <div className="p-6 flex-1 space-y-6">
-            {!isConnected ? (
+            {!isConnected && !isLoading ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
                 <ShieldAlert className="w-6 h-6" />
                 <p className="text-[10px] font-bold uppercase tracking-widest text-center">System Offline</p>
               </div>
-            ) : (
+            ) : isConnected ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Node</h4>
@@ -426,7 +433,7 @@ export default function OvoDashboardPage() {
                   <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border">
                     <UserIcon className="w-5 h-5 text-[#4C2B9A]" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{ovo?.username}</p>
+                      <p className="text-sm font-bold truncate">{ovo?.username || "OVO User"}</p>
                       <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active Connection</p>
                     </div>
                   </div>
@@ -461,7 +468,7 @@ export default function OvoDashboardPage() {
                   </Dialog>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </Card>
       </div>
@@ -472,7 +479,7 @@ export default function OvoDashboardPage() {
               <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
               OVO Transaction Journal
            </CardTitle>
-           <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Recent Records</Badge>
+           <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{Array.isArray(mutations) ? mutations.length : 0} Recent Records</Badge>
         </CardHeader>
         <div className="flex-1 overflow-auto w-full">
            <table className="w-full text-left text-xs">
