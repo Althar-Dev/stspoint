@@ -87,14 +87,9 @@ export default function OvoDashboardPage() {
   const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
 
   const isConnected = !!ovo?.token;
+  const isLoading = authLoading || serviceLoading;
 
-  useEffect(() => {
-    if (ovo) {
-      setBaseQrInput(ovo.baseQr || "");
-    }
-  }, [ovo]);
-
-  // Helper to extract numeric values safely
+  // Helper to extract numeric values safely from various OVO API formats
   const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
@@ -116,15 +111,17 @@ export default function OvoDashboardPage() {
         ]);
 
         if (balanceRes.success && balanceRes.data) {
-          // Based on docs: data.cash.card_balance and data.point.card_balance
           setBalances({
             cash: parseNumericValue(balanceRes.data.cash),
             points: parseNumericValue(balanceRes.data.point)
           });
         }
 
-        if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
-          setMutations(mutationRes.data.orders);
+        // Robust array detection for mutations
+        if (mutationRes.success && mutationRes.data) {
+          const rawData = mutationRes.data;
+          const orders = rawData.orders || (Array.isArray(rawData) ? rawData : []);
+          setMutations(orders);
         } else {
           setMutations([]);
         }
@@ -138,7 +135,9 @@ export default function OvoDashboardPage() {
   }, [isConnected, ovo?.token, ovo?.deviceId]);
 
   useEffect(() => {
-    fetchLiveData();
+    if (isConnected) {
+      fetchLiveData();
+    }
   }, [fetchLiveData, refreshKey]);
 
   const handleManualRefresh = () => {
@@ -152,7 +151,8 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        setRefId(res.data.otp_refId);
+        // Support multiple refId keys
+        setRefId(res.data.otp_refId || res.data.refId);
         setStep(2);
         toast({ title: "OTP Sent", description: res.message || "Silakan cek WhatsApp Anda." });
       } else {
@@ -248,8 +248,6 @@ export default function OvoDashboardPage() {
       setIsProcessing(false);
     }
   };
-
-  const isLoading = authLoading || serviceLoading || (!!user && !ovoRef);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -365,7 +363,7 @@ export default function OvoDashboardPage() {
                       <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
                       <div className="flex items-baseline gap-2">
                         {dataLoading ? <Skeleton className="h-10 w-48 mt-1" /> : (
-                          <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                          <h2 className="text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
                             Rp {balances.cash.toLocaleString('id-ID')}
                           </h2>
                         )}
@@ -374,12 +372,12 @@ export default function OvoDashboardPage() {
                     </div>
                     <div className="space-y-0.5">
                        <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO Points</p>
-                       <p className="text-lg font-bold text-purple-600">
+                       <p className="text-lg font-bold text-foreground/80">
                           {dataLoading ? "---" : `Rp ${balances.points.toLocaleString('id-ID')}`}
                        </p>
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors p-1">
+                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
                     <img src="/assets/main/ovo.png" alt="OVO" className="w-12 h-12 object-contain" />
                   </div>
                 </div>
@@ -506,8 +504,8 @@ export default function OvoDashboardPage() {
                     </td>
                   </tr>
                 ) : mutations.map((item, i) => {
-                  const amtValue = parseNumericValue(item.transaction_amount);
-                  const isTopup = item.transaction_type?.includes("TOPUP") || amtValue > 0;
+                  const amtValue = parseNumericValue(item.transaction_amount || item.amount);
+                  const isTopup = String(item.transaction_type || "").toUpperCase().includes("TOPUP") || amtValue > 0;
                   
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
@@ -523,7 +521,7 @@ export default function OvoDashboardPage() {
                         <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">{item.status || "SUCCESS"}</Badge>
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
-                         {item.transaction_date} {item.transaction_time}
+                         {item.transaction_date || ""} {item.transaction_time || ""}
                       </td>
                     </tr>
                   )

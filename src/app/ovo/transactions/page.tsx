@@ -44,6 +44,9 @@ export default function OvoTransactionsPage() {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
     if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+    if (typeof val === 'object') {
+      return parseNumericValue(val.card_balance || val.amount || val.value || 0);
+    }
     return 0;
   };
 
@@ -56,8 +59,11 @@ export default function OvoTransactionsPage() {
           deviceId: ovo.deviceId, 
           limit: 100 
         });
-        if (res.success && res.data && Array.isArray(res.data.orders)) {
-          setMutations(res.data.orders);
+        
+        if (res.success && res.data) {
+          const rawData = res.data;
+          const orders = rawData.orders || (Array.isArray(rawData) ? rawData : []);
+          setMutations(orders);
         } else {
           setMutations([]);
         }
@@ -87,9 +93,9 @@ export default function OvoTransactionsPage() {
     doc.text("OVO Transaction History", 14, 15);
     
     const tableData = filteredMutations.map(m => [
-      `${m.transaction_date} ${m.transaction_time}`,
+      `${m.transaction_date || ""} ${m.transaction_time || ""}`,
       m.merchant_name || m.desc1 || "OVO Transaction",
-      parseNumericValue(m.transaction_amount).toLocaleString(),
+      parseNumericValue(m.transaction_amount || m.amount).toLocaleString(),
       m.status || "SUCCESS"
     ]);
 
@@ -165,13 +171,13 @@ export default function OvoTransactionsPage() {
                 <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">No transactions found.</td></tr>
               ) : (
                 filteredMutations.map((item, i) => {
-                  const amtValue = parseNumericValue(item.transaction_amount);
-                  const isTopup = item.transaction_type?.includes("TOPUP") || amtValue > 0;
+                  const amtValue = parseNumericValue(item.transaction_amount || item.amount);
+                  const isTopup = String(item.transaction_type || "").toUpperCase().includes("TOPUP") || amtValue > 0;
 
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-                        {item.transaction_date} {item.transaction_time}
+                        {item.transaction_date || ""} {item.transaction_time || ""}
                       </td>
                       <td className="px-6 py-4 font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</td>
                       <td className="px-6 py-4 text-center font-bold">
