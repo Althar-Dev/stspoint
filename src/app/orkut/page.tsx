@@ -403,7 +403,7 @@ export default function OrkutPage() {
                     </div>
                   </div>
                   <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-2.5">
-                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={24} height={24} className="object-contain" />
+                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={32} height={32} className="object-contain" />
                   </div>
                 </div>
                 

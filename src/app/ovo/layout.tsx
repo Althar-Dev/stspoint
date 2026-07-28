@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -22,6 +23,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
+import Image from "next/image";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -76,9 +78,13 @@ function OvoLayoutInner({ children }: { children: ReactNode }) {
       >
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href="/ovo" className="flex items-center gap-2 group shrink-0">
-            <div className="w-8 h-8 bg-[#4C2B9A] rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
-               <Icon icon="logos:ovo" className="w-5 h-5 brightness-200 grayscale" />
-            </div>
+            <Image 
+              src="/assets/main/ovo.png" 
+              alt="OVO Logo" 
+              width={32} 
+              height={32} 
+              className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0 object-contain"
+            />
             <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">OVO Bridge</span>
           </Link>
         </SidebarHeader>

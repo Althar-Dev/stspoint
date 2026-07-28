@@ -34,7 +34,6 @@ import { Logo } from "@/components/logo";
 const gopayMenuItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "/gopay" },
   { title: "Transaction History", icon: History, url: "/gopay/transactions" },
-  // { title: "Settings", icon: Settings, url: "/gopay/settings" },
 ];
 
 function GopayLayoutInner({ children }: { children: ReactNode }) {
@@ -56,7 +55,6 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
       if (!user) {
         router.push("/signin");
       } else if (profile && !!profile.partner && !profile.dev) {
-        // Redirect partners to their own portal
         router.push("/client");
       }
     }
@@ -83,7 +81,7 @@ function GopayLayoutInner({ children }: { children: ReactNode }) {
         <SidebarHeader className="h-16 flex pt-4 items-center justify-center border-b border-border group-data-[state=expanded]:justify-start group-data-[state=expanded]:px-6 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center shrink-0">
           <Link href="/gopay" className="flex items-center gap-2 group shrink-0">
             <Image 
-              src="/assets/img/gopay.png" 
+              src="/assets/main/gm.png" 
               alt="GoPay Logo" 
               width={32} 
               height={32} 

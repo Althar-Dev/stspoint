@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
@@ -229,8 +231,8 @@ export default function OvoDashboardPage() {
                       <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Connected</Badge>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border">
-                    <Icon icon="logos:ovo" className="w-6 h-6 grayscale brightness-0" />
+                  <div className="w-12 h-12 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border p-2">
+                    <Image src="/assets/main/ovo.png" alt="OVO" width={32} height={32} className="object-contain" />
                   </div>
                 </div>
                 

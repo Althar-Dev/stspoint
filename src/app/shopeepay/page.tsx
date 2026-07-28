@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
@@ -67,12 +68,10 @@ export default function ShopeepayDashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Form states
   const [innerToken, setInnerToken] = useState("");
   const [baseQrInput, setBaseQrInput] = useState("");
   const [digitSetting, setDigitSetting] = useState<string>("3");
 
-  // Live Data states
   const [mutations, setMutations] = useState<ShopeeMutationItem[]>([]);
   const [stats, setStats] = useState({ totalNetSales: 0, totalCount: 0 });
   const [mutationsLoading, setMutationsLoading] = useState(false);
@@ -112,7 +111,6 @@ export default function ShopeepayDashboardPage() {
           });
           setIsSessionExpired(false);
 
-          // Update store name from mutation data if not already saved
           if (res.data && res.data.length > 0 && shopeepayRef) {
             const firstStoreName = res.data[0].store_name;
             if (firstStoreName && firstStoreName !== shopeepay?.storeName) {
@@ -316,8 +314,8 @@ export default function ShopeepayDashboardPage() {
                       )}
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors">
-                    <Icon icon="simple-icons:shopee" className="text-[#EE4D2D] w-6 h-6" />
+                  <div className="w-12 h-12 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors p-2">
+                    <Image src="/assets/main/spm.png" alt="ShopeePay" width={32} height={32} className="object-contain" />
                   </div>
                 </div>
                 

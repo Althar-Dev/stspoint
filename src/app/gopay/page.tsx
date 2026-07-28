@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
@@ -68,18 +69,15 @@ export default function GopayPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Mutations state
   const [mutations, setMutations] = useState<GoMerchantMutationItem[]>([]);
   const [mutationsLoading, setMutationsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Form states
   const [phone, setPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [baseQrInput, setBaseQrInput] = useState("");
   const [digitSetting, setDigitSetting] = useState<string>("3");
   
-  // Bridge Session states
   const [otpToken, setOtpToken] = useState("");
   const [uniqueId, setUniqueId] = useState("");
 
@@ -387,8 +385,8 @@ export default function GopayPage() {
                       )}
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors">
-                    <Wallet className="w-6 h-6 text-[#00AED6]" />
+                  <div className="w-12 h-12 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors p-2">
+                    <Image src="/assets/main/gm.png" alt="GoPay" width={32} height={32} className="object-contain" />
                   </div>
                 </div>
                 
