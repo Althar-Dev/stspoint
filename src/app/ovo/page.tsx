@@ -95,10 +95,11 @@ export default function OvoDashboardPage() {
     if (ovo?.deviceId) {
       setDeviceId(ovo.deviceId);
     } else if (!deviceId) {
-      const newId = `STS-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+      // Generate once and keep it
+      const newId = `STS-${Math.random().toString(36).substring(2, 10).toUpperCase()}-${Date.now()}`;
       setDeviceId(newId);
     }
-  }, [ovo, deviceId]);
+  }, [ovo?.deviceId]);
 
   useEffect(() => {
     if (ovo) {
@@ -145,7 +146,12 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        setRefId(res.data.refId);
+        // Robust check for refId (some bridges use referenceId or different keys)
+        const serverRefId = res.data.refId || res.data.referenceId || res.data.ref_id;
+        if (!serverRefId) {
+          throw new Error("Bridge tidak mengembalikan ID Referensi (refId).");
+        }
+        setRefId(serverRefId);
         setStep(2);
         toast({ title: "OTP Sent", description: "Silakan cek pesan WhatsApp Anda." });
       } else {
@@ -161,6 +167,18 @@ export default function OvoDashboardPage() {
   // Auth Step 2: Verify OTP
   const handleVerifyOtp = async () => {
     if (!otpCode) return;
+    
+    // Explicit safety check for incomplete data
+    if (!refId || !phone || !deviceId) {
+      toast({ 
+        variant: "destructive", 
+        title: "Data Tidak Lengkap", 
+        description: "Beberapa parameter verifikasi (refId/phone/deviceId) hilang. Silakan ulangi dari langkah pertama." 
+      });
+      setStep(1);
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const res = await verifyOvoOtp({ 
@@ -186,6 +204,17 @@ export default function OvoDashboardPage() {
   // Auth Step 3: Verify PIN & Save Token
   const handleVerifyPin = async () => {
     if (!pinCode) return;
+    
+    if (!otpToken || !refId || !deviceId) {
+      toast({ 
+        variant: "destructive", 
+        title: "Sesi Habis", 
+        description: "Token otorisasi hilang. Harap ulangi proses login." 
+      });
+      setStep(1);
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const res = await verifyOvoPin({
@@ -201,7 +230,7 @@ export default function OvoDashboardPage() {
           username: phone,
           token: res.data.token,
           deviceId: deviceId,
-          balance: 0, // Will be updated by live sync
+          balance: 0, 
           updatedAt: serverTimestamp()
         }, { merge: true });
         
@@ -320,7 +349,7 @@ export default function OvoDashboardPage() {
                               />
                             </div>
                           </div>
-                          <Button onClick={handleRequestOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white" disabled={isProcessing || !phone}>
+                          <Button onClick={handleRequestOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !phone}>
                             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Request OTP"}
                           </Button>
                         </div>
@@ -338,7 +367,7 @@ export default function OvoDashboardPage() {
                               maxLength={6}
                             />
                           </div>
-                          <Button onClick={handleVerifyOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white" disabled={isProcessing || !otpCode}>
+                          <Button onClick={handleVerifyOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !otpCode || !refId}>
                             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verifikasi OTP"}
                           </Button>
                           <Button variant="ghost" onClick={() => setStep(1)} className="w-full text-xs font-bold" disabled={isProcessing}>Kembali</Button>
@@ -358,7 +387,7 @@ export default function OvoDashboardPage() {
                               maxLength={6}
                             />
                           </div>
-                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white" disabled={isProcessing || !pinCode}>
+                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !pinCode || !otpToken}>
                             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify PIN & Connect"}
                           </Button>
                         </div>
@@ -417,11 +446,9 @@ export default function OvoDashboardPage() {
         <Card className="lg:col-span-1 border border-border shadow-sm rounded-3xl p-0 overflow-hidden bg-card flex flex-col">
           <div className="p-6 flex-1 space-y-6">
             {!isConnected ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4">
-                <div className="p-4 bg-muted/50 text-muted-foreground/30 rounded-3xl">
-                   <ShieldAlert className="w-6 h-6" />
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">System Offline</p>
+              <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
+                <ShieldAlert className="w-6 h-6" />
+                <p className="text-[10px] font-bold uppercase tracking-widest">System Offline</p>
               </div>
             ) : (
               <div className="space-y-6">
