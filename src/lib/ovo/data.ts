@@ -1,10 +1,15 @@
 'use server';
 /**
  * @fileOverview Library Pengambilan Data Akun OVO (Mutasi, Saldo, Profil).
- * Dilengkapi dengan validasi tipe konten respon.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
+
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  'stspointkey': OVO_BRIDGE_KEY,
+  'User-Agent': 'STSPoint-Infrastructure/1.2'
+};
 
 interface OVODataParams {
   token: string;
@@ -18,7 +23,7 @@ export async function getOvoMutations(params: OVODataParams & { page?: number; l
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/mutasi`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
@@ -45,7 +50,7 @@ export async function getOvoBalance(params: OVODataParams) {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/balance`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
@@ -72,7 +77,7 @@ export async function getOvoProfile(params: OVODataParams) {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/profile`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params

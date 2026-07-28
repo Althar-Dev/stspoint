@@ -1,10 +1,15 @@
 'use server';
 /**
  * @fileOverview Library Transfer Saldo OVO & Rekening Bank.
- * Dilengkapi dengan validasi tipe konten respon.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
+
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  'stspointkey': OVO_BRIDGE_KEY,
+  'User-Agent': 'STSPoint-Infrastructure/1.2'
+};
 
 interface OVOBaseParams {
   token: string;
@@ -18,12 +23,13 @@ export async function checkOvoNumber(params: OVOBaseParams & { phone: string; am
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/check-ovo`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
       }),
       signal: AbortSignal.timeout(15000),
+      cache: 'no-store'
     });
 
     const contentType = response.headers.get("content-type");
@@ -44,12 +50,13 @@ export async function transferToOvo(params: OVOBaseParams & { phone: string; amo
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/ovo`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
       }),
       signal: AbortSignal.timeout(30000),
+      cache: 'no-store'
     });
 
     const contentType = response.headers.get("content-type");
@@ -70,12 +77,13 @@ export async function getOvoBankList(params: OVOBaseParams) {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/banks`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
       }),
       signal: AbortSignal.timeout(15000),
+      cache: 'no-store'
     });
 
     const contentType = response.headers.get("content-type");
@@ -102,12 +110,13 @@ export async function bankInquiry(params: OVOBaseParams & {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/bank-inquiry`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
       }),
       signal: AbortSignal.timeout(20000),
+      cache: 'no-store'
     });
 
     const contentType = response.headers.get("content-type");
@@ -137,12 +146,13 @@ export async function transferToBank(params: OVOBaseParams & {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/bank`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
         ...params
       }),
       signal: AbortSignal.timeout(30000),
+      cache: 'no-store'
     });
 
     const contentType = response.headers.get("content-type");
