@@ -25,7 +25,7 @@ export interface ShopeeMutationResponse {
   data: ShopeeMutationItem[];
   total?: number;
   totalNetSales?: number;
-  code?: number; // Shopee specific error code (-1 = expired)
+  code?: number; 
 }
 
 export interface GetShopeeMutationsParams {
@@ -41,6 +41,8 @@ export interface GetShopeeMutationsParams {
  */
 export async function getShopeeMutations(params: GetShopeeMutationsParams): Promise<ShopeeMutationResponse> {
   const query = new URLSearchParams();
+  
+  // Masukkan API Key platform ke query (sesuai dokumentasi ?key=...)
   query.append('key', SHOPEE_BRIDGE_KEY);
   
   if (params.token) query.append('token', params.token);
@@ -49,20 +51,23 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
   if (params.page) query.append('page', params.page.toString());
   if (params.limit) query.append('limit', params.limit.toString());
 
-  // Menggunakan format double slash sesuai dokumentasi
-  const url = `${SHOPEE_BRIDGE_URL}/api/mutasi?${query.toString()}`;
+  // Menggunakan format double slash //api sesuai instruksi dokumentasi
+  const url = `${SHOPEE_BRIDGE_URL}//api/mutasi?${query.toString()}`;
 
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'stspointkey': SHOPEE_BRIDGE_KEY
+        'stspointkey': SHOPEE_BRIDGE_KEY // Juga kirim via header sebagai redundansi aman
       },
-      // Timeout 30 detik untuk pengambilan mutasi yang besar
       signal: AbortSignal.timeout(30000),
       cache: 'no-store'
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error ${response.status}`);
+    }
 
     const result = await response.json();
 
@@ -76,12 +81,13 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
       };
     }
 
+    // Pemetaan data yang lebih aman (tahan terhadap perbedaan struktur bridge)
     return {
-      success: result.success,
-      message: result.message,
-      data: result.data || [],
-      total: result.total,
-      totalNetSales: result.totalNetSales
+      success: !!result.success,
+      message: result.message || (result.success ? "Berhasil" : "Gagal mengambil mutasi"),
+      data: Array.isArray(result.data) ? result.data : [],
+      total: result.total || 0,
+      totalNetSales: result.totalNetSales || 0
     };
   } catch (error: any) {
     console.error('ShopeePay Mutation API Error:', error);

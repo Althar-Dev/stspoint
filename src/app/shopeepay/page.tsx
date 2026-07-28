@@ -110,13 +110,12 @@ export default function ShopeepayDashboardPage() {
             totalCount: res.total || 0
           });
           setIsSessionExpired(false);
-        } else if (res.code === -1) {
-          setIsSessionExpired(true);
-          toast({ 
-            variant: "destructive", 
-            title: "Session Expired", 
-            description: "Sesi ShopeePay Anda telah berakhir. Harap hubungkan kembali." 
-          });
+        } else {
+          if (res.code === -1) {
+            setIsSessionExpired(true);
+          } else {
+            toast({ variant: "destructive", title: "API Error", description: res.message });
+          }
         }
       } catch (error) {
         console.error("Failed to fetch ShopeePay mutations:", error);
@@ -144,7 +143,6 @@ export default function ShopeepayDashboardPage() {
     setIsProcessing(true);
     try {
       if (shopeepayRef) {
-        // Menggunakan setDoc + merge: true agar tahan jika dokumen belum ada
         await setDoc(shopeepayRef, {
           username: "Shopee Merchant",
           token: innerToken,
@@ -156,7 +154,7 @@ export default function ShopeepayDashboardPage() {
       setInnerToken("");
       setIsSessionExpired(false);
       setRefreshKey(prev => prev + 1);
-      toast({ title: "Connected!", description: "Token ShopeePay berhasil disimpan ke database Anda." });
+      toast({ title: "Connected!", description: "Token ShopeePay berhasil disimpan." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Gagal Menghubungkan", description: error.message });
     } finally {
@@ -211,7 +209,7 @@ export default function ShopeepayDashboardPage() {
              </div>
              <div className="space-y-0.5">
                 <p className="text-sm font-bold text-red-900">Sesi Kedaluwarsa</p>
-                <p className="text-xs text-red-700">Token ShopeePay Anda tidak lagi valid. Harap perbarui token di pengaturan.</p>
+                <p className="text-xs text-red-700">Token ShopeePay Anda tidak lagi valid. Harap perbarui token.</p>
              </div>
           </div>
           <Button size="sm" onClick={() => setIsDialogOpen(true)} className="bg-red-600 hover:bg-red-700 text-white font-bold h-9 px-4 rounded-lg text-xs uppercase">
@@ -277,7 +275,6 @@ export default function ShopeepayDashboardPage() {
                             className="pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[120px] font-mono text-[10px]"
                           />
                         </div>
-                        <p className="text-[9px] text-muted-foreground ml-1">Token ini disimpan secara aman di database Anda dan dikirim ke bridge saat menarik mutasi.</p>
                       </div>
                       <Button 
                         onClick={handleConnectAccount} 
