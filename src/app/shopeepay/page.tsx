@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,6 +111,14 @@ export default function ShopeepayDashboardPage() {
             totalCount: res.total || 0
           });
           setIsSessionExpired(false);
+
+          // Update store name from mutation data if not already saved
+          if (res.data && res.data.length > 0 && shopeepayRef) {
+            const firstStoreName = res.data[0].store_name;
+            if (firstStoreName && firstStoreName !== shopeepay?.storeName) {
+              setDoc(shopeepayRef, { storeName: firstStoreName }, { merge: true });
+            }
+          }
         } else {
           if (res.code === -1) {
             setIsSessionExpired(true);
@@ -123,7 +132,7 @@ export default function ShopeepayDashboardPage() {
         setMutationsLoading(false);
       }
     }
-  }, [isConnected, shopeepay?.token]);
+  }, [isConnected, shopeepay?.token, shopeepay?.storeName, shopeepayRef]);
 
   useEffect(() => {
     fetchLiveMutations();
@@ -186,6 +195,7 @@ export default function ShopeepayDashboardPage() {
         username: "",
         token: "",
         id: "",
+        storeName: "",
         balance: 0,
         updatedAt: serverTimestamp()
       }, { merge: true });
@@ -376,7 +386,9 @@ export default function ShopeepayDashboardPage() {
                     <UserIcon className="w-5 h-5 text-[#EE4D2D]" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{shopeepay?.username || "Connected Account"}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active ShopeePay Node</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                         {shopeepay?.storeName || "Active ShopeePay Node"}
+                      </p>
                     </div>
                   </div>
                   
