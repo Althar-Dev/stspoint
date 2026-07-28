@@ -31,7 +31,7 @@ export async function requestOvoLogin(params: { phone: string; channel?: 'WHATSA
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Bridge mengembalikan format non-JSON (HTML/Text). Pastikan URL endpoint benar.' };
+      return { success: false, message: 'Bridge mengembalikan format non-JSON. Pastikan URL benar.' };
     }
 
     return await response.json();
@@ -42,12 +42,11 @@ export async function requestOvoLogin(params: { phone: string; channel?: 'WHATSA
 
 /**
  * Tahap 2: Verifikasi Kode OTP
+ * Phone dan DeviceId kini opsional karena diselesaikan otomatis oleh server via refId.
  */
 export async function verifyOvoOtp(params: { 
-  phone: string; 
-  otp: string; 
   refId: string; 
-  deviceId: string 
+  otp: string;
 }) {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/auth/verify`, {
@@ -55,7 +54,8 @@ export async function verifyOvoOtp(params: {
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
-        ...params
+        refId: params.refId,
+        otp: params.otp
       }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
@@ -74,13 +74,11 @@ export async function verifyOvoOtp(params: {
 
 /**
  * Tahap 3: Verifikasi PIN & Dapatkan Sesi Token
+ * Server melengkapi phone, deviceId, dan otpToken secara otomatis berdasarkan refId.
  */
 export async function verifyOvoPin(params: {
-  phone: string;
-  pin: string;
-  otpToken: string;
   refId: string;
-  deviceId: string;
+  pin: string;
 }) {
   try {
     const response = await fetch(`${OVO_BRIDGE_URL}/api/auth/pin`, {
@@ -88,7 +86,8 @@ export async function verifyOvoPin(params: {
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
-        ...params
+        refId: params.refId,
+        pin: params.pin
       }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'

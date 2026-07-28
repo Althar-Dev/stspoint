@@ -69,8 +69,6 @@ export default function OvoDashboardPage() {
   const [otpCode, setOtpCode] = useState("");
   const [pinCode, setPinCode] = useState("");
   const [refId, setRefId] = useState("");
-  const [otpToken, setOtpToken] = useState("");
-  const [deviceId, setDeviceId] = useState("");
 
   // Live Data States
   const [balances, setBalances] = useState({ cash: 0, points: 0 });
@@ -89,17 +87,6 @@ export default function OvoDashboardPage() {
   const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
 
   const isConnected = !!ovo?.token;
-
-  // Initialize persistent deviceId or generate new one
-  useEffect(() => {
-    if (ovo?.deviceId) {
-      setDeviceId(ovo.deviceId);
-    } else if (!deviceId) {
-      // Generate once and keep it
-      const newId = `STS-${Math.random().toString(36).substring(2, 10).toUpperCase()}-${Date.now()}`;
-      setDeviceId(newId);
-    }
-  }, [ovo?.deviceId]);
 
   useEffect(() => {
     if (ovo) {
@@ -146,10 +133,10 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        // Robust check for refId (some bridges use referenceId or different keys)
-        const serverRefId = res.data.refId || res.data.referenceId || res.data.ref_id;
+        // Mendukung otp_refId sesuai dokumentasi terbaru
+        const serverRefId = res.data.otp_refId || res.data.refId || res.data.referenceId;
         if (!serverRefId) {
-          throw new Error("Bridge tidak mengembalikan ID Referensi (refId).");
+          throw new Error("Bridge tidak mengembalikan ID Referensi (otp_refId).");
         }
         setRefId(serverRefId);
         setStep(2);
@@ -166,29 +153,15 @@ export default function OvoDashboardPage() {
 
   // Auth Step 2: Verify OTP
   const handleVerifyOtp = async () => {
-    if (!otpCode) return;
-    
-    // Explicit safety check for incomplete data
-    if (!refId || !phone || !deviceId) {
-      toast({ 
-        variant: "destructive", 
-        title: "Data Tidak Lengkap", 
-        description: "Beberapa parameter verifikasi (refId/phone/deviceId) hilang. Silakan ulangi dari langkah pertama." 
-      });
-      setStep(1);
-      return;
-    }
+    if (!otpCode || !refId) return;
 
     setIsProcessing(true);
     try {
       const res = await verifyOvoOtp({ 
-        phone, 
-        otp: otpCode, 
         refId, 
-        deviceId 
+        otp: otpCode
       });
-      if (res.success && res.data) {
-        setOtpToken(res.data.otpToken);
+      if (res.success) {
         setStep(3);
         toast({ title: "OTP Verified", description: "Silakan masukkan PIN OVO Anda." });
       } else {
@@ -203,34 +176,21 @@ export default function OvoDashboardPage() {
 
   // Auth Step 3: Verify PIN & Save Token
   const handleVerifyPin = async () => {
-    if (!pinCode) return;
-    
-    if (!otpToken || !refId || !deviceId) {
-      toast({ 
-        variant: "destructive", 
-        title: "Sesi Habis", 
-        description: "Token otorisasi hilang. Harap ulangi proses login." 
-      });
-      setStep(1);
-      return;
-    }
+    if (!pinCode || !refId) return;
 
     setIsProcessing(true);
     try {
       const res = await verifyOvoPin({
-        phone,
-        pin: pinCode,
-        otpToken,
         refId,
-        deviceId
+        pin: pinCode
       });
 
       if (res.success && res.data && ovoRef) {
+        // Ambil token dan deviceId yang dikembalikan oleh server pada step final
         await setDoc(ovoRef, {
-          username: phone,
+          username: phone, // Menggunakan nomor yang diinput di step 1
           token: res.data.token,
-          deviceId: deviceId,
-          balance: 0, 
+          deviceId: res.data.deviceId,
           updatedAt: serverTimestamp()
         }, { merge: true });
         
@@ -274,6 +234,7 @@ export default function OvoDashboardPage() {
         username: "",
         token: "",
         balance: 0,
+        deviceId: "",
         updatedAt: serverTimestamp()
       }, { merge: true });
       setMutations([]);
@@ -319,7 +280,7 @@ export default function OvoDashboardPage() {
                 }}>
                   <DialogTrigger asChild>
                     <Button className="bg-[#4C2B9A] hover:bg-[#4C2B9A]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#4C2B9A]/10 transition-all active:scale-95">
-                      Hubungkan Akun
+                      Hubungkan Sekarang
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="rounded-[2rem] border-border w-[94vw] md:max-w-sm p-8">
@@ -329,7 +290,7 @@ export default function OvoDashboardPage() {
                       </DialogTitle>
                       <DialogDescription className="text-xs text-center">
                         {step === 1 ? "Masukkan nomor OVO untuk menerima kode OTP." : 
-                         step === 2 ? `Masukkan kode yang dikirim ke nomor ${phone}.` :
+                         step === 2 ? "Masukkan kode yang dikirim ke nomor WhatsApp Anda." :
                          "Langkah terakhir, masukkan 6 digit PIN OVO Anda."}
                       </DialogDescription>
                     </DialogHeader>
@@ -387,7 +348,7 @@ export default function OvoDashboardPage() {
                               maxLength={6}
                             />
                           </div>
-                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !pinCode || !otpToken}>
+                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white shadow-lg shadow-[#4C2B9A]/20" disabled={isProcessing || !pinCode || !refId}>
                             {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify PIN & Connect"}
                           </Button>
                         </div>
@@ -421,8 +382,8 @@ export default function OvoDashboardPage() {
                        </div>
                     </div>
                   </div>
-                  <div className="w-16 h-16 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors p-2">
-                    <Image src="/assets/main/ovo.png" alt="OVO" width={64} height={64} className="w-12 h-12 object-contain" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
+                    <Image src="/assets/main/ovo.png" alt="OVO" width={48} height={48} className="w-12 h-12 object-contain" />
                   </div>
                 </div>
                 
@@ -517,8 +478,8 @@ export default function OvoDashboardPage() {
 
                 <div className="pt-2 border-t border-border space-y-3">
                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-muted-foreground font-bold uppercase">Device Context</span>
-                      <span className="font-mono text-primary font-medium">{deviceId.substring(0, 12)}...</span>
+                      <span className="text-muted-foreground font-bold uppercase">System ID</span>
+                      <span className="font-mono text-primary font-medium">{ovo?.deviceId?.substring(0, 12)}...</span>
                    </div>
                 </div>
               </div>
