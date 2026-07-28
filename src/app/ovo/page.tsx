@@ -89,7 +89,7 @@ export default function OvoDashboardPage() {
   const isConnected = !!ovo?.token;
   const isLoading = authLoading || serviceLoading;
 
-  // Helper to extract numeric values safely from various OVO API formats
+  // Helper to extract numeric values safely from OVO API (String or Object)
   const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
@@ -117,11 +117,9 @@ export default function OvoDashboardPage() {
           });
         }
 
-        // Robust array detection for mutations
-        if (mutationRes.success && mutationRes.data) {
-          const rawData = mutationRes.data;
-          const orders = rawData.orders || (Array.isArray(rawData) ? rawData : []);
-          setMutations(orders);
+        // According to docs, array is in data.orders
+        if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
+          setMutations(mutationRes.data.orders);
         } else {
           setMutations([]);
         }
@@ -151,10 +149,9 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        // Support multiple refId keys
-        setRefId(res.data.otp_refId || res.data.refId);
+        setRefId(res.data.otp_refId);
         setStep(2);
-        toast({ title: "OTP Sent", description: res.message || "Silakan cek WhatsApp Anda." });
+        toast({ title: "OTP Sent", description: "Silakan cek WhatsApp Anda." });
       } else {
         throw new Error(res.message || "Gagal meminta OTP.");
       }
@@ -172,7 +169,7 @@ export default function OvoDashboardPage() {
       const res = await verifyOvoOtp({ refId, otp: otpCode });
       if (res.success) {
         setStep(3);
-        toast({ title: "OTP Verified", description: res.message || "Silakan masukkan PIN OVO Anda." });
+        toast({ title: "OTP Verified", description: "Silakan masukkan PIN OVO." });
       } else {
         throw new Error(res.message || "Kode OTP tidak valid.");
       }
@@ -536,3 +533,4 @@ export default function OvoDashboardPage() {
     </div>
   );
 }
+

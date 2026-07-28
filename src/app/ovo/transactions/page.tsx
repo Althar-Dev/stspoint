@@ -27,7 +27,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 
 export default function OvoTransactionsPage() {
-  const { user } = useUser();
+  const { user, loading: authLoading } = useUser();
   const db = useFirestore();
   const [mutations, setMutations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,10 @@ export default function OvoTransactionsPage() {
     return doc(db, "users", user.uid, "services", "ovo");
   }, [db, user?.uid]);
   
-  const { data: ovo } = useDoc(ovoRef);
+  const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
+
+  const isConnected = !!ovo?.token;
+  const isGlobalLoading = authLoading || serviceLoading;
 
   const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
@@ -51,7 +54,7 @@ export default function OvoTransactionsPage() {
   };
 
   const fetchMutations = useCallback(async () => {
-    if (ovo?.token && ovo?.deviceId) {
+    if (isConnected && ovo?.token && ovo?.deviceId) {
       setLoading(true);
       try {
         const res = await getOvoMutations({ 
@@ -60,10 +63,8 @@ export default function OvoTransactionsPage() {
           limit: 100 
         });
         
-        if (res.success && res.data) {
-          const rawData = res.data;
-          const orders = rawData.orders || (Array.isArray(rawData) ? rawData : []);
-          setMutations(orders);
+        if (res.success && res.data && Array.isArray(res.data.orders)) {
+          setMutations(res.data.orders);
         } else {
           setMutations([]);
         }
@@ -74,11 +75,13 @@ export default function OvoTransactionsPage() {
         setLoading(false);
       }
     }
-  }, [ovo?.token, ovo?.deviceId]);
+  }, [isConnected, ovo?.token, ovo?.deviceId]);
 
   useEffect(() => {
-    fetchMutations();
-  }, [fetchMutations]);
+    if (isConnected) {
+      fetchMutations();
+    }
+  }, [isConnected, fetchMutations]);
 
   const filteredMutations = useMemo(() => {
     if (!Array.isArray(mutations)) return [];
@@ -144,7 +147,7 @@ export default function OvoTransactionsPage() {
           variant="outline" 
           className="h-11 px-4 rounded-xl gap-2 font-bold text-xs"
           onClick={fetchMutations}
-          disabled={loading}
+          disabled={loading || isGlobalLoading}
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
           Sync
@@ -163,11 +166,11 @@ export default function OvoTransactionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {loading ? (
+              {loading || isGlobalLoading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
-              ) : !Array.isArray(mutations) || mutations.length === 0 ? (
+              ) : !Array.isArray(filteredMutations) || filteredMutations.length === 0 ? (
                 <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">No transactions found.</td></tr>
               ) : (
                 filteredMutations.map((item, i) => {
