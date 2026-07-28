@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  Wallet, 
   RefreshCcw,
   Clock,
   Link as LinkIcon,
@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
@@ -401,8 +402,8 @@ export default function OrkutPage() {
                       <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors">
-                    <Wallet className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-2.5">
+                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={24} height={24} className="object-contain" />
                   </div>
                 </div>
                 
@@ -442,11 +443,9 @@ export default function OrkutPage() {
                 </div>
               </div>
             ) : !isConnected ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4">
-                <div className="p-4 bg-orange-500/10 text-orange-600 rounded-3xl border border-orange-500/20">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Service Status</p>
+              <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
+                <ShieldAlert className="w-6 h-6" />
+                <p className="text-[10px] font-bold uppercase tracking-widest">Service Status</p>
                 <p className="text-sm font-bold text-orange-600">DISCONNECTED</p>
               </div>
             ) : (
