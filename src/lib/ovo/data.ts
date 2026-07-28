@@ -26,7 +26,10 @@ export async function getOvoMutations(params: OVODataParams & { page?: number; l
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
-        ...params
+        token: params.token,
+        deviceId: params.deviceId,
+        page: params.page || 1,
+        limit: params.limit || 15
       }),
       signal: AbortSignal.timeout(20000),
       cache: 'no-store'
@@ -53,7 +56,8 @@ export async function getOvoBalance(params: OVODataParams) {
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
-        ...params
+        token: params.token,
+        deviceId: params.deviceId
       }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
@@ -80,7 +84,8 @@ export async function getOvoProfile(params: OVODataParams) {
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
         secret_key: OVO_BRIDGE_KEY,
-        ...params
+        token: params.token,
+        deviceId: params.deviceId
       }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'

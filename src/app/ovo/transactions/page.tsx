@@ -44,7 +44,6 @@ export default function OvoTransactionsPage() {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
     if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
-    if (typeof val === 'object' && val.amount) return parseNumericValue(val.amount);
     return 0;
   };
 
@@ -57,16 +56,8 @@ export default function OvoTransactionsPage() {
           deviceId: ovo.deviceId, 
           limit: 100 
         });
-        if (res.success) {
-          let foundMutations = [];
-          if (Array.isArray(res.data)) {
-            foundMutations = res.data;
-          } else if (res.data && Array.isArray(res.data.mutations)) {
-            foundMutations = res.data.mutations;
-          } else if (res.data && Array.isArray(res.data.items)) {
-            foundMutations = res.data.items;
-          }
-          setMutations(foundMutations);
+        if (res.success && res.data && Array.isArray(res.data.orders)) {
+          setMutations(res.data.orders);
         } else {
           setMutations([]);
         }
@@ -86,7 +77,7 @@ export default function OvoTransactionsPage() {
   const filteredMutations = useMemo(() => {
     if (!Array.isArray(mutations)) return [];
     return mutations.filter(m => 
-      (m.desc || m.keterangan || m.description || "").toLowerCase().includes(search.toLowerCase())
+      (m.merchant_name || m.desc1 || "").toLowerCase().includes(search.toLowerCase())
     );
   }, [mutations, search]);
 
@@ -96,14 +87,14 @@ export default function OvoTransactionsPage() {
     doc.text("OVO Transaction History", 14, 15);
     
     const tableData = filteredMutations.map(m => [
-      m.created_at || m.time || m.transaction_date || "---",
-      m.desc || m.keterangan || m.description || "OVO Transaction",
-      parseNumericValue(m.amount).toLocaleString(),
-      "SUCCESS"
+      `${m.transaction_date} ${m.transaction_time}`,
+      m.merchant_name || m.desc1 || "OVO Transaction",
+      parseNumericValue(m.transaction_amount).toLocaleString(),
+      m.status || "SUCCESS"
     ]);
 
     autoTable(doc, {
-      head: [['Time', 'Description', 'Amount', 'Status']],
+      head: [['Time', 'Merchant / Description', 'Amount', 'Status']],
       body: tableData,
       startY: 20,
       theme: 'grid'
@@ -138,7 +129,7 @@ export default function OvoTransactionsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             className="pl-9 h-11 bg-card border-border rounded-xl shadow-sm text-sm" 
-            placeholder="Search by description..." 
+            placeholder="Search by merchant or description..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -160,7 +151,7 @@ export default function OvoTransactionsPage() {
             <thead className="sticky top-0 bg-muted/90 backdrop-blur-md z-10">
               <tr className="border-b border-border">
                 <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground">Time</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground">Description</th>
+                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground">Merchant / Description</th>
                 <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center">Amount</th>
                 <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right">Status</th>
               </tr>
@@ -174,21 +165,22 @@ export default function OvoTransactionsPage() {
                 <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">No transactions found.</td></tr>
               ) : (
                 filteredMutations.map((item, i) => {
-                  const amtValue = parseNumericValue(item.amount);
-                  const typeStr = (item.transaction_type || item.type || "").toUpperCase();
-                  const isTopup = typeStr === 'IN' || typeStr === 'TOPUP' || amtValue > 0;
+                  const amtValue = parseNumericValue(item.transaction_amount);
+                  const isTopup = item.transaction_type?.includes("TOPUP") || amtValue > 0;
 
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground">{item.created_at || item.time || item.transaction_date || "---"}</td>
-                      <td className="px-6 py-4 font-bold text-foreground/80">{item.desc || item.keterangan || item.description || "OVO Transaction"}</td>
+                      <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                        {item.transaction_date} {item.transaction_time}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</td>
                       <td className="px-6 py-4 text-center font-bold">
                         <span className={isTopup ? 'text-emerald-600' : 'text-rose-500'}>
                           {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
                         </span>
                       </td>
                       <td className="px-8 py-4 text-right">
-                         <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">Success</Badge>
+                         <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">{item.status || "SUCCESS"}</Badge>
                       </td>
                     </tr>
                   )
