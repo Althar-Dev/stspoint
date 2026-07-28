@@ -53,7 +53,7 @@ import {
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { Icon } from "@iconify/react";
 import { format } from "date-fns";
@@ -143,13 +143,13 @@ export default function ShopeepayDashboardPage() {
 
     setIsProcessing(true);
     try {
-      // Langsung simpan ke Firestore merchant
       if (shopeepayRef) {
-        await updateDoc(shopeepayRef, {
+        // Menggunakan setDoc + merge: true agar tahan jika dokumen belum ada
+        await setDoc(shopeepayRef, {
           username: "Shopee Merchant",
           token: innerToken,
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true });
       }
 
       setIsDialogOpen(false);
@@ -168,11 +168,11 @@ export default function ShopeepayDashboardPage() {
     if (!shopeepayRef) return;
     setIsProcessing(true);
     try {
-      await updateDoc(shopeepayRef, {
+      await setDoc(shopeepayRef, {
         baseQr: baseQrInput,
         randomDigit: parseInt(digitSetting),
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       toast({ title: "Settings Saved", description: "Konfigurasi ShopeePay diperbarui." });
       setIsSettingsOpen(false);
     } finally {
@@ -184,13 +184,13 @@ export default function ShopeepayDashboardPage() {
     if (!shopeepayRef) return;
     setIsProcessing(true);
     try {
-      await updateDoc(shopeepayRef, {
+      await setDoc(shopeepayRef, {
         username: "",
         token: "",
         id: "",
         balance: 0,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       setMutations([]);
       setStats({ totalNetSales: 0, totalCount: 0 });
       toast({ title: "Disconnected", description: "Akun ShopeePay telah dilepas." });
@@ -379,7 +379,7 @@ export default function ShopeepayDashboardPage() {
                     <UserIcon className="w-5 h-5 text-[#EE4D2D]" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{shopeepay?.username || "Connected Account"}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Active ShopeePay Node</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active ShopeePay Node</p>
                     </div>
                   </div>
                   

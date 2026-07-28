@@ -42,7 +42,7 @@ import {
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { Icon } from "@iconify/react";
 
@@ -86,12 +86,12 @@ export default function OvoDashboardPage() {
     if (!ovoRef) return;
     setIsProcessing(true);
     setTimeout(async () => {
-      await updateDoc(ovoRef, {
+      await setDoc(ovoRef, {
         username: phone,
         token: "OVO-MOCK-SESSION-TOKEN",
         id: `OVO-${Date.now()}`,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       setIsDialogOpen(false);
       setStep(1);
       setIsProcessing(false);
@@ -103,10 +103,10 @@ export default function OvoDashboardPage() {
     if (!ovoRef) return;
     setIsProcessing(true);
     try {
-      await updateDoc(ovoRef, {
+      await setDoc(ovoRef, {
         baseQr: baseQrInput,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       toast({ title: "Settings Saved", description: "Konfigurasi OVO diperbarui." });
       setIsSettingsOpen(false);
     } finally {
@@ -118,13 +118,13 @@ export default function OvoDashboardPage() {
     if (!ovoRef) return;
     setIsProcessing(true);
     try {
-      await updateDoc(ovoRef, {
+      await setDoc(ovoRef, {
         username: "",
         token: "",
         id: "",
         balance: 0,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       toast({ title: "Disconnected", description: "Akun OVO telah dilepas dari sistem." });
     } finally {
       setIsProcessing(false);
