@@ -49,6 +49,7 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
   if (params.page) query.append('page', params.page.toString());
   if (params.limit) query.append('limit', params.limit.toString());
 
+  // Menggunakan format double slash sesuai dokumentasi
   const url = `${SHOPEE_BRIDGE_URL}/api/mutasi?${query.toString()}`;
 
   try {
@@ -58,8 +59,8 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
         'Accept': 'application/json',
         'stspointkey': SHOPEE_BRIDGE_KEY
       },
-      // Timeout 20 detik karena API Shopee terkadang lambat merespon
-      signal: AbortSignal.timeout(20000),
+      // Timeout 30 detik untuk pengambilan mutasi yang besar
+      signal: AbortSignal.timeout(30000),
       cache: 'no-store'
     });
 

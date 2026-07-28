@@ -138,7 +138,7 @@ export default function ShopeepayDashboardPage() {
 
   const handleConnectAccount = async () => {
     if (!innerToken || !innerToken.startsWith("B:")) {
-      toast({ variant: "destructive", title: "Invalid Token", description: "Masukkan innerToken ShopeePay yang valid (mulai dengan B:)." });
+      toast({ variant: "destructive", title: "Invalid Token", description: "Masukkan Token ShopeePay yang valid (mulai dengan B:)." });
       return;
     }
 
@@ -265,14 +265,14 @@ export default function ShopeepayDashboardPage() {
                   </DialogTrigger>
                   <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="font-headline font-bold">Connect ShopeePay Bridge</DialogTitle>
+                      <DialogTitle className="font-headline font-bold">Connect ShopeePay</DialogTitle>
                       <DialogDescription className="text-xs">
-                        Masukkan innerToken ShopeePay yang didapatkan dari browser atau alat developer.
+                        Masukkan Token ShopeePay yang didapatkan dari browser atau alat developer.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Shopee innerToken</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Shopee Token</Label>
                         <div className="relative">
                           <Key className="absolute left-3 top-4 w-4 h-4 text-muted-foreground" />
                           <Textarea 

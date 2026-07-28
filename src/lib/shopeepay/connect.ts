@@ -15,6 +15,7 @@ export interface ShopeeConfigResponse {
  * Menyimpan innerToken ShopeePay ke server bridge.
  */
 export async function saveShopeeConfig(innerToken: string): Promise<ShopeeConfigResponse> {
+  // Menggunakan double slash sesuai contoh dokumentasi: domain//api/...
   const url = `${SHOPEE_BRIDGE_URL}/api/save-config`;
 
   try {
@@ -28,7 +29,9 @@ export async function saveShopeeConfig(innerToken: string): Promise<ShopeeConfig
         innerToken,
         STSPointKey: SHOPEE_BRIDGE_KEY
       }),
-      signal: AbortSignal.timeout(15000),
+      // Meningkatkan timeout untuk menghindari 'fetch failed' karena jaringan lambat
+      signal: AbortSignal.timeout(30000),
+      cache: 'no-store'
     });
 
     const result = await response.json();
@@ -41,7 +44,7 @@ export async function saveShopeeConfig(innerToken: string): Promise<ShopeeConfig
     console.error('ShopeePay Save Config Error:', error);
     return { 
       success: false, 
-      message: error.message || 'Gagal menyimpan konfigurasi ke server bridge.' 
+      message: error.message || 'Gagal menghubungi server bridge ShopeePay.' 
     };
   }
 }
@@ -58,7 +61,8 @@ export async function getShopeeStatus(): Promise<ShopeeConfigResponse> {
       headers: {
         'stspointkey': SHOPEE_BRIDGE_KEY
       },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
+      cache: 'no-store'
     });
 
     const result = await response.json();
