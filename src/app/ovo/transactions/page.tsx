@@ -40,6 +40,14 @@ export default function OvoTransactionsPage() {
   
   const { data: ovo } = useDoc(ovoRef);
 
+  const parseNumericValue = (val: any): number => {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+    if (typeof val === 'object' && val.amount) return parseNumericValue(val.amount);
+    return 0;
+  };
+
   const fetchMutations = useCallback(async () => {
     if (ovo?.token && ovo?.deviceId) {
       setLoading(true);
@@ -50,7 +58,15 @@ export default function OvoTransactionsPage() {
           limit: 100 
         });
         if (res.success) {
-          setMutations(Array.isArray(res.data) ? res.data : []);
+          let foundMutations = [];
+          if (Array.isArray(res.data)) {
+            foundMutations = res.data;
+          } else if (res.data && Array.isArray(res.data.mutations)) {
+            foundMutations = res.data.mutations;
+          } else if (res.data && Array.isArray(res.data.items)) {
+            foundMutations = res.data.items;
+          }
+          setMutations(foundMutations);
         } else {
           setMutations([]);
         }
@@ -70,7 +86,7 @@ export default function OvoTransactionsPage() {
   const filteredMutations = useMemo(() => {
     if (!Array.isArray(mutations)) return [];
     return mutations.filter(m => 
-      (m.desc || m.keterangan || "").toLowerCase().includes(search.toLowerCase())
+      (m.desc || m.keterangan || m.description || "").toLowerCase().includes(search.toLowerCase())
     );
   }, [mutations, search]);
 
@@ -80,9 +96,9 @@ export default function OvoTransactionsPage() {
     doc.text("OVO Transaction History", 14, 15);
     
     const tableData = filteredMutations.map(m => [
-      m.created_at || m.time,
-      m.desc || m.keterangan,
-      m.amount.toLocaleString(),
+      m.created_at || m.time || m.transaction_date || "---",
+      m.desc || m.keterangan || m.description || "OVO Transaction",
+      parseNumericValue(m.amount).toLocaleString(),
       "SUCCESS"
     ]);
 
@@ -154,19 +170,29 @@ export default function OvoTransactionsPage() {
                 Array.from({ length: 10 }).map((_, i) => (
                   <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                 ))
-              ) : filteredMutations.length === 0 ? (
+              ) : !Array.isArray(mutations) || mutations.length === 0 ? (
                 <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">No transactions found.</td></tr>
               ) : (
-                filteredMutations.map((item, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground">{item.created_at || item.time}</td>
-                    <td className="px-6 py-4 font-bold text-foreground/80">{item.desc || item.keterangan}</td>
-                    <td className="px-6 py-4 text-center font-bold text-primary">Rp {Math.abs(item.amount).toLocaleString('id-ID')}</td>
-                    <td className="px-8 py-4 text-right">
-                       <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">Success</Badge>
-                    </td>
-                  </tr>
-                ))
+                filteredMutations.map((item, i) => {
+                  const amtValue = parseNumericValue(item.amount);
+                  const typeStr = (item.transaction_type || item.type || "").toUpperCase();
+                  const isTopup = typeStr === 'IN' || typeStr === 'TOPUP' || amtValue > 0;
+
+                  return (
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground">{item.created_at || item.time || item.transaction_date || "---"}</td>
+                      <td className="px-6 py-4 font-bold text-foreground/80">{item.desc || item.keterangan || item.description || "OVO Transaction"}</td>
+                      <td className="px-6 py-4 text-center font-bold">
+                        <span className={isTopup ? 'text-emerald-600' : 'text-rose-500'}>
+                          {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
+                        </span>
+                      </td>
+                      <td className="px-8 py-4 text-right">
+                         <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">Success</Badge>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>

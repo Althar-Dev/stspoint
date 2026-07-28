@@ -94,6 +94,18 @@ export default function OvoDashboardPage() {
     }
   }, [ovo]);
 
+  // Helper to extract numeric values from potential objects or strings
+  const parseNumericValue = (val: any): number => {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+    if (typeof val === 'object') {
+      // Check common amount fields in bridge responses
+      return parseNumericValue(val.amount || val.value || val.balance || val.cash || val.points || 0);
+    }
+    return 0;
+  };
+
   // Data Fetching Logic
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -106,14 +118,22 @@ export default function OvoDashboardPage() {
 
         if (balanceRes.success && balanceRes.data) {
           setBalances({
-            cash: balanceRes.data.cash || 0,
-            points: balanceRes.data.points || 0
+            cash: parseNumericValue(balanceRes.data.cash),
+            points: parseNumericValue(balanceRes.data.points)
           });
         }
 
         if (mutationRes.success) {
-          // Robust array assignment
-          setMutations(Array.isArray(mutationRes.data) ? mutationRes.data : []);
+          // Smart array detection: handle direct array or nested array
+          let foundMutations = [];
+          if (Array.isArray(mutationRes.data)) {
+            foundMutations = mutationRes.data;
+          } else if (mutationRes.data && Array.isArray(mutationRes.data.mutations)) {
+            foundMutations = mutationRes.data.mutations;
+          } else if (mutationRes.data && Array.isArray(mutationRes.data.items)) {
+            foundMutations = mutationRes.data.items;
+          }
+          setMutations(foundMutations);
         } else {
           setMutations([]);
         }
@@ -523,20 +543,25 @@ export default function OvoDashboardPage() {
                     </td>
                   </tr>
                 ) : mutations.map((item, i) => {
-                  const isTopup = item.transaction_type?.toUpperCase() === 'IN' || item.amount > 0;
+                  const typeStr = (item.transaction_type || item.type || "").toUpperCase();
+                  const amtValue = parseNumericValue(item.amount);
+                  const isTopup = typeStr === 'IN' || typeStr === 'TOPUP' || amtValue > 0;
+                  
                   return (
                     <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-8 py-4 whitespace-nowrap font-bold text-foreground/80">{item.desc || item.keterangan || "OVO Transaction"}</td>
+                      <td className="px-8 py-4 whitespace-nowrap font-bold text-foreground/80">
+                        {item.desc || item.keterangan || item.description || "OVO Transaction"}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <span className={`font-bold ${isTopup ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {isTopup ? '+' : '-'}Rp {Math.abs(item.amount).toLocaleString('id-ID')}
+                          {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">Success</Badge>
                       </td>
                       <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
-                         {item.created_at || item.time}
+                         {item.created_at || item.time || item.transaction_date || "---"}
                       </td>
                     </tr>
                   )
