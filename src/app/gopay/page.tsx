@@ -384,8 +384,8 @@ export default function GopayPage() {
                       )}
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors p-2.5">
-                    <Image src="/assets/main/gm.png" alt="GoPay" width={40} height={40} className="w-10 h-10 object-contain" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors p-1.5">
+                    <Image src="/assets/main/gm.png" alt="GoPay" width={48} height={48} className="w-12 h-12 object-contain" />
                   </div>
                 </div>
                 

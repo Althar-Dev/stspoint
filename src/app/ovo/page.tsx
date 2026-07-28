@@ -230,8 +230,8 @@ export default function OvoDashboardPage() {
                       <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Connected</Badge>
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border p-2.5">
-                    <Image src="/assets/main/ovo.png" alt="OVO" width={40} height={40} className="w-10 h-10 object-contain" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border p-1.5">
+                    <Image src="/assets/main/ovo.png" alt="OVO" width={48} height={48} className="w-12 h-12 object-contain" />
                   </div>
                 </div>
                 
