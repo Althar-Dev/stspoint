@@ -31,7 +31,7 @@ export async function requestOvoLogin(params: { phone: string; channel?: 'WHATSA
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Bridge mengembalikan format non-JSON. Pastikan rute API /api/auth/login tersedia.' };
+      return { success: false, message: 'Bridge mengembalikan format non-JSON (HTML/Text). Pastikan URL endpoint benar.' };
     }
 
     return await response.json();
