@@ -57,7 +57,6 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
 import { Icon } from "@iconify/react";
 import { format } from "date-fns";
-import { saveShopeeConfig, getShopeeStatus } from "@/lib/shopeepay/connect";
 import { getShopeeMutations, type ShopeeMutationItem } from "@/lib/shopeepay/mutasi";
 
 export default function ShopeepayDashboardPage() {
@@ -144,17 +143,10 @@ export default function ShopeepayDashboardPage() {
 
     setIsProcessing(true);
     try {
-      // 1. Simpan ke bridge server
-      const bridgeRes = await saveShopeeConfig(innerToken);
-      
-      if (!bridgeRes.success) {
-        throw new Error(bridgeRes.message);
-      }
-
-      // 2. Simpan ke Firestore merchant
+      // Langsung simpan ke Firestore merchant
       if (shopeepayRef) {
         await updateDoc(shopeepayRef, {
-          username: "Shopee Merchant", // Diperbarui setelah sync profile pertama
+          username: "Shopee Merchant",
           token: innerToken,
           updatedAt: serverTimestamp()
         });
@@ -164,7 +156,7 @@ export default function ShopeepayDashboardPage() {
       setInnerToken("");
       setIsSessionExpired(false);
       setRefreshKey(prev => prev + 1);
-      toast({ title: "Connected!", description: "Akun ShopeePay berhasil terhubung ke Bridge." });
+      toast({ title: "Connected!", description: "Token ShopeePay berhasil disimpan ke database Anda." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Gagal Menghubungkan", description: error.message });
     } finally {
@@ -257,7 +249,10 @@ export default function ShopeepayDashboardPage() {
                     Hubungkan akun ShopeePay Merchant Anda untuk mengaktifkan otomatisasi mutasi.
                   </p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                  setIsDialogOpen(open);
+                  if (!open) { setInnerToken(""); }
+                }}>
                   <DialogTrigger asChild>
                     <Button className="bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#EE4D2D]/10 transition-all active:scale-95">
                       Hubungkan Sekarang
@@ -282,7 +277,7 @@ export default function ShopeepayDashboardPage() {
                             className="pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[120px] font-mono text-[10px]"
                           />
                         </div>
-                        <p className="text-[9px] text-muted-foreground ml-1">Token ini digunakan untuk otorisasi akses data mutasi Anda secara aman.</p>
+                        <p className="text-[9px] text-muted-foreground ml-1">Token ini disimpan secara aman di database Anda dan dikirim ke bridge saat menarik mutasi.</p>
                       </div>
                       <Button 
                         onClick={handleConnectAccount} 
@@ -290,7 +285,7 @@ export default function ShopeepayDashboardPage() {
                         disabled={isProcessing || !innerToken}
                       >
                         {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                        Simpan & Hubungkan
+                        Simpan Token
                       </Button>
                     </div>
                   </DialogContent>
@@ -369,7 +364,7 @@ export default function ShopeepayDashboardPage() {
                     <AlertDialogContent className="rounded-3xl">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Putuskan Koneksi?</AlertDialogTitle>
-                        <AlertDialogDescription>Data sesi akan dihapus dan sinkronisasi otomatis akan berhenti.</AlertDialogDescription>
+                        <AlertDialogDescription>Token akan dihapus dari database Anda dan sinkronisasi mutasi akan berhenti.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
