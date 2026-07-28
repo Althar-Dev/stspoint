@@ -40,33 +40,35 @@ export interface GetShopeeMutationsParams {
  * Menarik data mutasi transaksi ShopeePay via Bridge API.
  */
 export async function getShopeeMutations(params: GetShopeeMutationsParams): Promise<ShopeeMutationResponse> {
-  const query = new URLSearchParams();
-  
-  // Masukkan API Key platform ke query (sesuai dokumentasi ?key=...)
-  query.append('key', SHOPEE_BRIDGE_KEY);
-  
-  if (params.token) query.append('token', params.token);
-  if (params.startDate) query.append('startDate', params.startDate);
-  if (params.endDate) query.append('endDate', params.endDate);
-  if (params.page) query.append('page', params.page.toString());
-  if (params.limit) query.append('limit', params.limit.toString());
-
-  // Menggunakan format double slash //api sesuai instruksi dokumentasi
-  const url = `${SHOPEE_BRIDGE_URL}//api/mutasi?${query.toString()}`;
-
   try {
+    const query = new URLSearchParams();
+    
+    // API Key platform (Wajib)
+    query.append('key', SHOPEE_BRIDGE_KEY);
+    
+    if (params.token) query.append('token', params.token);
+    if (params.startDate) query.append('startDate', params.startDate);
+    if (params.endDate) query.append('endDate', params.endDate);
+    if (params.page) query.append('page', params.page.toString());
+    if (params.limit) query.append('limit', params.limit.toString());
+
+    // Gunakan URL constructor untuk keamanan rute
+    const baseUrl = SHOPEE_BRIDGE_URL.endsWith('/') ? SHOPEE_BRIDGE_URL.slice(0, -1) : SHOPEE_BRIDGE_URL;
+    const url = `${baseUrl}/api/mutasi?${query.toString()}`;
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'stspointkey': SHOPEE_BRIDGE_KEY // Juga kirim via header sebagai redundansi aman
+        'stspointkey': SHOPEE_BRIDGE_KEY,
+        'User-Agent': 'STSPoint-Infrastructure/1.2 (ShopeePay-Bridge)'
       },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(30000), // Timeout 30 detik
       cache: 'no-store'
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP Error ${response.status}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const result = await response.json();
@@ -81,7 +83,6 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
       };
     }
 
-    // Pemetaan data yang lebih aman (tahan terhadap perbedaan struktur bridge)
     return {
       success: !!result.success,
       message: result.message || (result.success ? "Berhasil" : "Gagal mengambil mutasi"),
@@ -93,7 +94,7 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
     console.error('ShopeePay Mutation API Error:', error);
     return { 
       success: false, 
-      message: 'Koneksi ke server bridge terputus atau timeout.', 
+      message: `Koneksi ke server bridge terputus atau timeout. (${error.message || 'Unknown Network Error'})`, 
       data: [] 
     };
   }

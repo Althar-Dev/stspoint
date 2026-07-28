@@ -15,13 +15,15 @@ export interface ShopeeConfigResponse {
  * Mengambil status konfigurasi aktif dari server bridge.
  */
 export async function getShopeeStatus(): Promise<ShopeeConfigResponse> {
-  const url = `${SHOPEE_BRIDGE_URL}/api/get-config`;
+  const baseUrl = SHOPEE_BRIDGE_URL.endsWith('/') ? SHOPEE_BRIDGE_URL.slice(0, -1) : SHOPEE_BRIDGE_URL;
+  const url = `${baseUrl}/api/get-config`;
 
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'stspointkey': SHOPEE_BRIDGE_KEY
+        'stspointkey': SHOPEE_BRIDGE_KEY,
+        'User-Agent': 'STSPoint-Infrastructure/1.2'
       },
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
@@ -37,7 +39,7 @@ export async function getShopeeStatus(): Promise<ShopeeConfigResponse> {
     console.error('ShopeePay Get Status Error:', error);
     return { 
       success: false, 
-      message: 'Gagal mengecek status server bridge.' 
+      message: `Gagal mengecek status server bridge. (${error.message || 'Connection Error'})` 
     };
   }
 }
