@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Library untuk menarik data mutasi transaksi dari ShopeePay Merchant Portal.
- * Diperbarui menggunakan metode POST dan payload JSON sesuai dokumentasi terbaru.
+ * Diperbarui untuk menangani potensi respon non-JSON dan menggunakan rute /api/mutasi yang lebih stabil.
  */
 
 import { SHOPEE_BRIDGE_URL, SHOPEE_BRIDGE_KEY } from './init';
@@ -42,7 +42,8 @@ export interface GetShopeeMutationsParams {
  */
 export async function getShopeeMutations(params: GetShopeeMutationsParams): Promise<ShopeeMutationResponse> {
   try {
-    const url = `${SHOPEE_BRIDGE_URL}/shopee/mutasi`;
+    // Menggunakan rute /api/mutasi yang seringkali lebih stabil pada bridge
+    const url = `${SHOPEE_BRIDGE_URL}api/mutasi`;
 
     const payload = {
       secret_key: SHOPEE_BRIDGE_KEY,
@@ -56,6 +57,7 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'stspointkey': SHOPEE_BRIDGE_KEY, // Kirim key di header juga sebagai fallback
         'User-Agent': 'STSPoint-Infrastructure/1.2 (ShopeePay-Bridge)'
       },
       body: JSON.stringify(payload),
@@ -63,10 +65,22 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
       cache: 'no-store'
     });
 
+    // Cek apakah respon adalah JSON
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textError = await response.text();
+      console.error("Non-JSON Response received:", textError.substring(0, 200));
+      return {
+        success: false,
+        message: `Server Bridge mengembalikan format tidak valid (HTML/Text). Pastikan URL dan API Key benar.`,
+        data: []
+      };
+    }
+
     const result = await response.json();
 
-    // Penanganan khusus jika token expired atau unauthorized (HTTP 401 atau success: false dengan code -1)
-    if (response.status === 401 || result.code === -1) {
+    // Penanganan khusus jika token expired atau unauthorized
+    if (response.status === 401 || result.code === -1 || result.success === false && result.message?.toLowerCase().includes("expired")) {
       return {
         success: false,
         message: result.message || 'Sesi ShopeePay telah berakhir atau token tidak valid.',
@@ -77,7 +91,11 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
     }
 
     if (!response.ok) {
-      throw new Error(result.message || `HTTP ${response.status}: ${response.statusText}`);
+      return {
+        success: false,
+        message: result.message || `Bridge Error: HTTP ${response.status}`,
+        data: []
+      };
     }
 
     return {
@@ -92,7 +110,7 @@ export async function getShopeeMutations(params: GetShopeeMutationsParams): Prom
     console.error('ShopeePay Mutation API Error:', error);
     return { 
       success: false, 
-      message: `Koneksi ke server bridge terputus atau timeout. (${error.message || 'Unknown Network Error'})`, 
+      message: `Gagal terhubung ke Bridge: ${error.message || 'Unknown Network Error'}`, 
       data: [] 
     };
   }
