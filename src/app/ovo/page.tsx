@@ -37,26 +37,48 @@ import {
   User as UserIcon,
   Save,
   Settings as SettingsIcon,
-  Clock
+  Clock,
+  ArrowUpRight,
+  ShieldCheck,
+  CheckCircle2
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
-import { Icon } from "@iconify/react";
+import { format } from "date-fns";
+
+// OVO Library Imports
+import { requestOvoLogin, verifyOvoOtp, verifyOvoPin } from "@/lib/ovo/auth";
+import { getOvoBalance, getOvoMutations } from "@/lib/ovo/data";
 
 export default function OvoDashboardPage() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
+  
+  // Connection Flow States
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
+  // Auth Context
   const [phone, setPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
+  const [pinCode, setPinCode] = useState("");
+  const [refId, setRefId] = useState("");
+  const [otpToken, setOtpToken] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+
+  // Live Data States
+  const [balances, setBalances] = useState({ cash: 0, points: 0 });
+  const [mutations, setMutations] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Settings
   const [baseQrInput, setBaseQrInput] = useState("");
 
   const ovoRef = useMemoFirebase(() => {
@@ -68,36 +90,136 @@ export default function OvoDashboardPage() {
 
   const isConnected = !!ovo?.token;
 
+  // Initialize persistent deviceId or generate new one
+  useEffect(() => {
+    if (ovo?.deviceId) {
+      setDeviceId(ovo.deviceId);
+    } else if (!deviceId) {
+      const newId = `STS-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+      setDeviceId(newId);
+    }
+  }, [ovo, deviceId]);
+
   useEffect(() => {
     if (ovo) {
       setBaseQrInput(ovo.baseQr || "");
     }
   }, [ovo]);
 
-  const handleRequestOtp = () => {
+  // Data Fetching Logic
+  const fetchLiveData = useCallback(async () => {
+    if (isConnected && ovo?.token && ovo?.deviceId) {
+      setDataLoading(true);
+      try {
+        const [balanceRes, mutationRes] = await Promise.all([
+          getOvoBalance({ token: ovo.token, deviceId: ovo.deviceId }),
+          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 10 })
+        ]);
+
+        if (balanceRes.success && balanceRes.data) {
+          setBalances({
+            cash: balanceRes.data.cash || 0,
+            points: balanceRes.data.points || 0
+          });
+        }
+
+        if (mutationRes.success) {
+          setMutations(mutationRes.data || []);
+        }
+      } catch (error) {
+        console.error("OVO Data Sync Error:", error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+  }, [isConnected, ovo?.token, ovo?.deviceId]);
+
+  useEffect(() => {
+    fetchLiveData();
+  }, [fetchLiveData, refreshKey]);
+
+  // Auth Step 1: Login / Request OTP
+  const handleRequestOtp = async () => {
+    if (!phone) return;
     setIsProcessing(true);
-    setTimeout(() => {
-      setStep(2);
+    try {
+      const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
+      if (res.success && res.data) {
+        setRefId(res.data.refId);
+        setStep(2);
+        toast({ title: "OTP Sent", description: "Silakan cek pesan WhatsApp Anda." });
+      } else {
+        throw new Error(res.message || "Gagal meminta OTP.");
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
       setIsProcessing(false);
-      toast({ title: "OTP Dikirim", description: "Silakan cek SMS pada nomor OVO Anda." });
-    }, 1500);
+    }
   };
 
+  // Auth Step 2: Verify OTP
   const handleVerifyOtp = async () => {
-    if (!ovoRef) return;
+    if (!otpCode) return;
     setIsProcessing(true);
-    setTimeout(async () => {
-      await setDoc(ovoRef, {
-        username: phone,
-        token: "OVO-MOCK-SESSION-TOKEN",
-        id: `OVO-${Date.now()}`,
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-      setIsDialogOpen(false);
-      setStep(1);
+    try {
+      const res = await verifyOvoOtp({ 
+        phone, 
+        otp: otpCode, 
+        refId, 
+        deviceId 
+      });
+      if (res.success && res.data) {
+        setOtpToken(res.data.otpToken);
+        setStep(3);
+        toast({ title: "OTP Verified", description: "Silakan masukkan PIN OVO Anda." });
+      } else {
+        throw new Error(res.message || "Kode OTP tidak valid.");
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
       setIsProcessing(false);
-      toast({ title: "Connected!", description: "Akun OVO berhasil terhubung sebagai Bridge." });
-    }, 1500);
+    }
+  };
+
+  // Auth Step 3: Verify PIN & Save Token
+  const handleVerifyPin = async () => {
+    if (!pinCode) return;
+    setIsProcessing(true);
+    try {
+      const res = await verifyOvoPin({
+        phone,
+        pin: pinCode,
+        otpToken,
+        refId,
+        deviceId
+      });
+
+      if (res.success && res.data && ovoRef) {
+        await setDoc(ovoRef, {
+          username: phone,
+          token: res.data.token,
+          deviceId: deviceId,
+          balance: 0, // Will be updated by live sync
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        setIsDialogOpen(false);
+        setStep(1);
+        setPhone("");
+        setOtpCode("");
+        setPinCode("");
+        toast({ title: "Connected!", description: "Akun OVO berhasil terhubung." });
+        setRefreshKey(prev => prev + 1);
+      } else {
+        throw new Error(res.message || "PIN salah atau sesi kedaluwarsa.");
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -122,21 +244,23 @@ export default function OvoDashboardPage() {
       await setDoc(ovoRef, {
         username: "",
         token: "",
-        id: "",
         balance: 0,
         updatedAt: serverTimestamp()
       }, { merge: true });
+      setMutations([]);
+      setBalances({ cash: 0, points: 0 });
       toast({ title: "Disconnected", description: "Akun OVO telah dilepas dari sistem." });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const isLoading = authLoading || serviceLoading || (!!user && !ovoRef);
+  const isLoading = authLoading || serviceLoading;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Balance Card */}
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#4C2B9A]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
@@ -155,89 +279,133 @@ export default function OvoDashboardPage() {
                   <LinkIcon className="w-8 h-8 text-[#4C2B9A]/40" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-lg">OVO Not Connected</h3>
-                  <p className="text-xs text-muted-foreground max-w-xs">
-                    Hubungkan akun OVO Merchant untuk otomatisasi mutasi QRIS.
+                  <h3 className="font-bold text-lg">OVO Bridge Inactive</h3>
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                    Hubungkan akun OVO untuk monitoring saldo dan mutasi otomatis secara real-time.
                   </p>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={(open) => {
                   setIsDialogOpen(open);
-                  if (!open) setStep(1);
+                  if (!open) { setStep(1); setOtpCode(""); setPinCode(""); }
                 }}>
                   <DialogTrigger asChild>
                     <Button className="bg-[#4C2B9A] hover:bg-[#4C2B9A]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#4C2B9A]/10 transition-all active:scale-95">
                       Hubungkan Akun
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-sm">
-                    <DialogHeader>
-                      <DialogTitle className="font-headline font-bold">
-                        {step === 1 ? "Login OVO Merchant" : "Verifikasi OTP"}
+                  <DialogContent className="rounded-[2rem] border-border w-[94vw] md:max-w-sm p-8">
+                    <DialogHeader className="space-y-3">
+                      <DialogTitle className="font-headline font-bold text-2xl text-center">
+                        {step === 1 ? "Login OVO" : step === 2 ? "Verify OTP" : "Enter PIN"}
                       </DialogTitle>
+                      <DialogDescription className="text-xs text-center">
+                        {step === 1 ? "Masukkan nomor OVO untuk menerima kode OTP." : 
+                         step === 2 ? `Masukkan kode yang dikirim ke nomor ${phone}.` :
+                         "Langkah terakhir, masukkan 6 digit PIN OVO Anda."}
+                      </DialogDescription>
                     </DialogHeader>
-                    {step === 1 ? (
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor OVO</Label>
-                          <Input 
-                            placeholder="0812xxxx" 
-                            value={phone} 
-                            onChange={(e) => setPhone(e.target.value)}
-                            className="rounded-xl h-12 border-border"
-                          />
+                    
+                    <div className="py-4">
+                      {step === 1 && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor Handphone</Label>
+                            <div className="relative">
+                              <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input 
+                                placeholder="0812xxxx" 
+                                value={phone} 
+                                onChange={(e) => setPhone(e.target.value)}
+                                className="pl-10 rounded-xl h-12 bg-muted/50 border-transparent focus:bg-background transition-all font-bold"
+                              />
+                            </div>
+                          </div>
+                          <Button onClick={handleRequestOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white" disabled={isProcessing || !phone}>
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Request OTP"}
+                          </Button>
                         </div>
-                        <Button 
-                          onClick={handleRequestOtp} 
-                          className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white" 
-                          disabled={isProcessing || !phone}
-                        >
-                          {isProcessing ? "Memproses..." : "Kirim OTP"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2 text-center">
-                          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Kode OTP</Label>
-                          <Input 
-                            placeholder="xxxx" 
-                            value={otpCode} 
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="h-14 text-center text-xl font-headline font-bold tracking-[0.5em] rounded-xl"
-                            maxLength={6}
-                          />
+                      )}
+
+                      {step === 2 && (
+                        <div className="space-y-4">
+                          <div className="space-y-2 text-center">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">OTP Code</Label>
+                            <Input 
+                              placeholder="xxxx" 
+                              value={otpCode} 
+                              onChange={(e) => setOtpCode(e.target.value)}
+                              className="h-14 text-center text-2xl font-headline font-bold tracking-[0.5em] rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all"
+                              maxLength={6}
+                            />
+                          </div>
+                          <Button onClick={handleVerifyOtp} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white" disabled={isProcessing || !otpCode}>
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verifikasi OTP"}
+                          </Button>
+                          <Button variant="ghost" onClick={() => setStep(1)} className="w-full text-xs font-bold" disabled={isProcessing}>Kembali</Button>
                         </div>
-                        <Button 
-                          onClick={handleVerifyOtp} 
-                          className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white" 
-                          disabled={isProcessing || !otpCode}
-                        >
-                          {isProcessing ? "Verifikasi..." : "Konfirmasi"}
-                        </Button>
-                      </div>
-                    )}
+                      )}
+
+                      {step === 3 && (
+                        <div className="space-y-4">
+                          <div className="space-y-2 text-center">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Security PIN</Label>
+                            <Input 
+                              type="password"
+                              placeholder="••••••" 
+                              value={pinCode} 
+                              onChange={(e) => setPinCode(e.target.value)}
+                              className="h-14 text-center text-xl font-headline font-bold tracking-[0.8em] rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all"
+                              maxLength={6}
+                            />
+                          </div>
+                          <Button onClick={handleVerifyPin} className="w-full h-12 rounded-xl font-bold bg-[#4C2B9A] text-white" disabled={isProcessing || !pinCode}>
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify PIN & Connect"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>
             ) : (
               <>
                 <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Saldo OVO Cash</p>
-                    <div className="flex items-baseline gap-2">
-                      <h2 className="text-4xl font-headline font-bold tracking-tighter">
-                        Rp {(ovo?.balance || 0).toLocaleString('id-ID')}
-                      </h2>
-                      <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Connected</Badge>
+                  <div className="space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
+                      <div className="flex items-baseline gap-2">
+                        {dataLoading ? <Skeleton className="h-10 w-48 mt-1" /> : (
+                          <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                            Rp {balances.cash.toLocaleString('id-ID')}
+                          </h2>
+                        )}
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Connected</Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-6">
+                       <div className="space-y-0.5">
+                          <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO Points</p>
+                          <p className="text-lg font-bold text-purple-600">
+                             {dataLoading ? "---" : balances.points.toLocaleString('id-ID')}
+                          </p>
+                       </div>
                     </div>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border p-1.5">
-                    <Image src="/assets/main/ovo.png" alt="OVO" width={48} height={48} className="w-12 h-12 object-contain" />
+                  <div className="w-16 h-16 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors p-2">
+                    <Image src="/assets/main/ovo.png" alt="OVO" width={64} height={64} className="w-12 h-12 object-contain" />
                   </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
-                  <Button variant="outline" className="border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider" onClick={() => toast({ title: "Syncing..." })}>
-                    Refresh Saldo
+                  <Button 
+                    variant="outline" 
+                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider gap-2 shadow-sm transition-all active:scale-95" 
+                    onClick={() => { setRefreshKey(k => k + 1); toast({ title: "Refreshing...", description: "Sinkronisasi saldo & mutasi terbaru." }); }}
+                    disabled={dataLoading}
+                  >
+                    {dataLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
+                    Refresh Data
                   </Button>
                 </div>
               </>
@@ -245,31 +413,34 @@ export default function OvoDashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Status Card */}
         <Card className="lg:col-span-1 border border-border shadow-sm rounded-3xl p-0 overflow-hidden bg-card flex flex-col">
           <div className="p-6 flex-1 space-y-6">
             {!isConnected ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
-                <ShieldAlert className="w-6 h-6" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">OVO Service: Inactive</p>
+              <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4">
+                <div className="p-4 bg-muted/50 text-muted-foreground/30 rounded-3xl">
+                   <ShieldAlert className="w-6 h-6" />
+                </div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">System Offline</p>
               </div>
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Node Info</h4>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Node</h4>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase transition-colors">
                         <PowerOff className="w-3 h-3 mr-1" /> Putuskan
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-3xl">
+                    <AlertDialogContent className="rounded-3xl border-border">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Putuskan Koneksi?</AlertDialogTitle>
-                        <AlertDialogDescription>Sesi OVO akan dihapus dan sinkronisasi akan berhenti.</AlertDialogDescription>
+                        <AlertDialogTitle className="font-headline font-bold">Putuskan Sesi OVO?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">Anda harus melakukan login ulang untuk mengaktifkan sinkronisasi otomatis kembali.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="rounded-xl">Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDisconnect} className="bg-red-500 rounded-xl">Ya, Putuskan</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDisconnect} className="bg-red-600 text-white rounded-xl">Ya, Putuskan</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -277,10 +448,12 @@ export default function OvoDashboardPage() {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border">
-                    <UserIcon className="w-5 h-5 text-[#4C2B9A]" />
+                    <div className="w-10 h-10 rounded-xl bg-[#4C2B9A]/10 flex items-center justify-center text-[#4C2B9A]">
+                       <UserIcon className="w-5 h-5" />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{ovo?.username}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Active OVO Bridge Node</p>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Active Connection</p>
                     </div>
                   </div>
                   
@@ -293,7 +466,8 @@ export default function OvoDashboardPage() {
                     </DialogTrigger>
                     <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
                       <DialogHeader>
-                        <DialogTitle className="font-headline font-bold">OVO Bridge Settings</DialogTitle>
+                        <DialogTitle className="font-headline font-bold">OVO Configuration</DialogTitle>
+                        <DialogDescription className="text-xs">Ubah master payload untuk generate QRIS otomatis.</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -302,13 +476,23 @@ export default function OvoDashboardPage() {
                             placeholder="Enter QRIS string..." 
                             value={baseQrInput} 
                             onChange={(e) => setBaseQrInput(e.target.value)}
-                            className="rounded-xl min-h-[120px] text-xs font-mono"
+                            className="rounded-xl min-h-[120px] text-xs font-mono bg-muted/30 border-transparent focus:bg-background transition-all"
                           />
                         </div>
-                        <Button onClick={handleSaveSettings} className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white">Simpan Perubahan</Button>
+                        <Button onClick={handleSaveSettings} disabled={isProcessing} className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white">
+                           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                           Simpan Pengaturan
+                        </Button>
                       </div>
                     </DialogContent>
                   </Dialog>
+                </div>
+
+                <div className="pt-2 border-t border-border space-y-3">
+                   <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground font-bold uppercase">Device Context</span>
+                      <span className="font-mono text-primary font-medium">{deviceId.substring(0, 12)}...</span>
+                   </div>
                 </div>
               </div>
             )}
@@ -316,20 +500,66 @@ export default function OvoDashboardPage() {
         </Card>
       </div>
 
-      <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card h-[400px] flex flex-col">
-        <CardHeader className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
-           <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <RefreshCcw className="w-4 h-4 text-[#4C2B9A]" />
-              OVO Mutation Log
+      {/* Mutation Log */}
+      <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
+        <CardHeader className="px-8 py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
+           <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+              <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
+              OVO Transaction Journal
            </CardTitle>
+           <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Recent Records</Badge>
         </CardHeader>
-        <div className="flex-1 overflow-auto flex items-center justify-center">
-           <div className="text-center opacity-20">
-              <Clock className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-[10px] font-bold uppercase tracking-widest">No Recent Mutations Found</p>
-           </div>
+        <div className="flex-1 overflow-auto w-full">
+           <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10">
+                 <tr className="border-b border-border">
+                    <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest">Description</th>
+                    <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center">Amount</th>
+                    <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center">Status</th>
+                    <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right">Time</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {dataLoading ? (
+                   Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
+                   ))
+                ) : mutations.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
+                       <div className="flex flex-col items-center gap-3 opacity-20">
+                          <Clock className="w-10 h-10" />
+                          <p className="text-[10px] font-bold uppercase tracking-widest">No mutations found</p>
+                       </div>
+                    </td>
+                  </tr>
+                ) : mutations.map((item, i) => {
+                  const isTopup = item.transaction_type?.toUpperCase() === 'IN' || item.amount > 0;
+                  return (
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-4 whitespace-nowrap font-bold text-foreground/80">{item.desc || item.keterangan || "OVO Transaction"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`font-bold ${isTopup ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {isTopup ? '+' : '-'}Rp {Math.abs(item.amount).toLocaleString('id-ID')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">Success</Badge>
+                      </td>
+                      <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
+                         {item.created_at || item.time}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+           </table>
         </div>
       </Card>
+
+      <div className="text-center pt-4 pb-8 opacity-20">
+         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint OVO Node ID: Node-04-JKT</p>
+      </div>
     </div>
   );
 }

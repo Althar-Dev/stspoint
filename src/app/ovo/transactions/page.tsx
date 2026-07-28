@@ -4,27 +4,109 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
   RefreshCcw, 
   Calendar,
   Clock,
-  Download
+  Download,
+  Loader2,
+  FileText,
+  User as UserIcon,
+  ArrowLeft
 } from "lucide-react";
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { getOvoMutations } from "@/lib/ovo/data";
+import { toast } from "@/hooks/use-toast";
+import Link from "next/link";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { format } from "date-fns";
 
 export default function OvoTransactionsPage() {
+  const { user } = useUser();
+  const db = useFirestore();
+  const [mutations, setMutations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const ovoRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "ovo");
+  }, [db, user?.uid]);
+  
+  const { data: ovo } = useDoc(ovoRef);
+
+  const fetchMutations = useCallback(async () => {
+    if (ovo?.token && ovo?.deviceId) {
+      setLoading(true);
+      try {
+        const res = await getOvoMutations({ 
+          token: ovo.token, 
+          deviceId: ovo.deviceId, 
+          limit: 100 
+        });
+        if (res.success) {
+          setMutations(res.data || []);
+        }
+      } catch (error) {
+        console.error("Fetch mutations error:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [ovo?.token, ovo?.deviceId]);
+
+  useEffect(() => {
+    fetchMutations();
+  }, [fetchMutations]);
+
+  const filteredMutations = mutations.filter(m => 
+    (m.desc || m.keterangan || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleExportPDF = () => {
+    if (filteredMutations.length === 0) return;
+    const doc = new jsPDF();
+    doc.text("OVO Transaction History", 14, 15);
+    
+    const tableData = filteredMutations.map(m => [
+      m.created_at || m.time,
+      m.desc || m.keterangan,
+      m.amount.toLocaleString(),
+      "SUCCESS"
+    ]);
+
+    autoTable(doc, {
+      head: [['Time', 'Description', 'Amount', 'Status']],
+      body: tableData,
+      startY: 20,
+      theme: 'grid'
+    });
+
+    doc.save(`OVO_Report_${format(new Date(), "yyyyMMdd")}.pdf`);
+    toast({ title: "Export Success", description: "PDF has been generated." });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-headline font-bold tracking-tight">OVO <span className="text-[#4C2B9A]">History</span></h1>
-          <p className="text-muted-foreground text-sm">Pemantauan riwayat transaksi masuk melalui jalur OVO.</p>
+        <div className="flex items-center gap-4">
+           <Button variant="ghost" size="icon" asChild className="rounded-xl">
+              <Link href="/ovo"><ArrowLeft className="w-5 h-5" /></Link>
+           </Button>
+           <div>
+              <h1 className="text-2xl font-headline font-bold tracking-tight">OVO <span className="text-[#4C2B9A]">History</span></h1>
+              <p className="text-muted-foreground text-sm">Full transaction audit log for your OVO account.</p>
+           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-xs">
-            <Download className="w-4 h-4 text-[#4C2B9A]" />
-            Export CSV
+          <Button variant="outline" onClick={handleExportPDF} className="h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-xs">
+            <FileText className="w-4 h-4 text-rose-500" />
+            Export PDF
           </Button>
         </div>
       </div>
@@ -34,23 +116,54 @@ export default function OvoTransactionsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             className="pl-9 h-11 bg-card border-border rounded-xl shadow-sm text-sm" 
-            placeholder="Cari ID Transaksi OVO..." 
+            placeholder="Search by description..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="h-11 px-6 rounded-xl border-border bg-card shadow-sm font-bold text-xs">
-          <Calendar className="w-4 h-4 mr-2" /> Filter
+        <Button 
+          variant="outline" 
+          className="h-11 px-4 rounded-xl gap-2 font-bold text-xs"
+          onClick={fetchMutations}
+          disabled={loading}
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+          Sync
         </Button>
       </div>
 
-      <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card h-[600px] flex flex-col">
-        <CardHeader className="bg-slate-50/50 dark:bg-[#0A0A0A] py-4 px-6 border-b border-border">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <Clock className="w-4 h-4 text-[#4C2B9A]" />
-            Transaction Logs
-          </CardTitle>
-        </CardHeader>
-        <div className="flex-1 flex items-center justify-center text-muted-foreground/30 italic text-sm">
-           Belum ada data riwayat OVO yang tersedia.
+      <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card flex-1 min-h-[500px]">
+        <div className="w-full h-full overflow-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 bg-muted/90 backdrop-blur-md z-10">
+              <tr className="border-b border-border">
+                <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground">Time</th>
+                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground">Description</th>
+                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center">Amount</th>
+                <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
+                ))
+              ) : filteredMutations.length === 0 ? (
+                <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">No transactions found.</td></tr>
+              ) : (
+                filteredMutations.map((item, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground">{item.created_at || item.time}</td>
+                    <td className="px-6 py-4 font-bold text-foreground/80">{item.desc || item.keterangan}</td>
+                    <td className="px-6 py-4 text-center font-bold text-primary">Rp {Math.abs(item.amount).toLocaleString('id-ID')}</td>
+                    <td className="px-8 py-4 text-right">
+                       <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">Success</Badge>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>
