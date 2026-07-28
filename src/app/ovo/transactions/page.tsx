@@ -16,7 +16,7 @@ import {
   User as UserIcon,
   ArrowLeft
 } from "lucide-react";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { getOvoMutations } from "@/lib/ovo/data";
@@ -50,10 +50,13 @@ export default function OvoTransactionsPage() {
           limit: 100 
         });
         if (res.success) {
-          setMutations(res.data || []);
+          setMutations(Array.isArray(res.data) ? res.data : []);
+        } else {
+          setMutations([]);
         }
       } catch (error) {
         console.error("Fetch mutations error:", error);
+        setMutations([]);
       } finally {
         setLoading(false);
       }
@@ -64,9 +67,12 @@ export default function OvoTransactionsPage() {
     fetchMutations();
   }, [fetchMutations]);
 
-  const filteredMutations = mutations.filter(m => 
-    (m.desc || m.keterangan || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredMutations = useMemo(() => {
+    if (!Array.isArray(mutations)) return [];
+    return mutations.filter(m => 
+      (m.desc || m.keterangan || "").toLowerCase().includes(search.toLowerCase())
+    );
+  }, [mutations, search]);
 
   const handleExportPDF = () => {
     if (filteredMutations.length === 0) return;

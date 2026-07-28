@@ -112,10 +112,14 @@ export default function OvoDashboardPage() {
         }
 
         if (mutationRes.success) {
-          setMutations(mutationRes.data || []);
+          // Robust array assignment
+          setMutations(Array.isArray(mutationRes.data) ? mutationRes.data : []);
+        } else {
+          setMutations([]);
         }
       } catch (error) {
         console.error("OVO Data Sync Error:", error);
+        setMutations([]);
       } finally {
         setDataLoading(false);
       }
@@ -133,7 +137,6 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        // Mendukung otp_refId sesuai dokumentasi terbaru
         const serverRefId = res.data.otp_refId || res.data.refId || res.data.referenceId;
         if (!serverRefId) {
           throw new Error("Bridge tidak mengembalikan ID Referensi (otp_refId).");
@@ -186,9 +189,8 @@ export default function OvoDashboardPage() {
       });
 
       if (res.success && res.data && ovoRef) {
-        // Ambil token dan deviceId yang dikembalikan oleh server pada step final
         await setDoc(ovoRef, {
-          username: phone, // Menggunakan nomor yang diinput di step 1
+          username: phone,
           token: res.data.token,
           deviceId: res.data.deviceId,
           updatedAt: serverTimestamp()
@@ -250,7 +252,6 @@ export default function OvoDashboardPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Balance Card */}
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#4C2B9A]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
@@ -512,7 +513,7 @@ export default function OvoDashboardPage() {
                    Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                    ))
-                ) : mutations.length === 0 ? (
+                ) : (!Array.isArray(mutations) || mutations.length === 0) ? (
                   <tr>
                     <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
                        <div className="flex flex-col items-center gap-3 opacity-20">
