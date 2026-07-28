@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -385,8 +384,8 @@ export default function GopayPage() {
                       )}
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors p-2">
-                    <Image src="/assets/main/gm.png" alt="GoPay" width={32} height={32} className="object-contain" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors p-2.5">
+                    <Image src="/assets/main/gm.png" alt="GoPay" width={40} height={40} className="w-10 h-10 object-contain" />
                   </div>
                 </div>
                 
@@ -444,7 +443,7 @@ export default function GopayPage() {
                         Disconnect
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-3xl border-border">
+                    <AlertDialogContent className="rounded-3xl border-border w-[94vw] md:max-w-sm">
                       <AlertDialogHeader>
                         <AlertDialogTitle className="font-headline font-bold">Disconnect GoPay Account?</AlertDialogTitle>
                         <AlertDialogDescription className="text-sm">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -314,8 +313,8 @@ export default function ShopeepayDashboardPage() {
                       )}
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors p-2">
-                    <Image src="/assets/main/spm.png" alt="ShopeePay" width={32} height={32} className="object-contain" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors p-2.5">
+                    <Image src="/assets/main/spm.png" alt="ShopeePay" width={40} height={40} className="w-10 h-10 object-contain" />
                   </div>
                 </div>
                 

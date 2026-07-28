@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -402,8 +401,8 @@ export default function OrkutPage() {
                       <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-2.5">
-                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={32} height={32} className="object-contain" />
+                  <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-2.5">
+                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={40} height={40} className="w-10 h-10 object-contain" />
                   </div>
                 </div>
                 
