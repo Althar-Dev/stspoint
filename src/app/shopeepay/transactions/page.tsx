@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,11 +98,11 @@ export default function ShopeepayTransactionsPage() {
       toast({ variant: "destructive", title: "Export Gagal", description: "Tidak ada data untuk diekspor." });
       return;
     }
-    const headers = ["Waktu", "ID Transaksi", "Nama Toko", "Nominal", "Status"];
+    const headers = ["Waktu", "ID Transaksi", "Metode", "Nominal", "Status"];
     const rows = filteredMutations.map(m => [
       m.created_at,
       m.transaction_id,
-      m.store_name,
+      "ShopeePay",
       m.amount,
       m.status
     ]);
@@ -126,12 +125,12 @@ export default function ShopeepayTransactionsPage() {
     const tableData = filteredMutations.map(m => [
       m.created_at,
       m.transaction_id,
-      m.store_name,
+      "ShopeePay",
       m.amount.toLocaleString('id-ID'),
       m.status
     ]);
     autoTable(doc, {
-      head: [['Waktu', 'ID Transaksi', 'Toko', 'Nominal (IDR)', 'Status']],
+      head: [['Waktu', 'ID Transaksi', 'Metode Pembayaran', 'Nominal (IDR)', 'Status']],
       body: tableData,
       startY: 20,
       theme: 'grid',
@@ -182,7 +181,7 @@ export default function ShopeepayTransactionsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             className="pl-9 h-11 bg-card border-border rounded-xl shadow-sm text-sm" 
-            placeholder="Cari ID Transaksi atau Nama Toko..." 
+            placeholder="Cari ID Transaksi..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -205,7 +204,7 @@ export default function ShopeepayTransactionsPage() {
               <tr className="border-b border-border">
                 <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Waktu Transaksi</th>
                 <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">ID Transaksi</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Nama Toko</th>
+                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Metode Pembayaran</th>
                 <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center whitespace-nowrap">Nominal</th>
                 <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
               </tr>
@@ -244,11 +243,16 @@ export default function ShopeepayTransactionsPage() {
                     <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
                       {item.created_at}
                     </td>
-                    <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase">
+                    <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase text-foreground/80">
                       {item.transaction_id}
                     </td>
-                    <td className="px-6 py-4 font-bold text-foreground/80 whitespace-nowrap">
-                      {item.store_name || "Shopee Outlet"}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#EE4D2D]/10 flex items-center justify-center p-1">
+                          <img src="/assets/main/spm.png" alt="ShopeePay" className="w-full h-full object-contain" />
+                        </div>
+                        <span className="font-bold text-xs">ShopeePay</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-center font-bold text-[13px] text-[#EE4D2D]">
                       Rp {item.amount.toLocaleString('id-ID')}
@@ -268,7 +272,7 @@ export default function ShopeepayTransactionsPage() {
         </div>
       </Card>
       <div className="text-center pt-4 opacity-30">
-         <p className="text-[9px] font-bold uppercase tracking-[0.4em]">STSPoint Analytics Node • Data Export Enabled</p>
+         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint Analytics Node • Data Export Enabled</p>
       </div>
     </div>
   );
