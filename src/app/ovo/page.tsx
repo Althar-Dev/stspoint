@@ -90,21 +90,17 @@ export default function OvoDashboardPage() {
   const isLoading = authLoading || serviceLoading;
 
   /**
-   * Helper: Parse numeric values safely from OVO string/object formats
+   * Helper: Parse numeric values safely from OVO formats
    */
   const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return val;
     if (typeof val === 'string') return parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
-    if (typeof val === 'object') {
-      // Handle card_balance structure from documentation
-      return parseNumericValue(val.card_balance || val.amount || val.value || 0);
-    }
     return 0;
   };
 
   /**
-   * Data Fetching Logic - Aligned 100% with API Docs
+   * Data Fetching Logic - Aligned with OVO Bridge API Docs
    */
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -115,15 +111,13 @@ export default function OvoDashboardPage() {
           getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 15 })
         ]);
 
-        // 1. Map Balance (data.cash.card_balance)
         if (balanceRes.success && balanceRes.data) {
           setBalances({
-            cash: parseNumericValue(balanceRes.data.cash),
-            points: parseNumericValue(balanceRes.data.point)
+            cash: parseNumericValue(balanceRes.data.cash?.card_balance || 0),
+            points: parseNumericValue(balanceRes.data.point?.card_balance || 0)
           });
         }
 
-        // 2. Map Mutations (data.orders array)
         if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
           setMutations(mutationRes.data.orders);
         } else {
@@ -194,7 +188,6 @@ export default function OvoDashboardPage() {
     try {
       const res = await verifyOvoPin({ refId, pin: pinCode });
       if (res.success && res.data && ovoRef) {
-        // Save the final persistent Token and DeviceId as per Docs Step 3
         await setDoc(ovoRef, {
           username: phone || "OVO User",
           token: res.data.token,
@@ -370,7 +363,7 @@ export default function OvoDashboardPage() {
                       <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
                       <div className="flex items-baseline gap-2">
                         {dataLoading ? <Skeleton className="h-10 w-48 mt-1" /> : (
-                          <h2 className="text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
+                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
                             Rp {balances.cash.toLocaleString('id-ID')}
                           </h2>
                         )}
@@ -504,7 +497,7 @@ export default function OvoDashboardPage() {
                      Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                      ))
-                  ) : mutations.length === 0 ? (
+                  ) : !Array.isArray(mutations) || mutations.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
                          <div className="flex flex-col items-center gap-3 opacity-20">

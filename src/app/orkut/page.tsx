@@ -394,7 +394,7 @@ export default function OrkutPage() {
                       {isSyncingBalance ? (
                          <Skeleton className="h-10 w-48 mt-1" />
                       ) : (
-                        <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                        <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
                           Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
                         </h2>
                       )}
@@ -432,10 +432,7 @@ export default function OrkutPage() {
           <div className="p-6 flex-1 space-y-6">
             {isLoading ? (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                </div>
+                <Skeleton className="h-4 w-24" />
                 <div className="space-y-4">
                   <Skeleton className="h-14 w-full rounded-2xl" />
                   <Skeleton className="h-10 w-full rounded-xl" />
@@ -444,7 +441,7 @@ export default function OrkutPage() {
             ) : !isConnected ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
                 <ShieldAlert className="w-6 h-6" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">Service Status</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-center">Service Status</p>
                 <p className="text-sm font-bold text-orange-600">DISCONNECTED</p>
               </div>
             ) : (

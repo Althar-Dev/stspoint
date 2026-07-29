@@ -305,7 +305,7 @@ export default function ShopeepayDashboardPage() {
                         <Skeleton className="h-10 w-48 mt-1" />
                       ) : (
                         <>
-                          <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
                             Rp {stats.totalNetSales.toLocaleString('id-ID')}
                           </h2>
                           <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>

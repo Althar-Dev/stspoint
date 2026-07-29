@@ -287,7 +287,7 @@ export default function GopayPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-bold text-lg">GoPay Not Connected</h3>
-                  <p className="text-xs text-muted-foreground max-w-xs">
+                  <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                     Connect your GoPay Merchant account to start monitoring balances and automatic transactions.
                   </p>
                 </div>
@@ -376,7 +376,7 @@ export default function GopayPage() {
                         <Skeleton className="h-10 w-48 mt-1" />
                       ) : (
                         <>
-                          <h2 className="text-4xl font-headline font-bold tracking-tighter">
+                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
                             Rp {totalRevenue.toLocaleString('id-ID')}
                           </h2>
                           <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>

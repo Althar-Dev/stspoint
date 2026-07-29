@@ -326,7 +326,7 @@ export default function OverviewPage() {
                   <Badge variant="outline" className="bg-green-50/5 text-green-600 border-green-500/20 font-bold text-[9px] px-2 py-0.5 rounded-md hidden sm:flex">Verified</Badge>
                 </div>
                 <div className="my-2 md:my-4">
-                  <h2 className="text-2xl md:text-4xl font-headline font-bold tracking-tighter">
+                  <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
                     Rp {(profile?.balance || 0).toLocaleString('id-ID')}
                   </h2>
                 </div>
