@@ -17,6 +17,8 @@ import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
  * API: Check Orderkuota Transaction Status
  * Method: POST
  * URL: /orkut/status (via api subdomain)
+ * 
+ * FIX: Menambahkan pengecekan waktu mutasi agar tidak mengambil transaksi lama.
  */
 export async function POST(request: Request) {
   try {
@@ -140,10 +142,21 @@ export async function POST(request: Request) {
 
       if (mutationRes.status && mutationRes.result && Array.isArray(mutationRes.result)) {
         const mutations = mutationRes.result;
-        const match = mutations.find(m => 
-          m.status === 'IN' && 
-          Math.abs(parseFloat(m.kredit) - transactionData.amount) < 1
-        );
+        
+        // --- FIX: JANGAN CEK TRANSAKSI SEBELUMNYA ---
+        // Ambil waktu pembuatan transaksi dalam milidetik
+        const txCreatedAtMillis = transactionData.createdAt?.toMillis 
+          ? transactionData.createdAt.toMillis() 
+          : new Date(transactionData.createdAt).getTime();
+
+        const match = mutations.find(m => {
+          // Parsing tanggal mutasi (format: YYYY-MM-DD HH:mm:ss)
+          const mCreatedAtMillis = new Date(m.tanggal).getTime();
+          
+          return m.status === 'IN' && 
+                 Math.abs(parseFloat(m.kredit) - transactionData.amount) < 1 &&
+                 mCreatedAtMillis >= (txCreatedAtMillis - 30000); // 30s buffer
+        });
 
         if (match) {
           // Update technical record and ledgers
@@ -195,9 +208,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API Orkut Status Error:', error);
-    return NextResponse.json({ 
+    return { 
       success: false, 
       message: 'Internal Server Error: ' + (error.message || 'Unknown error') 
-    }, { status: 500 });
+    };
   }
 }
