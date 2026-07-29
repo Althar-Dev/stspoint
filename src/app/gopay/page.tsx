@@ -122,12 +122,6 @@ export default function GopayPage() {
               updatedAt: serverTimestamp()
             });
           }
-        } else if (res.status === "error") {
-          toast({ 
-            variant: "destructive", 
-            title: "Sync Failed", 
-            description: res.message || "Ensure the GoPay account is still active." 
-          });
         }
       } catch (error) {
         console.error("Failed to fetch live GoPay mutations:", error);
@@ -265,15 +259,17 @@ export default function GopayPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card text-card-foreground p-0.5 overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#00AED6]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
+          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[220px]">
             {isLoading ? (
-              <div className="space-y-6">
-                <div className="flex justify-between">
+              <div className="space-y-6 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-10 w-64" />
                   </div>
                   <Skeleton className="w-12 h-12 rounded-2xl" />
+                </div>
+                <div className="pb-4">
+                  <Skeleton className="h-10 w-64" />
                 </div>
                 <div className="flex gap-3 pt-6 border-t border-border">
                   <Skeleton className="h-12 w-32 rounded-xl" />
@@ -368,25 +364,26 @@ export default function GopayPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Total Revenue (GoPay)</p>
-                    <div className="flex items-baseline gap-2">
-                      {mutationsLoading ? (
-                        <Skeleton className="h-10 w-48 mt-1" />
-                      ) : (
-                        <>
-                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
-                            Rp {totalRevenue.toLocaleString('id-ID')}
-                          </h2>
-                          <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
-                        </>
-                      )}
-                    </div>
                   </div>
                   <div className="w-14 h-14 rounded-2xl bg-[#00AED6]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#00AED6]/20 transition-colors p-1.5">
                     <Image src="/assets/main/gm.png" alt="GoPay" width={48} height={48} className="w-12 h-12 object-contain" />
                   </div>
+                </div>
+                
+                <div className="pb-4">
+                  {mutationsLoading ? (
+                    <Skeleton className="h-10 w-48 mt-1" />
+                  ) : (
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
+                        Rp {totalRevenue.toLocaleString('id-ID')}
+                      </h2>
+                      <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex wrap gap-3 pt-6 border-t border-border">

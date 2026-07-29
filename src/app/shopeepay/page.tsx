@@ -228,15 +228,17 @@ export default function ShopeepayDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#EE4D2D]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
+          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[220px]">
             {isLoading ? (
-              <div className="space-y-6">
-                <div className="flex justify-between">
+              <div className="space-y-6 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-10 w-64" />
                   </div>
                   <Skeleton className="w-12 h-12 rounded-2xl" />
+                </div>
+                <div className="pb-4">
+                  <Skeleton className="h-10 w-48 mt-1" />
                 </div>
                 <div className="flex gap-3 pt-6 border-t border-border">
                   <Skeleton className="h-12 w-32 rounded-xl" />
@@ -297,25 +299,26 @@ export default function ShopeepayDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Total Net Sales (Hari Ini)</p>
-                    <div className="flex items-baseline gap-2">
-                      {mutationsLoading ? (
-                        <Skeleton className="h-10 w-48 mt-1" />
-                      ) : (
-                        <>
-                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
-                            Rp {stats.totalNetSales.toLocaleString('id-ID')}
-                          </h2>
-                          <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
-                        </>
-                      )}
-                    </div>
                   </div>
                   <div className="w-14 h-14 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors p-2.5">
                     <Image src="/assets/main/spm.png" alt="ShopeePay" width={40} height={40} className="w-10 h-10 object-contain" />
                   </div>
+                </div>
+                
+                <div className="pb-4">
+                  {mutationsLoading ? (
+                    <Skeleton className="h-10 w-48 mt-1" />
+                  ) : (
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#EE4D2D]">
+                        Rp {stats.totalNetSales.toLocaleString('id-ID')}
+                      </h2>
+                      <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
@@ -344,7 +347,10 @@ export default function ShopeepayDashboardPage() {
           <div className="p-6 flex-1 space-y-6">
             {isLoading ? (
               <div className="space-y-6">
-                <Skeleton className="h-4 w-24" />
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
                 <div className="space-y-4">
                   <Skeleton className="h-14 w-full rounded-2xl" />
                   <Skeleton className="h-10 w-full rounded-xl" />

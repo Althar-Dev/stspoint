@@ -87,7 +87,7 @@ export default function OvoDashboardPage() {
   const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
 
   const isConnected = !!ovo?.token;
-  const isLoading = authLoading || serviceLoading;
+  const isLoading = authLoading || serviceLoading || (!!user && !ovoRef);
 
   /**
    * Helper: Parse numeric values safely from OVO formats
@@ -100,7 +100,7 @@ export default function OvoDashboardPage() {
   };
 
   /**
-   * Data Fetching Logic - Aligned with OVO Bridge API Docs
+   * Data Fetching Logic - Aligned with AltharDev OVO Bridge API Docs
    */
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -112,6 +112,7 @@ export default function OvoDashboardPage() {
         ]);
 
         if (balanceRes.success && balanceRes.data) {
+          // Extract specific numerical values from docs: data.cash.card_balance
           setBalances({
             cash: parseNumericValue(balanceRes.data.cash?.card_balance || 0),
             points: parseNumericValue(balanceRes.data.point?.card_balance || 0)
@@ -119,6 +120,7 @@ export default function OvoDashboardPage() {
         }
 
         if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
+          // Extract array from docs: data.orders
           setMutations(mutationRes.data.orders);
         } else {
           setMutations([]);
@@ -151,7 +153,7 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        setRefId(res.data.otp_refId);
+        setRefId(res.data.otp_refId); // Docs: otp_refId
         toast({ title: "OTP Sent", description: res.message });
         setStep(2);
       } else {
@@ -188,6 +190,7 @@ export default function OvoDashboardPage() {
     try {
       const res = await verifyOvoPin({ refId, pin: pinCode });
       if (res.success && res.data && ovoRef) {
+        // Save token and deviceId from docs success response
         await setDoc(ovoRef, {
           username: phone || "OVO User",
           token: res.data.token,
@@ -254,14 +257,20 @@ export default function OvoDashboardPage() {
         {/* Balance Card */}
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#4C2B9A]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
+          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[220px]">
             {isLoading ? (
-              <div className="space-y-6">
-                <div className="flex justify-between">
+              <div className="space-y-6 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-10 w-64" />
                   </div>
+                  <Skeleton className="w-12 h-12 rounded-2xl" />
+                </div>
+                <div className="pb-4">
+                  <Skeleton className="h-10 w-48 mt-1" />
+                </div>
+                <div className="flex gap-3 pt-6 border-t border-border">
+                  <Skeleton className="h-12 w-32 rounded-xl" />
                 </div>
               </div>
             ) : !isConnected ? (
@@ -323,7 +332,7 @@ export default function OvoDashboardPage() {
                               placeholder="xxxx" 
                               value={otpCode} 
                               onChange={(e) => setOtpCode(e.target.value)}
-                              className="h-14 text-center text-2xl font-headline font-bold tracking-[0.5em] rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all"
+                              className="h-14 text-center text-2xl font-headline font-bold tracking-[0.5em] rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                               maxLength={6}
                             />
                           </div>
@@ -342,7 +351,7 @@ export default function OvoDashboardPage() {
                               placeholder="••••••" 
                               value={pinCode} 
                               onChange={(e) => setPinCode(e.target.value)}
-                              className="h-14 text-center text-xl font-headline font-bold tracking-[0.8em] rounded-xl bg-muted/50 border-transparent focus:bg-background transition-all"
+                              className="h-14 text-center text-xl font-headline font-bold tracking-[0.8em] rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                               maxLength={6}
                             />
                           </div>
@@ -357,18 +366,10 @@ export default function OvoDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-6">
                     <div className="space-y-1">
                       <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
-                      <div className="flex items-baseline gap-2">
-                        {dataLoading ? <Skeleton className="h-10 w-48 mt-1" /> : (
-                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
-                            Rp {balances.cash.toLocaleString('id-ID')}
-                          </h2>
-                        )}
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Sync Active</Badge>
-                      </div>
                     </div>
                     <div className="space-y-0.5">
                        <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO Points</p>
@@ -381,6 +382,20 @@ export default function OvoDashboardPage() {
                     <img src="/assets/main/ovo.png" alt="OVO" className="w-12 h-12 object-contain" />
                   </div>
                 </div>
+
+                <div className="pb-4">
+                  {dataLoading ? (
+                    <Skeleton className="h-10 w-48 mt-1" />
+                  ) : (
+                    <div className="flex items-baseline gap-2">
+                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
+                        Rp {balances.cash.toLocaleString('id-ID')}
+                      </h2>
+                      <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Sync Active</Badge>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex wrap gap-3 pt-6 border-t border-border">
                   <Button 
                     variant="outline" 
@@ -480,7 +495,7 @@ export default function OvoDashboardPage() {
                 <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
                 OVO Transactions
              </CardTitle>
-             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Records</Badge>
+             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{Array.isArray(mutations) ? mutations.length : 0} Records</Badge>
           </CardHeader>
           <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
              <table className="w-full min-w-[700px] text-left text-xs">

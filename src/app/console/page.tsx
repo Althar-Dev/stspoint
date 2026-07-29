@@ -98,7 +98,6 @@ export default function OverviewPage() {
   }, [db, user?.uid]);
   const { data: rawTransactions, loading: txLoading } = useCollection(transactionsQuery);
 
-  // Helper to determine effective status based on normalized success states
   const getEffectiveStatus = (status: string, createdAt: any) => {
     const s = String(status).toUpperCase();
     if (['PAID', 'SUCCESS', 'SETTLED', 'SUCCEEDED', 'COMPLETED'].includes(s)) return 'Success';
@@ -106,7 +105,6 @@ export default function OverviewPage() {
     if (!createdAt) return status;
     const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
     const diffInMinutes = (new Date().getTime() - date.getTime()) / 60000;
-    // Set to Failed if more than 15 minutes
     return diffInMinutes > 15 ? 'Failed' : 'Pending';
   };
 
@@ -295,23 +293,27 @@ export default function OverviewPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 min-w-0">
         <Card className="border border-border shadow-sm rounded-2xl md:rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-6 md:p-8 flex flex-col justify-between min-h-[160px] md:min-h-[180px] relative z-10 h-full">
+          <CardContent className="p-6 md:p-8 flex flex-col min-h-[160px] md:min-h-[180px] relative z-10 h-full">
             {isGlobalLoading ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="flex items-center gap-3">
                     <Skeleton className="w-8 h-8 rounded-lg" />
                     <div className="space-y-1">
                       <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-3 w-12" />
                     </div>
                   </div>
                 </div>
-                <Skeleton className="h-10 w-40" />
+                <div className="pb-4">
+                  <Skeleton className="h-10 w-40" />
+                </div>
+                <div className="flex gap-2 pt-2 border-t border-border">
+                  <Skeleton className="h-9 flex-1 rounded-lg" />
+                </div>
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-auto">
                   <div className="flex items-center gap-2 md:gap-3">
                     <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center border border-border">
                       <Wallet className="w-4 h-4 text-primary" />
@@ -325,13 +327,14 @@ export default function OverviewPage() {
                   </div>
                   <Badge variant="outline" className="bg-green-50/5 text-green-600 border-green-500/20 font-bold text-[9px] px-2 py-0.5 rounded-md hidden sm:flex">Verified</Badge>
                 </div>
-                <div className="my-2 md:my-4">
+                
+                <div className="pb-4">
                   <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
                     Rp {(profile?.balance || 0).toLocaleString('id-ID')}
                   </h2>
                 </div>
+                
                 <div className="flex gap-2 pt-2 border-t border-border">
-                  
                   <Dialog open={isTopUpOpen} onOpenChange={(o) => {
                     setIsTopUpOpen(o);
                     if(!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); }
@@ -431,8 +434,6 @@ export default function OverviewPage() {
             {[
               { label: "API Key", icon: Key, color: "text-orange-500", bg: "bg-orange-500/10", href: "/console/developer/api-keys" },
               { label: "PPOB", icon: Smartphone, color: "text-blue-500", bg: "bg-blue-500/10", href: "/console/services/ppob" },
-              // { label: "SMM", icon: Users, color: "text-indigo-500", bg: "bg-indigo-500/10", href: "/console/services/smm" },
-              // { label: "OTP", icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10", href: "/console/services/nokos" },
             ].map((item, i) => (
               <Link href={item.href} key={i} className="block min-w-0">
                 <Button variant="ghost" className="w-full h-auto py-4 px-1 flex flex-col gap-2 rounded-xl border border-border/50 hover:bg-primary/5 transition-all group overflow-hidden">

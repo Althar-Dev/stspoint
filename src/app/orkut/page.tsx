@@ -274,15 +274,17 @@ export default function OrkutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card text-card-foreground p-0.5 overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col justify-between min-h-[220px]">
+          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[220px]">
             {isLoading ? (
-              <div className="space-y-6">
-                <div className="flex justify-between">
+              <div className="space-y-6 h-full flex flex-col">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-10 w-64" />
                   </div>
                   <Skeleton className="w-12 h-12 rounded-2xl" />
+                </div>
+                <div className="pb-4">
+                  <Skeleton className="h-10 w-48 mt-1" />
                 </div>
                 <div className="flex gap-3 pt-6 border-t border-border">
                   <Skeleton className="h-12 w-32 rounded-xl" />
@@ -387,22 +389,25 @@ export default function OrkutPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available Balance (Orderkuota)</p>
-                    <div className="flex items-baseline gap-2">
-                      {isSyncingBalance ? (
-                         <Skeleton className="h-10 w-48 mt-1" />
-                      ) : (
-                        <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
-                          Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
-                        </h2>
-                      )}
-                      <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
-                    </div>
                   </div>
                   <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-1.5">
                     <Image src="/assets/img/orkut.png" alt="Orderkuota" width={48} height={48} className="w-12 h-12 object-contain" />
+                  </div>
+                </div>
+                
+                <div className="pb-4">
+                  <div className="flex items-baseline gap-2">
+                    {isSyncingBalance ? (
+                       <Skeleton className="h-10 w-48 mt-1" />
+                    ) : (
+                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
+                        Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
+                      </h2>
+                    )}
+                    <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
                   </div>
                 </div>
                 
@@ -570,7 +575,6 @@ export default function OrkutPage() {
         </Card>
       </div>
 
-      {/* Responsive Table Wrapper */}
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="w-full max-w-full border border-border shadow-sm rounded-xl overflow-hidden bg-card h-[455px] flex flex-col">
           <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] shrink-0">
