@@ -358,7 +358,7 @@ export default function ShopeepayDashboardPage() {
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Node Info</h4>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Info</h4>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase">

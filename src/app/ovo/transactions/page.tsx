@@ -113,9 +113,6 @@ export default function OvoTransactionsPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-           <Button variant="ghost" size="icon" asChild className="rounded-xl">
-              <Link href="/ovo"><ArrowLeft className="w-5 h-5" /></Link>
-           </Button>
            <div>
               <h1 className="text-2xl font-headline font-bold tracking-tight">OVO <span className="text-[#4C2B9A]">History</span></h1>
               <p className="text-muted-foreground text-sm">Audit log lengkap transaksi akun OVO Anda.</p>

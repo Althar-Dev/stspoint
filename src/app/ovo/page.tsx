@@ -277,7 +277,7 @@ export default function OvoDashboardPage() {
                   <LinkIcon className="w-8 h-8 text-[#4C2B9A]/40" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-bold text-lg">OVO Bridge Inactive</h3>
+                  <h3 className="font-bold text-lg">OVO Inactive</h3>
                   <p className="text-xs text-muted-foreground max-w-xs mx-auto">Connect your OVO account to automate mutations and balance checks.</p>
                 </div>
                 <Dialog open={isDialogOpen} onOpenChange={(open) => {
