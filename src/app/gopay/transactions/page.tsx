@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +9,14 @@ import {
   Search, 
   RefreshCcw, 
   Calendar,
-  ShieldAlert,
   Clock,
-  User as UserIcon,
   Download,
-  Loader2,
   FileText,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ShieldAlert,
+  Loader2
 } from "lucide-react";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { getGoMerchantMutations, type GoMerchantMutationItem } from "@/lib/gomerchant/mutation";
@@ -26,6 +24,7 @@ import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { User as UserIcon } from "lucide-react";
 
 export default function GopayTransactionsPage() {
   const { user, loading: authLoading } = useUser();
@@ -249,19 +248,19 @@ export default function GopayTransactionsPage() {
             </Badge>
           </CardHeader>
           <div className="w-full flex-1 overflow-x-auto overflow-y-auto max-h-[600px]">
-            <table className="w-full min-w-full text-xs text-left">
+            <table className="w-full min-w-[850px] text-xs text-left">
               <thead className="sticky top-0 z-10 bg-muted/50">
                 <tr>
-                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
-                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Transaction ID</th>
-                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Customer</th>
-                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest whitespace-nowrap">Amount</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Time</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Transaction ID</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Customer</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Amount</th>
                   <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {isGlobalLoading || loading ? (
-                  Array.from({ length: 12 }).map((_, i) => (
+                   Array.from({ length: 12 }).map((_, i) => (
                     <tr key={i}>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
                       <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
@@ -279,13 +278,13 @@ export default function GopayTransactionsPage() {
                         </div>
                         <div className="space-y-1">
                           <p className="font-bold text-base uppercase tracking-widest text-foreground">Account Not Connected</p>
-                          <p className="text-sm max-w-xs mx-auto">Please connect your GoPay Merchant account on the main Dashboard to view mutation history.</p>
+                          <p className="text-sm max-w-xs mx-auto text-muted-foreground">Please connect your GoPay Merchant account on the main Dashboard to view mutation history.</p>
                         </div>
                       </div>
                     </td>
                   </tr>
                 ) : filteredMutations.length === 0 ? (
-                  <tr>
+                   <tr>
                     <td colSpan={5} className="px-6 py-24 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-3 w-full">
                         <Clock className="w-10 h-10 opacity-20" />
@@ -294,30 +293,30 @@ export default function GopayTransactionsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredMutations.map((log, i) => (
+                  filteredMutations.map((item, i) => (
                     <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-                        {formatTrxDate(log.created_at)}
+                        {formatTrxDate(item.created_at)}
                       </td>
-                      <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase">
-                        {log.trx_id}
+                      <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap uppercase">
+                        {item.trx_id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-primary/5 flex items-center justify-center">
                             <UserIcon className="w-3 h-3 text-muted-foreground" />
                           </div>
-                          <span className="font-bold text-xs">{log.customer_name || "GoPay Customer"}</span>
+                          <span className="font-bold text-xs">{item.customer_name || "GoPay Customer"}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-[#00AED6] text-[13px] whitespace-nowrap">
-                        Rp {log.amount.toLocaleString('id-ID')}
+                      <td className="px-6 py-4 font-bold text-sm whitespace-nowrap">
+                        Rp {item.amount.toLocaleString('id-ID')}
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <Badge className={`${
-                          log.status === 'paid' ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'
+                          item.status === 'paid' ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'
                         } border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm`}>
-                          {log.status === 'paid' ? 'Success' : log.status}
+                          Success
                         </Badge>
                       </td>
                     </tr>

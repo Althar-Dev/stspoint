@@ -11,9 +11,10 @@ import {
   Calendar,
   Clock,
   Download,
-  Loader2,
   FileText,
-  ArrowLeft
+  ArrowLeft,
+  Loader2,
+  ShieldAlert
 } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -59,9 +60,10 @@ export default function OvoTransactionsPage() {
           limit: 100 
         });
         
-        // Aligned with Docs: Data is in data.orders
-        if (res.success && res.data && Array.isArray(res.data.orders)) {
-          setMutations(res.data.orders);
+        if (res.success && res.data) {
+          // Robust array extraction based on latest OVO documentation
+          const orders = res.data.orders || [];
+          setMutations(Array.isArray(orders) ? orders : []);
         } else {
           setMutations([]);
         }
@@ -81,6 +83,7 @@ export default function OvoTransactionsPage() {
   }, [isConnected, fetchMutations]);
 
   const filteredMutations = useMemo(() => {
+    if (!Array.isArray(mutations)) return [];
     return mutations.filter(m => 
       (m.merchant_name || m.desc1 || "").toLowerCase().includes(search.toLowerCase())
     );
@@ -102,7 +105,8 @@ export default function OvoTransactionsPage() {
       head: [['Waktu', 'Merchant / Deskripsi', 'Amount (IDR)', 'Status']],
       body: tableData,
       startY: 20,
-      theme: 'grid'
+      theme: 'grid',
+      headStyles: { fillColor: [76, 43, 154] }
     });
 
     doc.save(`OVO_Journal_${format(new Date(), "yyyyMMdd")}.pdf`);
@@ -147,56 +151,72 @@ export default function OvoTransactionsPage() {
         </Button>
       </div>
 
-      <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card flex-1 min-h-[500px]">
-        <div className="w-full h-full overflow-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-muted/90 backdrop-blur-md z-10">
-              <tr className="border-b border-border">
-                <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Waktu Transaksi</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Merchant / Detail</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center whitespace-nowrap">Nominal</th>
-                <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading || isGlobalLoading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
-                ))
-              ) : filteredMutations.length === 0 ? (
-                <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">Tidak ada transaksi ditemukan.</td></tr>
-              ) : (
-                filteredMutations.map((item, i) => {
-                  const amtValue = parseNumericValue(item.transaction_amount);
-                  const isTopup = String(item.transaction_type || "").includes("TOPUP") || item.emoney_topup > 0;
+      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
+        <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card flex-1 min-h-[500px]">
+          <div className="w-full h-full overflow-x-auto overflow-y-auto">
+            <table className="w-full min-w-[850px] text-left text-xs">
+              <thead className="sticky top-0 bg-muted/90 backdrop-blur-md z-10">
+                <tr className="border-b border-border">
+                  <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Waktu Transaksi</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Merchant / Detail</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center whitespace-nowrap">Nominal</th>
+                  <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loading || isGlobalLoading ? (
+                  Array.from({ length: 10 }).map((_, i) => (
+                    <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
+                  ))
+                ) : !isConnected ? (
+                  <tr>
+                    <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-4 w-full">
+                        <div className="p-4 bg-muted rounded-full">
+                          <ShieldAlert className="w-12 h-12 opacity-30" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-bold text-base uppercase tracking-widest text-foreground">Akun Belum Terhubung</p>
+                          <p className="text-sm max-w-xs mx-auto text-muted-foreground">Silakan hubungkan akun OVO Anda di Dashboard untuk melihat riwayat mutasi.</p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredMutations.length === 0 ? (
+                  <tr><td colSpan={4} className="py-32 text-center text-muted-foreground italic">Tidak ada transaksi ditemukan.</td></tr>
+                ) : (
+                  filteredMutations.map((item, i) => {
+                    const amtValue = parseNumericValue(item.transaction_amount);
+                    const isTopup = String(item.transaction_type || "").includes("TOPUP") || (item.emoney_topup && item.emoney_topup > 0);
 
-                  return (
-                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-                        {item.transaction_date || ""} {item.transaction_time || ""}
-                      </td>
-                      <td className="px-6 py-4">
-                         <div className="flex flex-col">
-                            <span className="font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</span>
-                            <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">{item.desc2}</span>
-                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold">
-                        <span className={isTopup ? 'text-emerald-600' : 'text-rose-500'}>
-                          {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
-                        </span>
-                      </td>
-                      <td className="px-8 py-4 text-right">
-                         <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">{item.status || "SUCCESS"}</Badge>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                    return (
+                      <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                          {item.transaction_date || ""} {item.transaction_time || ""}
+                        </td>
+                        <td className="px-6 py-4">
+                           <div className="flex flex-col">
+                              <span className="font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</span>
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[250px]">{item.desc2}</span>
+                           </div>
+                        </td>
+                        <td className="px-6 py-4 text-center font-bold whitespace-nowrap">
+                          <span className={isTopup ? 'text-emerald-600' : 'text-rose-500'}>
+                            {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
+                          </span>
+                        </td>
+                        <td className="px-8 py-4 text-right whitespace-nowrap">
+                           <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] uppercase px-2 py-0.5 rounded-sm">{item.status || "SUCCESS"}</Badge>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

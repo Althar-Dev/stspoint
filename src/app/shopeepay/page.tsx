@@ -44,6 +44,7 @@ import {
   ArrowUpRight,
   Loader2,
   User as UserIcon,
+  QrCode,
   Save,
   Settings as SettingsIcon,
   Hash,
@@ -56,7 +57,6 @@ import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
-import { Icon } from "@iconify/react";
 import { format } from "date-fns";
 import { getShopeeMutations, type ShopeeMutationItem } from "@/lib/shopeepay/mutasi";
 
@@ -437,77 +437,79 @@ export default function ShopeepayDashboardPage() {
         </Card>
       </div>
 
-      <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
-        <CardHeader className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between">
-           <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-              <RefreshCcw className={`w-4 h-4 text-[#EE4D2D] ${mutationsLoading ? 'animate-spin' : ''}`} />
-              ShopeePay Transaction Log
-           </CardTitle>
-           <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
-             {mutations.length} Data Terbaru
-           </Badge>
-        </CardHeader>
-        <div className="flex-1 overflow-auto w-full">
-           <table className="w-full min-w-full text-xs text-left">
-              <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md">
-                <tr>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Transaction ID</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Amount</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {mutationsLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i}>
-                      <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
-                      <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
-                      <td className="px-6 py-4 text-right"><Skeleton className="h-4 w-12 ml-auto" /></td>
-                    </tr>
-                  ))
-                ) : !isConnected ? (
+      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
+        <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
+          <CardHeader className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
+             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                <RefreshCcw className={`w-4 h-4 text-[#EE4D2D] ${mutationsLoading ? 'animate-spin' : ''}`} />
+                ShopeePay Transaction Log
+             </CardTitle>
+             <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
+               {mutations.length} Data Terbaru
+             </Badge>
+          </CardHeader>
+          <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
+             <table className="w-full min-w-[700px] text-xs text-left">
+                <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-md">
                   <tr>
-                    <td colSpan={4} className="px-6 py-24 text-center text-muted-foreground">
-                       <div className="flex flex-col items-center gap-2 opacity-20">
-                          <LinkIcon className="w-10 h-10" />
-                          <p className="text-[10px] font-bold uppercase tracking-widest">Connect account to see logs</p>
-                       </div>
-                    </td>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Transaction ID</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Amount</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
                   </tr>
-                ) : mutations.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-24 text-center text-muted-foreground opacity-20">
-                       <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada transaksi ditemukan</p>
-                    </td>
-                  </tr>
-                ) : (
-                  mutations.map((item) => (
-                    <tr key={item.transaction_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap uppercase">
-                         {item.created_at}
-                      </td>
-                      <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase text-foreground/80">
-                         {item.transaction_id}
-                      </td>
-                      <td className="px-6 py-4 font-bold text-[13px] whitespace-nowrap text-[#EE4D2D]">
-                         Rp {item.amount.toLocaleString('id-ID')}
-                      </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                         <Badge className={`${
-                           item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
-                         } border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm shadow-none`}>
-                           {item.status}
-                         </Badge>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {mutationsLoading ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <tr key={i}>
+                        <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
+                        <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
+                        <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                        <td className="px-6 py-4 text-right"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : !isConnected ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-24 text-center text-muted-foreground">
+                         <div className="flex flex-col items-center gap-2 opacity-20">
+                            <LinkIcon className="w-10 h-10" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Connect account to see logs</p>
+                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-           </table>
-        </div>
-      </Card>
+                  ) : mutations.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-24 text-center text-muted-foreground opacity-20">
+                         <p className="text-[10px] font-bold uppercase tracking-widest">Belum ada transaksi ditemukan</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    mutations.map((item) => (
+                      <tr key={item.transaction_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap uppercase">
+                           {item.created_at}
+                        </td>
+                        <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase text-foreground/80">
+                           {item.transaction_id}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-[13px] whitespace-nowrap text-[#EE4D2D]">
+                           Rp {item.amount.toLocaleString('id-ID')}
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                           <Badge className={`${
+                             item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                           } border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm shadow-none`}>
+                             {item.status}
+                           </Badge>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+             </table>
+          </div>
+        </Card>
+      </div>
 
       <div className="text-center py-6 opacity-20">
          <p className="text-[9px] font-bold uppercase tracking-[0.4em]">STSPoint ShopeePay Engine v2.1-stable</p>

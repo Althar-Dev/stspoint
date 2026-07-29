@@ -389,7 +389,7 @@ export default function GopayPage() {
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
+                <div className="flex wrap gap-3 pt-6 border-t border-border">
                   <Button asChild className="bg-[#00AED6] text-white hover:bg-[#00AED6]/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-[#00AED6]/10 transition-all active:scale-95">
                     <Link href="/gopay/qris">Generate QRIS</Link>
                   </Button>
@@ -562,7 +562,7 @@ export default function GopayPage() {
             </div>
           </CardHeader>
           <div className="w-full flex-1 overflow-x-auto overflow-y-auto">
-             <table className="w-full min-w-full text-xs text-left">
+             <table className="w-full min-w-[750px] text-xs text-left">
               <thead className="sticky top-0 z-10 bg-muted/50">
                 <tr>
                   <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>

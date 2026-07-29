@@ -87,8 +87,7 @@ export default function ShopeepayTransactionsPage() {
   const filteredMutations = useMemo(() => {
     if (!Array.isArray(mutations)) return [];
     return mutations.filter(m => 
-      (m.transaction_id || "").toLowerCase().includes(search.toLowerCase()) ||
-      (m.store_name || "").toLowerCase().includes(search.toLowerCase())
+      (m.transaction_id || "").toLowerCase().includes(search.toLowerCase())
     );
   }, [mutations, search]);
 
@@ -98,7 +97,7 @@ export default function ShopeepayTransactionsPage() {
       toast({ variant: "destructive", title: "Export Gagal", description: "Tidak ada data untuk diekspor." });
       return;
     }
-    const headers = ["Waktu", "ID Transaksi", "Metode", "Nominal", "Status"];
+    const headers = ["Waktu", "ID Transaksi", "Metode Pembayaran", "Nominal", "Status"];
     const rows = filteredMutations.map(m => [
       m.created_at,
       m.transaction_id,
@@ -197,82 +196,93 @@ export default function ShopeepayTransactionsPage() {
         </Button>
       </div>
 
-      <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card flex-1 min-h-[500px]">
-        <div className="w-full h-full overflow-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-muted/90 backdrop-blur-md z-10">
-              <tr className="border-b border-border">
-                <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Waktu Transaksi</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">ID Transaksi</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Metode Pembayaran</th>
-                <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center whitespace-nowrap">Nominal</th>
-                <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading || isGlobalLoading ? (
-                Array.from({ length: 12 }).map((_, i) => (
-                  <tr key={i}><td colSpan={5} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
-                ))
-              ) : !isConnected ? (
+      <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
+        <Card className="border border-border shadow-sm rounded-xl overflow-hidden bg-card flex flex-col">
+          <CardHeader className="bg-slate-50/50 dark:bg-[#0A0A0A] py-4 px-6 border-b border-border shrink-0 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#00AED6]" />
+              ShopeePay Transaction Logs
+            </CardTitle>
+            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">
+              {loading ? "Counting..." : `${filteredMutations.length} Transactions Found`}
+            </Badge>
+          </CardHeader>
+          <div className="w-full flex-1 overflow-x-auto overflow-y-auto max-h-[600px]">
+            <table className="w-full min-w-[850px] text-xs text-left">
+              <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-md">
                 <tr>
-                  <td colSpan={5} className="px-8 py-24 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-4 w-full">
-                      <div className="p-4 bg-muted rounded-full">
-                        <ShieldAlert className="w-12 h-12 opacity-30" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-bold text-base uppercase tracking-widest text-foreground">Akun Belum Terhubung</p>
-                        <p className="text-sm max-w-xs mx-auto text-muted-foreground">Silakan hubungkan akun ShopeePay Anda di Dashboard untuk melihat riwayat mutasi.</p>
-                      </div>
-                    </div>
-                  </td>
+                  <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Waktu Transaksi</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">ID Transaksi</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Metode Pembayaran</th>
+                  <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-center whitespace-nowrap">Nominal</th>
+                  <th className="px-8 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
                 </tr>
-              ) : filteredMutations.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-8 py-24 text-center text-muted-foreground italic">
-                    <div className="flex flex-col items-center gap-2 opacity-30">
-                       <Clock className="w-10 h-10" />
-                       <p className="font-bold uppercase tracking-widest">Tidak ada transaksi ditemukan.</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredMutations.map((item) => (
-                  <tr key={item.transaction_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                    <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
-                      {item.created_at}
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase text-foreground/80">
-                      {item.transaction_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#EE4D2D]/10 flex items-center justify-center p-1">
-                          <img src="/assets/main/spm.png" alt="ShopeePay" className="w-full h-full object-contain" />
+              </thead>
+              <tbody className="divide-y divide-border">
+                {loading || isGlobalLoading ? (
+                  Array.from({ length: 12 }).map((_, i) => (
+                    <tr key={i}><td colSpan={5} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
+                  ))
+                ) : !isConnected ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-24 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-4 w-full">
+                        <div className="p-4 bg-muted rounded-full">
+                          <ShieldAlert className="w-12 h-12 opacity-30" />
                         </div>
-                        <span className="font-bold text-xs">ShopeePay</span>
+                        <div className="space-y-1">
+                          <p className="font-bold text-base uppercase tracking-widest text-foreground">Akun Belum Terhubung</p>
+                          <p className="text-sm max-w-xs mx-auto text-muted-foreground">Silakan hubungkan akun ShopeePay Anda di Dashboard untuk melihat riwayat mutasi.</p>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center font-bold text-[13px] text-[#EE4D2D]">
-                      Rp {item.amount.toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-8 py-4 text-right">
-                       <Badge className={`${
-                         item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
-                       } border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm`}>
-                         {item.status}
-                       </Badge>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      <div className="text-center pt-4 opacity-30">
-         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint Analytics Node • Data Export Enabled</p>
+                ) : filteredMutations.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-24 text-center text-muted-foreground italic">
+                      <div className="flex flex-col items-center gap-2 opacity-30">
+                         <Clock className="w-10 h-10" />
+                         <p className="font-bold uppercase tracking-widest">Tidak ada transaksi ditemukan.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMutations.map((item) => (
+                    <tr key={item.transaction_id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-8 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">
+                        {item.created_at}
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-[11px] whitespace-nowrap uppercase text-foreground/80">
+                        {item.transaction_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#EE4D2D]/10 flex items-center justify-center p-1">
+                            <img src="/assets/main/spm.png" alt="ShopeePay" className="w-full h-full object-contain" />
+                          </div>
+                          <span className="font-bold text-xs">ShopeePay</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center font-bold text-[13px] text-[#EE4D2D]">
+                        Rp {item.amount.toLocaleString('id-ID')}
+                      </td>
+                      <td className="px-8 py-4 text-right">
+                         <Badge className={`${
+                           item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                         } border-none font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm`}>
+                           {item.status}
+                         </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+      <div className="text-center py-6 opacity-20">
+         <p className="text-[9px] font-bold uppercase tracking-[0.4em]">STSPoint Analytics Node • Data Export Enabled</p>
       </div>
     </div>
   );
