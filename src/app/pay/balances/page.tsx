@@ -220,10 +220,6 @@ export default function STSPayBalancesPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-headline font-bold tracking-tight">STSPay <span className="text-primary">Balances</span></h1>
-          <p className="text-muted-foreground text-sm">Monitor your available revenue and upcoming settlements.</p>
-        </div>
         <div className="flex items-center gap-2">
            <Button variant="outline" size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2" onClick={() => window.location.reload()}>
             <RefreshCcw className={`w-3.5 h-3.5 ${isLoading && 'animate-spin'}`} /> Refresh Data
@@ -370,9 +366,9 @@ export default function STSPayBalancesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <Card className="lg:col-span-12 border-border shadow-sm rounded-2xl bg-card overflow-hidden">
           <CardHeader className="px-6 py-5 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-[12px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <History className="w-4 h-4 text-primary" />
-              Recent Financial Activity
+              Recent Activity
             </CardTitle>
           </CardHeader>
           <div className="overflow-x-auto">

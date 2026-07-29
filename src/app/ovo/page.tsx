@@ -483,11 +483,11 @@ export default function OvoDashboardPage() {
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
           <CardHeader className="px-8 py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
-             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+             <CardTitle className="text-[12px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                 <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
-                OVO Activity Journal
+                OVO Transactions
              </CardTitle>
-             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Transactions</Badge>
+             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Records</Badge>
           </CardHeader>
           <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
              <table className="w-full min-w-[700px] text-left text-xs">
@@ -545,9 +545,6 @@ export default function OvoDashboardPage() {
              </table>
           </div>
         </Card>
-      </div>
-      <div className="text-center pt-4 pb-8 opacity-20">
-         <p className="text-[9px] font-bold uppercase tracking-[0.5em]">STSPoint OVO Bridge v1.2.0 • Data Audited</p>
       </div>
     </div>
   );

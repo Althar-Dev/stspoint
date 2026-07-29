@@ -146,11 +146,11 @@ export default function STSPayDashboard() {
         <Card className="md:col-span-2 border-border shadow-sm rounded-md bg-card overflow-hidden">
           <CardHeader className="px-6 py-6 border-b border-border flex flex-row items-center justify-between dark:bg-[#0A0A0A]">
             <div className="space-y-1">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Transaction Quality</CardTitle>
-              <h2 className="text-2xl font-headline font-bold">Status Distribution</h2>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Transaction</CardTitle>
+              <h2 className="text-sm md:text-2xl font-headline font-bold">Status Distribution</h2>
             </div>
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold text-[9px] uppercase px-2 h-6">
-              {transactions.length} Total Records
+              {transactions.length} Records
             </Badge>
           </CardHeader>
           <CardContent className="p-6">
@@ -196,7 +196,7 @@ export default function STSPayDashboard() {
              <CardContent className="p-6 space-y-4 relative z-10">
                 <div className="flex items-center gap-2">
                    <Wallet className="w-4 h-4 opacity-70" />
-                   <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">STSPay Payout Balance</p>
+                   <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">STSPay Balance</p>
                 </div>
                 {stspayLoading ? <Skeleton className="h-10 w-full bg-white/20" /> : (
                   <h3 className="text-3xl font-headline font-bold">Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}</h3>
@@ -234,7 +234,7 @@ export default function STSPayDashboard() {
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="border-border shadow-sm rounded-md overflow-hidden bg-card">
            <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A] flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+              <CardTitle className="text-[12px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                 <History className="w-4 h-4 text-primary" />
                 Gateway Traffic
               </CardTitle>

@@ -17,6 +17,8 @@ import { getGoMerchantMutations } from '@/lib/gomerchant/mutation';
  * API: Check GoPay Transaction Status with Strict Plan Validation
  * Method: POST
  * URL: /gopay/status (via api subdomain)
+ * 
+ * FIX: Implementasi pengecekan waktu mutasi agar tidak mengambil transaksi sebelumnya.
  */
 export async function POST(request: Request) {
   try {
@@ -155,10 +157,21 @@ export async function POST(request: Request) {
 
       if (mutationRes.status === 'success' && mutationRes.data) {
         const mutations = mutationRes.data.mutations || [];
-        const match = mutations.find(m => 
-          m.status.toLowerCase() === 'paid' && 
-          Math.abs(m.amount - transactionData.amount) < 1
-        );
+        
+        // --- FIX: JANGAN CEK TRANSAKSI SEBELUMNYA ---
+        // Ambil waktu pembuatan transaksi dalam milidetik
+        const txCreatedAtMillis = transactionData.createdAt?.toMillis 
+          ? transactionData.createdAt.toMillis() 
+          : new Date(transactionData.createdAt).getTime();
+
+        const match = mutations.find(m => {
+          const mCreatedAtMillis = new Date(m.created_at).getTime();
+          
+          // Kriteria: Status PAID, Nominal Cocok, dan Waktu Mutasi >= Waktu Transaksi (-30s buffer)
+          return m.status.toLowerCase() === 'paid' && 
+                 Math.abs(m.amount - transactionData.amount) < 1 &&
+                 mCreatedAtMillis >= (txCreatedAtMillis - 30000); 
+        });
 
         if (match) {
           const userHistoryRef = doc(firestore, 'users', userId, 'transactions', external_id);

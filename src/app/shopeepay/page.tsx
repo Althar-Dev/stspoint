@@ -358,7 +358,7 @@ export default function ShopeepayDashboardPage() {
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Bridge Info</h4>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Connection Info</h4>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-red-500 hover:bg-red-50 text-[10px] font-bold uppercase">
@@ -440,12 +440,12 @@ export default function ShopeepayDashboardPage() {
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
           <CardHeader className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
-             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+             <CardTitle className="text-[10px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                 <RefreshCcw className={`w-4 h-4 text-[#EE4D2D] ${mutationsLoading ? 'animate-spin' : ''}`} />
-                ShopeePay Transaction Log
+                ShopeePay Transaction
              </CardTitle>
              <Badge variant="outline" className="text-[10px] font-bold border-border bg-background">
-               {mutations.length} Data Terbaru
+               {mutations.length} Records
              </Badge>
           </CardHeader>
           <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
@@ -509,10 +509,6 @@ export default function ShopeepayDashboardPage() {
              </table>
           </div>
         </Card>
-      </div>
-
-      <div className="text-center py-6 opacity-20">
-         <p className="text-[9px] font-bold uppercase tracking-[0.4em]">STSPoint ShopeePay Engine v2.1-stable</p>
       </div>
     </div>
   );

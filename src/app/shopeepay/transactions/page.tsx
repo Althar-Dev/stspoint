@@ -145,9 +145,6 @@ export default function ShopeepayTransactionsPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-accent shrink-0">
-             <Link href="/shopeepay"><ChevronLeft className="w-5 h-5" /></Link>
-          </Button>
           <div>
             <h1 className="text-2xl font-headline font-bold tracking-tight">ShopeePay <span className="text-[#EE4D2D]">History</span></h1>
             <p className="text-muted-foreground text-sm">Monitor seluruh log mutasi masuk dari akun ShopeePay Anda.</p>
@@ -201,7 +198,7 @@ export default function ShopeepayTransactionsPage() {
           <CardHeader className="bg-slate-50/50 dark:bg-[#0A0A0A] py-4 px-6 border-b border-border shrink-0 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#00AED6]" />
-              ShopeePay Transaction Logs
+              ShopeePay Transaction
             </CardTitle>
             <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">
               {loading ? "Counting..." : `${filteredMutations.length} Transactions Found`}
@@ -280,9 +277,6 @@ export default function ShopeepayTransactionsPage() {
             </table>
           </div>
         </Card>
-      </div>
-      <div className="text-center py-6 opacity-20">
-         <p className="text-[9px] font-bold uppercase tracking-[0.4em]">STSPoint Analytics Node • Data Export Enabled</p>
       </div>
     </div>
   );
