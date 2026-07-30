@@ -17,7 +17,7 @@ import {
     ShieldAlert,
     Loader2,
     ChevronLeft
-} from "lucide-center";
+} from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -213,7 +213,7 @@ export default function ShopeepayTransactionsPage() {
                                     ))
                                 ) : !isConnected ? (
                                     <tr>
-                                        <td colSpan={5} className="px-8 py-24 text-center text-muted-foreground">
+                                        <td colSpan={5} className="px-6 py-24 text-center text-muted-foreground">
                                             <div className="flex flex-col items-center justify-center gap-4 w-full">
                                                 <div className="p-4 bg-muted rounded-full">
                                                     <ShieldAlert className="w-12 h-12 opacity-30" />
