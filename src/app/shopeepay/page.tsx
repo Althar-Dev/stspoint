@@ -88,13 +88,12 @@ export default function ShopeepayDashboardPage() {
   const isConnected = !!shopeepay?.token;
 
   /**
-   * Robust parser to handle Shopee amount strings like "5.170"
-   * Removes any dot or comma separators to ensure it's treated as a whole number.
+   * Helper: Parse amount for stats calculation only.
+   * Removes any formatting dots/commas to get raw integer.
    */
-  const parseAmount = (val: any): number => {
+  const parseAmountForStats = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return Math.floor(val);
-    // If string "5.170" -> "5170"
     const cleaned = String(val).replace(/[.,]/g, '');
     return parseInt(cleaned) || 0;
   };
@@ -118,7 +117,7 @@ export default function ShopeepayDashboardPage() {
         if (res.success) {
           setMutations(res.data || []);
           setStats({
-            totalNetSales: parseAmount(res.totalNetSales),
+            totalNetSales: parseAmountForStats(res.totalNetSales),
             totalCount: res.total || 0
           });
           setIsSessionExpired(false);
@@ -513,7 +512,7 @@ export default function ShopeepayDashboardPage() {
                              {item.transaction_id}
                           </td>
                           <td className="px-6 py-4 font-bold text-[13px] whitespace-nowrap text-[#EE4D2D]">
-                             Rp {parseAmount(item.amount).toLocaleString('id-ID')}
+                             Rp {item.amount}
                           </td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                              <Badge className={`${

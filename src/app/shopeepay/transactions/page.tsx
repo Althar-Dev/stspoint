@@ -46,10 +46,10 @@ export default function ShopeepayTransactionsPage() {
   const isGlobalLoading = authLoading || serviceLoading;
 
   /**
-   * Robust parser to handle Shopee amount strings like "5.170"
-   * Removes all punctuation to prevent JS from interpreting it as a small decimal (5.17).
+   * Helper: Parse amount for CSV/PDF summation purposes.
+   * Removes punctuation to get pure numeric value.
    */
-  const parseAmount = (val: any): number => {
+  const parseNumericValue = (val: any): number => {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return Math.floor(val);
     const cleaned = String(val).replace(/[.,]/g, '');
@@ -106,7 +106,7 @@ export default function ShopeepayTransactionsPage() {
       m.created_at,
       m.transaction_id,
       "ShopeePay",
-      parseAmount(m.amount),
+      parseNumericValue(m.amount),
       m.status
     ]);
     const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -129,7 +129,7 @@ export default function ShopeepayTransactionsPage() {
       m.created_at,
       m.transaction_id,
       "ShopeePay",
-      parseAmount(m.amount).toLocaleString('id-ID'),
+      m.amount, // Use raw string for PDF too
       m.status
     ]);
     autoTable(doc, {
@@ -264,7 +264,7 @@ export default function ShopeepayTransactionsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center font-bold text-[13px] text-[#EE4D2D]">
-                          Rp {parseAmount(item.amount).toLocaleString('id-ID')}
+                          Rp {item.amount}
                         </td>
                         <td className="px-6 py-4 text-right">
                            <Badge className={`${
