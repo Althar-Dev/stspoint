@@ -101,7 +101,7 @@ export default function OvoDashboardPage() {
   };
 
   /**
-   * Data Fetching Logic
+   * Data Fetching Logic - Fixed to robustly handle transaction arrays
    */
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -109,7 +109,7 @@ export default function OvoDashboardPage() {
       try {
         const [balanceRes, mutationRes] = await Promise.all([
           getOvoBalance({ token: ovo.token, deviceId: ovo.deviceId }),
-          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 15 })
+          getOvoMutations({ token: ovo.token, deviceId: ovo.deviceId, limit: 20 })
         ]);
 
         if (balanceRes.success && balanceRes.data) {
@@ -119,8 +119,16 @@ export default function OvoDashboardPage() {
           });
         }
 
-        if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
-          setMutations(mutationRes.data.orders);
+        // Improved Robust Data Mapping for Mutations
+        if (mutationRes.success && mutationRes.data) {
+          const rawData = mutationRes.data;
+          if (Array.isArray(rawData.orders)) {
+            setMutations(rawData.orders);
+          } else if (Array.isArray(rawData)) {
+            setMutations(rawData);
+          } else {
+            setMutations([]);
+          }
         } else {
           setMutations([]);
         }
@@ -145,7 +153,7 @@ export default function OvoDashboardPage() {
   };
 
   /**
-   * Login Step 1: Login 2FA (OTP Request)
+   * Login Flows
    */
   const handleRequestOtp = async () => {
     if (!phone) return;
@@ -167,9 +175,6 @@ export default function OvoDashboardPage() {
     }
   };
 
-  /**
-   * Login Step 2: Verifikasi Kode OTP
-   */
   const handleVerifyOtp = async () => {
     if (!otpCode || !refId) return;
     setIsProcessing(true);
@@ -194,9 +199,6 @@ export default function OvoDashboardPage() {
     }
   };
 
-  /**
-   * Login Step 3: Security Code (PIN)
-   */
   const handleVerifyPin = async () => {
     if (!pinCode || !refId || !otpToken) return;
     setIsProcessing(true);
@@ -271,16 +273,14 @@ export default function OvoDashboardPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Balance Card */}
+        {/* Balance Card - Optimized Layout */}
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#4C2B9A]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[260px]">
             {isLoading ? (
               <div className="space-y-6 h-full flex flex-col">
-                <div className="flex justify-between items-start mb-auto">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                  </div>
+                <div className="flex justify-between items-start">
+                  <Skeleton className="h-4 w-32" />
                   <Skeleton className="w-12 h-12 rounded-2xl" />
                 </div>
                 <div className="pb-4 mt-auto">
@@ -384,14 +384,12 @@ export default function OvoDashboardPage() {
             ) : (
               <>
                 <div className="flex justify-between items-start mb-auto">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
-                  </div>
+                  <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
                 </div>
 
+                {/* Amount Section - Right Above The Line */}
                 <div className="pb-4 mt-auto">
                   <div className="flex items-end justify-between gap-4">
-                    {/* Kiri: Cash Amount */}
                     <div className="space-y-1">
                       {dataLoading ? (
                         <Skeleton className="h-8 md:h-10 w-32 md:w-48" />
@@ -405,14 +403,12 @@ export default function OvoDashboardPage() {
                       )}
                     </div>
 
-                    {/* Kanan: Points & Logo */}
                     <div className="flex flex-col items-end gap-2">
-                      {/* OVO POINTS Rp 0 (Inline) */}
+                      {/* OVO POINTS Rp 0 (Inline & Above Logo) */}
                       <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-[#4C2B9A] whitespace-nowrap bg-[#4C2B9A]/5 px-2 py-0.5 rounded-md border border-[#4C2B9A]/10">
                         <span className="text-muted-foreground font-black opacity-50 text-[8px] tracking-tighter uppercase">OVO POINTS</span>
                         <span>Rp {balances.points.toLocaleString('id-ID')}</span>
                       </div>
-                      {/* Logo */}
                       <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm p-1.5">
                         <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
                       </div>
@@ -436,7 +432,7 @@ export default function OvoDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Info Column */}
+        {/* Configuration Card */}
         <Card className="lg:col-span-1 border border-border shadow-sm rounded-3xl p-0 overflow-hidden bg-card flex flex-col">
           <div className="p-6 flex-1 space-y-6">
             {!isConnected && !isLoading ? (
@@ -511,7 +507,7 @@ export default function OvoDashboardPage() {
         </Card>
       </div>
 
-      {/* Mutations Table */}
+      {/* Mutations Table - Robust data extraction */}
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
           <CardHeader className="px-8 py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
@@ -519,7 +515,7 @@ export default function OvoDashboardPage() {
                 <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
                 OVO Transactions
              </CardTitle>
-             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{Array.isArray(mutations) ? mutations.length : 0} Records</Badge>
+             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Records</Badge>
           </CardHeader>
           <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
              <table className="w-full min-w-[700px] text-left text-xs border-collapse">
@@ -536,7 +532,7 @@ export default function OvoDashboardPage() {
                      Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
                      ))
-                  ) : !Array.isArray(mutations) || mutations.length === 0 ? (
+                  ) : mutations.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
                          <div className="flex flex-col items-center gap-3 opacity-20">
