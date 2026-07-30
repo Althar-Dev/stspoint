@@ -43,7 +43,7 @@ const DOCS_NAV = [
       { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs/ppob" },
       { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs/orderkuota" },
       { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay" },
-      { id: "ovo", title: "OVO Bridge", icon: Wallet, href: "/docs/ovo" },
+      { id: "ovo", title: "OVO", icon: Wallet, href: "/docs/ovo" },
     ],
   },
   {

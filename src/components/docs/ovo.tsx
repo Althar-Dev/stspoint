@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Badge as UiBadge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { CodeBlock } from "./shared/code-block";
 
 export function DocsOvo() {

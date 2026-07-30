@@ -84,7 +84,7 @@ function OvoLayoutInner({ children }: { children: ReactNode }) {
               height={32} 
               className="w-8 h-8 transition-transform group-hover:scale-105 shrink-0 object-contain"
             />
-            <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">OVO Bridge</span>
+            <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">OVO</span>
           </Link>
         </SidebarHeader>
         

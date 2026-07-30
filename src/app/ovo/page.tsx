@@ -166,7 +166,7 @@ export default function OvoDashboardPage() {
 
   const handleManualRefresh = () => {
     setRefreshKey(prev => prev + 1);
-    toast({ title: "Syncing...", description: "Fetching latest data from OVO Bridge." });
+    toast({ title: "Syncing...", description: "Fetching latest data from OVO." });
   };
 
   /**
