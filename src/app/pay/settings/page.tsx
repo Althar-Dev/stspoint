@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -115,7 +114,7 @@ export default function STSPaySettingsPage() {
         {/* Identitas Bisnis & Merchant */}
         <Card className="border-border shadow-sm rounded-2xl md:rounded-[2rem] bg-card overflow-hidden">
           <CardHeader className="px-6 md:px-8 py-5 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-            <CardTitle className="text-xs md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-[11px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <Building2 className="w-4 h-4 text-primary" />
               Profil Identitas
             </CardTitle>
@@ -130,7 +129,7 @@ export default function STSPaySettingsPage() {
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Contoh: PT Teknologi Digital"
-                    className="rounded-xl border-border h-11 md:h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold text-sm"
+                    className="rounded-xl border-border h-11 md:h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold text-xs md:text-sm"
                   />
                 </div>
               </div>
@@ -142,7 +141,7 @@ export default function STSPaySettingsPage() {
                     value={merchantName}
                     onChange={(e) => setMerchantName(e.target.value)}
                     placeholder="Contoh: STS Point Pro"
-                    className="rounded-xl border-border h-11 md:h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold text-sm"
+                    className="rounded-xl border-border h-11 md:h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold text-xs md:text-sm"
                   />
                 </div>
               </div>
@@ -204,7 +203,7 @@ export default function STSPaySettingsPage() {
           <CardHeader className="px-6 md:px-8 py-5 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
-                <CardTitle className="text-xs md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                <CardTitle className="text-[11px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                   <Banknote className="w-4 h-4 text-primary" />
                   Rekening Bank
                 </CardTitle>
@@ -284,36 +283,6 @@ export default function STSPaySettingsPage() {
                 Ajukan Verifikasi
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Gateway & Security Preferences */}
-        <Card className="border-border shadow-sm rounded-2xl md:rounded-[2rem] bg-card overflow-hidden">
-          <CardHeader className="px-6 md:px-8 py-5 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-            <CardTitle className="text-xs md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              Gateway Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 divide-y divide-border">
-            {[
-              { label: 'Sandbox Mode', desc: 'Gunakan lingkungan testing untuk simulasi transaksi tanpa uang sungguhan.', icon: Lock, status: false },
-              { label: 'Auto-Settlement', desc: 'Cairkan saldo secara otomatis setiap hari ke rekening utama.', icon: Banknote, status: false },
-              { label: 'Double Verification', desc: 'Wajibkan verifikasi 2FA untuk setiap penarikan saldo.', icon: ShieldCheck, status: true },
-            ].map((pref, i) => (
-              <div key={i} className="px-6 md:px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-xl bg-muted text-muted-foreground mt-0.5">
-                    <pref.icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold">{pref.label}</h4>
-                    <p className="text-[9px] md:text-[10px] text-muted-foreground max-w-[200px] sm:max-w-xs leading-relaxed">{pref.desc}</p>
-                  </div>
-                </div>
-                <Switch checked={pref.status} />
-              </div>
-            ))}
           </CardContent>
         </Card>
 
