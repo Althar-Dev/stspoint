@@ -111,17 +111,17 @@ export default function STSPaySettingsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl mx-auto px-1 md:px-0">
       <div className="grid grid-cols-1 gap-8">
         {/* Identitas Bisnis & Merchant */}
-        <Card className="border-border shadow-sm rounded-md bg-card overflow-hidden">
-          <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
+        <Card className="border-border shadow-sm rounded-[2rem] bg-card overflow-hidden">
+          <CardHeader className="px-6 md:px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <Building2 className="w-4 h-4 text-primary" />
               Profil Identitas
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-6 md:p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Bisnis (Legal)</Label>
@@ -131,7 +131,7 @@ export default function STSPaySettingsPage() {
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Contoh: PT Teknologi Digital"
-                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                    className="rounded-xl border-border h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold"
                   />
                 </div>
               </div>
@@ -143,7 +143,7 @@ export default function STSPaySettingsPage() {
                     value={merchantName}
                     onChange={(e) => setMerchantName(e.target.value)}
                     placeholder="Contoh: STS Point Pro"
-                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                    className="rounded-xl border-border h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold"
                   />
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function STSPaySettingsPage() {
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder="https://link-gambar.com/logo.png"
-                  className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                  className="rounded-xl border-border h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-mono text-xs"
                 />
               </div>
               <p className="text-[9px] text-muted-foreground ml-1">Logo ini akan muncul di Sidebar Dashboard dan Halaman Checkout pelanggan Anda.</p>
@@ -171,7 +171,7 @@ export default function STSPaySettingsPage() {
                   <Input 
                     disabled
                     value={businessEmail}
-                    className="rounded-md border-border h-11 pl-10 bg-muted/50 cursor-not-allowed"
+                    className="rounded-xl border-border h-12 pl-10 bg-muted/50 cursor-not-allowed text-sm"
                   />
                 </div>
               </div>
@@ -181,17 +181,17 @@ export default function STSPaySettingsPage() {
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input 
                     placeholder="https://bisnis-anda.com"
-                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                    className="rounded-xl border-border h-12 pl-10 bg-muted/30 focus:bg-background transition-all text-sm"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border flex justify-end">
+            <div className="pt-4 border-t border-border flex flex-col sm:flex-row justify-end">
               <Button 
                 onClick={handleSaveGeneral}
                 disabled={loading}
-                className="rounded-md h-11 px-8 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10"
+                className="w-full sm:w-auto rounded-xl h-12 px-10 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Simpan Profil
@@ -201,9 +201,9 @@ export default function STSPaySettingsPage() {
         </Card>
 
         {/* Rekening Penarikan */}
-        <Card className="border-border shadow-sm rounded-md bg-card overflow-hidden">
-          <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-            <div className="flex items-center justify-between">
+        <Card className="border-border shadow-sm rounded-[2rem] bg-card overflow-hidden">
+          <CardHeader className="px-6 md:px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
                   <Banknote className="w-4 h-4 text-primary" />
@@ -212,7 +212,7 @@ export default function STSPaySettingsPage() {
                 <CardDescription className="text-[10px] uppercase font-bold text-muted-foreground/60">Tempat dana hasil penjualan Anda dicairkan.</CardDescription>
               </div>
               {profile?.payoutAccountStatus && (
-                <Badge className={`border-none text-[8px] font-bold uppercase rounded-md gap-1 px-3 py-1 ${
+                <Badge className={`border-none text-[8px] font-bold uppercase rounded-md gap-1 px-3 py-1 w-fit ${
                   profile.payoutAccountStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
                 }`}>
                   {profile.payoutAccountStatus === 'VERIFIED' ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
@@ -221,27 +221,25 @@ export default function STSPaySettingsPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-6 md:p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nama Bank</Label>
                 <Select value={bankName} onValueChange={setBankName}>
-                  <SelectTrigger className="h-11 rounded-md border-border bg-muted/30 focus:bg-background transition-all pl-10 relative">
+                  <SelectTrigger className="h-12 rounded-xl border-border bg-muted/30 focus:bg-background transition-all pl-10 relative text-sm font-bold">
                     <Landmark className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <SelectValue placeholder="Pilih Bank / E-Wallet" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border">
-                    {/* Banks Alphabetical */}
-                    <SelectItem value="Bank BCA">Bank BCA</SelectItem>
-                    <SelectItem value="Bank BNI">Bank BNI</SelectItem>
-                    <SelectItem value="Bank BRI">Bank BRI</SelectItem>
-                    <SelectItem value="Bank BSI">Bank BSI</SelectItem>
-                    <SelectItem value="Bank Jago">Bank Jago</SelectItem>
-                    <SelectItem value="Bank Mandiri">Bank Mandiri</SelectItem>
-                    {/* E-Wallets Alphabetical */}
-                    <SelectItem value="Dana">Dana</SelectItem>
-                    <SelectItem value="Gopay">Gopay</SelectItem>
-                    <SelectItem value="Ovo">Ovo</SelectItem>
+                  <SelectContent className="rounded-2xl border-border">
+                    <SelectItem value="Bank BCA" className="rounded-lg">Bank BCA</SelectItem>
+                    <SelectItem value="Bank BNI" className="rounded-lg">Bank BNI</SelectItem>
+                    <SelectItem value="Bank BRI" className="rounded-lg">Bank BRI</SelectItem>
+                    <SelectItem value="Bank BSI" className="rounded-lg">Bank BSI</SelectItem>
+                    <SelectItem value="Bank Jago" className="rounded-lg">Bank Jago</SelectItem>
+                    <SelectItem value="Bank Mandiri" className="rounded-lg">Bank Mandiri</SelectItem>
+                    <SelectItem value="Dana" className="rounded-lg">Dana</SelectItem>
+                    <SelectItem value="Gopay" className="rounded-lg">Gopay</SelectItem>
+                    <SelectItem value="Ovo" className="rounded-lg">Ovo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -253,7 +251,7 @@ export default function STSPaySettingsPage() {
                     value={bankAccountNumber}
                     onChange={(e) => setBankAccountNumber(e.target.value)}
                     placeholder="e.g. 1234567890"
-                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                    className="rounded-xl border-border h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-mono font-bold"
                   />
                 </div>
               </div>
@@ -265,14 +263,14 @@ export default function STSPaySettingsPage() {
                     value={bankAccountName}
                     onChange={(e) => setBankAccountName(e.target.value)}
                     placeholder="e.g. John Doe"
-                    className="rounded-md border-border h-11 pl-10 bg-muted/30 focus:bg-background transition-all"
+                    className="rounded-xl border-border h-12 pl-10 bg-muted/30 focus:bg-background transition-all font-bold"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border flex items-center justify-between gap-4">
-              <div className="flex items-start gap-3 p-4 rounded-md bg-amber-500/5 border border-amber-500/10 flex-1">
+            <div className="pt-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 w-full md:flex-1">
                 <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-amber-800 leading-relaxed font-medium uppercase">
                   Pastikan data rekening benar. Perubahan rekening memerlukan verifikasi manual 1x24 jam.
@@ -281,7 +279,7 @@ export default function STSPaySettingsPage() {
               <Button 
                 onClick={handleSavePayout}
                 disabled={isSavingPayout}
-                className="rounded-md h-11 px-8 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10 shrink-0"
+                className="w-full md:w-auto rounded-xl h-12 px-8 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/10 shrink-0"
               >
                 {isSavingPayout ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Ajukan Verifikasi
@@ -291,8 +289,8 @@ export default function STSPaySettingsPage() {
         </Card>
 
         {/* Gateway & Security Preferences */}
-        <Card className="border-border shadow-sm rounded-md bg-card overflow-hidden">
-          <CardHeader className="px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
+        <Card className="border-border shadow-sm rounded-[2rem] bg-card overflow-hidden">
+          <CardHeader className="px-6 md:px-8 py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
             <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <ShieldCheck className="w-4 h-4 text-primary" />
               Gateway Preferences
@@ -304,14 +302,14 @@ export default function STSPaySettingsPage() {
               { label: 'Auto-Settlement', desc: 'Cairkan saldo secara otomatis setiap hari ke rekening utama.', icon: Banknote, status: false },
               { label: 'Double Verification', desc: 'Wajibkan verifikasi 2FA untuk setiap penarikan saldo.', icon: ShieldCheck, status: true },
             ].map((pref, i) => (
-              <div key={i} className="px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
+              <div key={i} className="px-6 md:px-8 py-5 flex items-center justify-between hover:bg-muted/10 transition-colors">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-md bg-muted text-muted-foreground mt-0.5">
+                  <div className="p-2 rounded-xl bg-muted text-muted-foreground mt-0.5">
                     <pref.icon className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold">{pref.label}</h4>
-                    <p className="text-[10px] text-muted-foreground max-w-xs leading-relaxed">{pref.desc}</p>
+                    <p className="text-[10px] text-muted-foreground max-w-[200px] sm:max-w-xs leading-relaxed">{pref.desc}</p>
                   </div>
                 </div>
                 <Switch checked={pref.status} />
@@ -321,7 +319,7 @@ export default function STSPaySettingsPage() {
         </Card>
 
         {/* Merchant Keys Glance */}
-        <Card className="border-border shadow-sm rounded-md bg-zinc-900 text-white p-8 relative overflow-hidden">
+        <Card className="border-border shadow-sm rounded-[2rem] bg-zinc-900 text-white p-6 md:p-10 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[60px] -mr-16 -mt-16"></div>
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
@@ -333,7 +331,7 @@ export default function STSPaySettingsPage() {
                 Gunakan Merchant ID dan Secret Key Anda untuk mengintegrasikan STSPay ke dalam aplikasi atau website Anda.
               </p>
             </div>
-            <Button asChild className="bg-white text-black hover:bg-white/90 font-bold rounded-md px-8 h-12 uppercase tracking-widest text-[10px]">
+            <Button asChild className="bg-white text-black hover:bg-white/90 font-bold rounded-xl px-8 h-12 uppercase tracking-widest text-[10px]">
                <a href="/console/developer/api-keys">Kelola API Keys</a>
             </Button>
           </div>
