@@ -1,8 +1,21 @@
-import type {Metadata, Viewport} from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
-import {Toaster} from '@/components/ui/toaster';
+import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { DevToolsGuard } from '@/components/devtools-guard';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   applicationName: 'STSPoint',
@@ -12,14 +25,14 @@ export const metadata: Metadata = {
   },
   description: 'The ultimate digital gateway platform by StarVale Technology Solution. Providing enterprise-grade API solutions for PPOB, OTP, and STSPay payment bridges with 99.9% uptime. Developed and engineered by Alhadi Adriano (AltharDev) for high-scale business automation.',
   keywords: [
-    'digital infrastructure', 
-    'payment gateway indonesia', 
-    'api bridge', 
-    'ppob api', 
-    'otp center', 
-    'stspay', 
-    'stspoint', 
-    'payment orchestration', 
+    'digital infrastructure',
+    'payment gateway indonesia',
+    'api bridge',
+    'ppob api',
+    'otp center',
+    'stspay',
+    'stspoint',
+    'payment orchestration',
     'h2h ppob',
     'StarVale Technology Solution',
     'Alhadi Adriano',
@@ -84,6 +97,9 @@ export const metadata: Metadata = {
     apple: '/assets/img/logo.jpg',
   },
   manifest: '/manifest.json',
+  verification: {
+    google: 'google-site-verification=L0Y-wjQWEqVL9gxAw-Z9o3NOzeD_6hSDA7WQ4O6pMWo',
+  },
   other: {
     'geo.region': 'ID-JK',
     'geo.placename': 'Jakarta',
@@ -111,12 +127,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id-ID" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="id-ID" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
       <body className="font-body antialiased selection:bg-primary/10 selection:text-primary min-h-screen">
         <FirebaseClientProvider>
           <DevToolsGuard />

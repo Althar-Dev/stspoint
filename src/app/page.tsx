@@ -91,6 +91,62 @@ export default function Home() {
     }
   };
 
+  const faqData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Apa itu STSPoint?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "STSPoint adalah platform gerbang digital terintegrasi buatan StarVale Technology Solution untuk API PPOB, STSPay payment bridge, dan OTP Center dengan latensi rendah dan uptime 99.9%."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Bagaimana cara melakukan integrasi API STSPoint?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Anda dapat mendaftar akun di STSPoint, mengakses API key dari dashboard, dan membaca dokumentasi lengkap di docs.stspoint.id untuk mulai bertransaksi."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Apakah STSPoint mendukung transaksi Host-to-Host (H2H)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ya, STSPoint dirancang khusus untuk transaksi H2H skala enterprise dengan kecepatan pemrosesan tinggi dan deteksi status otomatis."
+        }
+      }
+    ]
+  };
+
+  const breadcrumbData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Beranda",
+        "item": "https://stspoint.id"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Tentang Kami",
+        "item": "https://stspoint.id/about"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Dokumentasi API",
+        "item": "https://stspoint.id/docs"
+      }
+    ]
+  };
+
   return (
     <LandingLayout>
       <Script
@@ -112,6 +168,16 @@ export default function Home() {
         id="org-data"
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationData) }}
+      />
+      <Script
+        id="faq-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqData) }}
+      />
+      <Script
+        id="breadcrumb-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
       
       <div className="space-y-24 pb-20">
