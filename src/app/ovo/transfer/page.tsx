@@ -22,7 +22,6 @@ import {
   Landmark, 
   Smartphone, 
   Coins, 
-  Loader2, 
   CheckCircle2, 
   AlertCircle,
   Search,
@@ -54,27 +53,13 @@ export default function OvoTransferPage() {
     return doc(db, "users", user.uid, "services", "ovo");
   }, [db, user?.uid]);
 
-  const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
+  const { data: ovo } = useDoc(ovoRef);
   const isConnected = !!ovo?.token;
 
   // Global State
   const [balance, setBalance] = useState(0);
   const [banks, setBanks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Form OVO State
-  const [ovoTarget, setOvoTarget] = useState("");
-  const [ovoAmount, setOvoTargetAmount] = useState("");
-  const [ovoMessage, setOvoMessage] = useState("");
-  const [ovoInquiryName, setOvoInquiryName] = useState<string | null>(null);
-
-  // Form Bank State
-  const [selectedBank, setSelectedBank] = useState<any>(null);
-  const [bankAccountNo, setBankAccountNo] = useState("");
-  const [bankAmount, setBankAmount] = useState("");
-  const [bankMessage, setBankMessage] = useState("");
-  const [bankInquiryResult, setBankInquiryResult] = useState<any>(null);
 
   useEffect(() => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -84,7 +69,6 @@ export default function OvoTransferPage() {
 
   const loadInitialData = async () => {
     if (!ovo?.token || !ovo?.deviceId) return;
-    setLoading(true);
     try {
       const [balRes, bankRes] = await Promise.all([
         getOvoBalance({ token: ovo.token, deviceId: ovo.deviceId }),
@@ -100,13 +84,10 @@ export default function OvoTransferPage() {
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // --- LOGIKA TRANSFER OVO ---
-
+  // --- TRANSFER OVO LOGIC ---
   const handleCheckOvo = async () => {
     if (!ovoTarget || !ovoAmount || !ovo?.token) return;
     setIsProcessing(true);
@@ -154,8 +135,7 @@ export default function OvoTransferPage() {
     }
   };
 
-  // --- LOGIKA TRANSFER BANK ---
-
+  // --- BANK TRANSFER LOGIC ---
   const handleBankInquiry = async () => {
     if (!selectedBank || !bankAccountNo || !bankAmount || !ovo?.token) return;
     setIsProcessing(true);
@@ -211,14 +191,18 @@ export default function OvoTransferPage() {
     }
   };
 
-  if (serviceLoading || loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-[#4C2B9A]" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Menyiapkan Mesin Transfer...</p>
-      </div>
-    );
-  }
+  // Form OVO State
+  const [ovoTarget, setOvoTarget] = useState("");
+  const [ovoAmount, setOvoTargetAmount] = useState("");
+  const [ovoMessage, setOvoMessage] = useState("");
+  const [ovoInquiryName, setOvoInquiryName] = useState<string | null>(null);
+
+  // Form Bank State
+  const [selectedBank, setSelectedBank] = useState<any>(null);
+  const [bankAccountNo, setBankAccountNo] = useState("");
+  const [bankAmount, setBankAmount] = useState("");
+  const [bankMessage, setBankMessage] = useState("");
+  const [bankInquiryResult, setBankInquiryResult] = useState<any>(null);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-500 pb-20 px-1">
@@ -316,8 +300,8 @@ export default function OvoTransferPage() {
                         disabled={isProcessing || !ovoTarget || !ovoAmount || parseInt(ovoAmount) < 10000}
                         className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white gap-2 shadow-lg shadow-[#4C2B9A]/20 text-[10px] uppercase tracking-widest"
                       >
-                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                        Cek Nomor Penerima
+                        <Search className="w-4 h-4" />
+                        {isProcessing ? "Mengecek..." : "Cek Nomor Penerima"}
                       </Button>
                     ) : (
                       <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
@@ -338,8 +322,8 @@ export default function OvoTransferPage() {
                           disabled={isProcessing}
                           className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xl shadow-emerald-600/20 text-[10px] uppercase tracking-widest"
                          >
-                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                            Kirim Sekarang
+                            <Send className="w-4 h-4" />
+                            {isProcessing ? "Memproses..." : "Kirim Sekarang"}
                          </Button>
                       </div>
                     )}
@@ -430,8 +414,8 @@ export default function OvoTransferPage() {
                         disabled={isProcessing || !selectedBank || !bankAccountNo || !bankAmount || parseInt(bankAmount) < 10000}
                         className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white gap-2 shadow-lg shadow-[#4C2B9A]/20 text-[10px] uppercase tracking-widest"
                       >
-                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                        Cek Rekening
+                        <Search className="w-4 h-4" />
+                        {isProcessing ? "Mengecek..." : "Cek Rekening"}
                       </Button>
                     ) : (
                       <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
@@ -450,8 +434,8 @@ export default function OvoTransferPage() {
                           disabled={isProcessing}
                           className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xl shadow-emerald-600/20 text-[10px] uppercase tracking-widest"
                          >
-                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                            Konfirmasi & Kirim Dana
+                            <ShieldCheck className="w-4 h-4" />
+                            {isProcessing ? "Memproses..." : "Konfirmasi & Kirim Dana"}
                          </Button>
                          <Button variant="ghost" size="sm" onClick={() => setBankInquiryResult(null)} className="w-full text-[10px] font-bold text-muted-foreground uppercase h-7">Batal / Ganti Rekening</Button>
                       </div>
