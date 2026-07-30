@@ -241,84 +241,235 @@ echo $response;
         </div>
       </section>
 
-      {/* Bank Transfer Section */}
-      <section id="ovo-bank" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+      {/* Bank List Section */}
+      <section id="bank-list" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
             <Landmark className="w-6 h-6 text-purple-600" />
-            Kirim ke Rekening Bank
+            Daftar Kode Bank
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Gunakan saldo OVO Anda sebagai sumber dana untuk melakukan pencairan (*disbursement*) ke ratusan bank di Indonesia.
+            Ambil daftar kode bank yang didukung untuk pengiriman dana (disbursement) melalui jembatan OVO.
           </p>
+          <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
+            <span className="text-primary">/api/transfer/banks</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-           <Card className="border-border shadow-none bg-muted/20 rounded-2xl overflow-hidden">
-              <CardContent className="p-6 space-y-4">
-                 <div className="flex items-center gap-2">
-                    <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px]">POST</UiBadge>
-                    <span className="font-bold text-xs font-mono">/api/transfer/banks</span>
-                 </div>
-                 <p className="text-xs text-muted-foreground">Mengambil daftar kode bank resmi (e.g. BCA: 014, Mandiri: 008).</p>
-              </CardContent>
-           </Card>
-           <Card className="border-border shadow-none bg-muted/20 rounded-2xl overflow-hidden">
-              <CardContent className="p-6 space-y-4">
-                 <div className="flex items-center gap-2">
-                    <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px]">POST</UiBadge>
-                    <span className="font-bold text-xs font-mono">/api/ovo/transfer/bank-inquiry</span>
-                 </div>
-                 <p className="text-xs text-muted-foreground">Verifikasi pemilik rekening bank secara real-time sebelum pengiriman.</p>
-              </CardContent>
-           </Card>
+        <CodeBlock 
+          title="Get Bank List Example"
+          type="curl"
+          code={`curl -X POST https://api.stspoint.id/api/transfer/banks \\
+  -H "Content-Type: application/json" \\
+  -d '{"secret_key": "STS-Key-XXXXXXXX"}'`}
+        />
+
+        <CodeBlock 
+          title="Response Example"
+          type="json"
+          code={`{
+  "success": true,
+  "data": [
+    { "value": "014", "label": "Bank BCA" },
+    { "value": "008", "label": "Bank Mandiri" }
+  ]
+}`}
+        />
+      </section>
+
+      {/* Bank Inquiry Section */}
+      <section id="bank-inquiry" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-4">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
+            <Search className="w-6 h-6 text-purple-600" />
+            Inquiry Rekening Bank
+          </h2>
+          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+            Lakukan verifikasi nomor rekening bank tujuan untuk mendapatkan nama pemilik rekening sebelum melakukan eksekusi transfer.
+          </p>
+          <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
+            <span className="text-primary">/api/ovo/transfer/bank-inquiry</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
+          <table className="w-full text-left text-xs border-collapse min-w-[600px]">
+            <thead className="bg-muted/50 border-b border-border">
+              <tr>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Parameter</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Type</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Status</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px]">Description</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              <tr>
+                <td className="px-6 py-4 font-mono font-bold text-purple-600">bank_code</td>
+                <td className="px-6 py-4 text-muted-foreground">String</td>
+                <td className="px-6 py-4 text-rose-500 font-bold">Required</td>
+                <td className="px-6 py-4 text-muted-foreground">Kode bank tujuan (e.g. 014 untuk BCA).</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-4 font-mono font-bold text-purple-600">account_no</td>
+                <td className="px-6 py-4 text-muted-foreground">String</td>
+                <td className="px-6 py-4 text-rose-500 font-bold">Required</td>
+                <td className="px-6 py-4 text-muted-foreground">Nomor rekening bank tujuan.</td>
+              </tr>
+              <tr>
+                <td className="px-6 py-4 font-mono font-bold text-purple-600">amount</td>
+                <td className="px-6 py-4 text-muted-foreground">Number</td>
+                <td className="px-6 py-4 text-rose-500 font-bold">Required</td>
+                <td className="px-6 py-4 text-muted-foreground">Nominal yang akan dikirim (untuk inkuiri biaya).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <CodeBlock 
+          title="Bank Inquiry Response"
+          type="json"
+          code={`{
+  "success": true,
+  "data": {
+    "accountName": "JOHN DOE",
+    "accountNo": "1234567890",
+    "bankCode": "014",
+    "bankName": "Bank BCA"
+  }
+}`}
+        />
+      </section>
+
+      {/* Bank Transfer Execution */}
+      <section id="bank-transfer-exec" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-4">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
+            <Send className="w-6 h-6 text-purple-600" />
+            Eksekusi Transfer Bank
+          </h2>
+          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+            Kirim dana dari saldo OVO Anda ke rekening bank tujuan. Pastikan Anda sudah melakukan inkuiri terlebih dahulu.
+          </p>
+          <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
+            <span className="text-primary">/api/ovo/transfer/bank</span>
+          </div>
         </div>
 
         <div className="space-y-4">
            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
-             <SmartphoneNfc className="w-3.5 h-3.5" />
-             Execute Bank Transfer
+             <Code2 className="w-3.5 h-3.5" />
+             Implementation Snippets
            </h4>
-           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold mb-4">
-              <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
-              <span className="text-primary">/api/ovo/transfer/bank</span>
-           </div>
-           <CodeBlock 
-              title="Full Bank Payout Payload"
-              type="json"
-              code={`{
-  "secret_key": "STS-Key-XXXXXXXX",
-  "bank_code": "014",
-  "account_no": "1234567890",
-  "amount": 150000,
-  "message": "Payout for Merchant ID #123",
-  "account_name": "JOHN DOE"
-}`}
-           />
-           <CodeBlock 
-              title="Disbursement Success Response"
-              type="json"
-              code={`{
+           <Tabs defaultValue="curl" className="w-full">
+              <TabsList className="bg-muted p-1 rounded-xl h-11 w-fit mb-4">
+                <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
+                <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
+                <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
+                <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="curl">
+                <CodeBlock 
+                  title="Shell / cURL"
+                  type="curl"
+                  code={`curl -X POST https://api.stspoint.id/api/ovo/transfer/bank \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "secret_key": "STS-Key-XXXXXXXX",
+    "bank_code": "014",
+    "account_no": "1234567890",
+    "account_name": "JOHN DOE",
+    "amount": 100000,
+    "message": "Payout #123"
+  }'`}
+                />
+              </TabsContent>
+              <TabsContent value="node">
+                <CodeBlock 
+                  title="Node.js (Fetch)"
+                  type="node"
+                  code={`const res = await fetch('https://api.stspoint.id/api/ovo/transfer/bank', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    secret_key: 'STS-Key-XXXXXXXX',
+    bank_code: '014',
+    account_no: '1234567890',
+    account_name: 'JOHN DOE',
+    amount: 100000,
+    message: 'Payout #123'
+  })
+});
+const result = await res.json();`}
+                />
+              </TabsContent>
+              <TabsContent value="python">
+                <CodeBlock 
+                  title="Python (Requests)"
+                  type="python"
+                  code={`import requests
+
+payload = {
+    "secret_key": "STS-Key-XXXXXXXX",
+    "bank_code": "014",
+    "account_no": "1234567890",
+    "account_name": "JOHN DOE",
+    "amount": 100000,
+    "message": "Payout #123"
+}
+res = requests.post("https://api.stspoint.id/api/ovo/transfer/bank", json=payload)`}
+                />
+              </TabsContent>
+              <TabsContent value="php">
+                <CodeBlock 
+                  title="PHP (CURL)"
+                  type="php"
+                  code={`<?php
+$payload = [
+    "secret_key" => "STS-Key-XXXXXXXX",
+    "bank_code" => "014",
+    "account_no" => "1234567890",
+    "account_name" => "JOHN DOE",
+    "amount" => 100000
+];
+
+$ch = curl_init("https://api.stspoint.id/api/ovo/transfer/bank");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+$response = curl_exec($ch);
+?>`}
+                />
+              </TabsContent>
+           </Tabs>
+        </div>
+
+        <CodeBlock 
+          title="Transfer Bank Success JSON"
+          type="json"
+          code={`{
   "success": true,
   "message": "Transfer ke Rekening Bank Berhasil",
   "data": {
-    "txId": "BANK-WD-8392",
-    "amount": 150000,
+    "txId": "BANK-WD-123456",
+    "amount": 100000,
     "fee": 2500
   }
 }`}
-           />
-        </div>
+        />
       </section>
 
-      {/* Footer Info */}
+      {/* Security Warning */}
       <section className="pt-12 border-t border-border">
          <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10 flex items-start gap-4">
             <Info className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
             <div className="space-y-1">
-               <p className="text-sm font-bold text-purple-900 uppercase tracking-tight">Security Warning</p>
+               <p className="text-sm font-bold text-purple-900 uppercase tracking-tight">Peringatan Keamanan</p>
                <p className="text-xs text-purple-800 leading-relaxed">
-                  Semua transaksi transfer dana OVO bersifat final dan tidak dapat dibatalkan. Pastikan Anda selalu melakukan <strong>Bank Inquiry</strong> atau <strong>OVO Check</strong> terlebih dahulu untuk meminimalisir kesalahan kirim.
+                  Setiap transaksi transfer (P2P maupun Bank) bersifat <strong>FINAL</strong> dan tidak dapat dibatalkan. Pastikan data inkuiri valid sebelum melakukan eksekusi transfer. Dikenakan biaya admin bank sebesar Rp 2.500 per transaksi.
                </p>
             </div>
          </div>
