@@ -35,7 +35,7 @@ export async function sendWithdrawRequestEmail(data: {
   const mailOptions = {
     from: `"STSPoint System" <${process.env.SMTP_USER}>`,
     to: TARGET_EMAIL,
-    subject: `🚨 WITHDRAW REQUEST: Rp ${data.amount.toLocaleString('id-ID')} - ${data.userName}`,
+    subject: `🚨 Withdraw Request: Rp ${data.amount.toLocaleString('id-ID')} - ${data.userName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 12px; background-color: #fff;">
         <h2 style="color: #10b981; margin-bottom: 20px;">Permintaan Penarikan Baru</h2>
@@ -76,7 +76,7 @@ export async function sendBankVerificationRequestEmail(data: {
   const mailOptions = {
     from: `"STSPoint System" <${process.env.SMTP_USER}>`,
     to: TARGET_EMAIL,
-    subject: `🏦 VERIFIKASI REKENING: ${data.userName}`,
+    subject: `🏦 Verifikasi Rekening: ${data.userName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 12px; background-color: #fff;">
         <h2 style="color: #3b82f6; margin-bottom: 20px;">Permintaan Verifikasi Rekening</h2>
