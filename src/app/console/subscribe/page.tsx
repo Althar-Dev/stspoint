@@ -110,6 +110,72 @@ const servicePlans = {
       icon: Building2,
       button: "Hubungi Sales",
     }
+  ],
+  shopeepay: [
+    {
+      id: "pro",
+      name: "Pro",
+      price: 25000,
+      description: "Essential package for automatic ShopeePay integration.",
+      features: [
+        { text: "5,000 API Quota Requests", available: true },
+        { text: "Rate Limit 60 RPM", available: true },
+        { text: "7-Day Transaction History", available: true },
+        { text: "Export Data (CSV/PDF)", available: true },
+        { text: "Priority Support", available: false },
+      ],
+      icon: Briefcase,
+      button: "Buy Pro Plan",
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: 50000,
+      description: "High-performance package for growing businesses.",
+      features: [
+        { text: "15,000 API Quota Requests", available: true },
+        { text: "Rate Limit 180 RPM", available: true },
+        { text: "30-Day Transaction History", available: true },
+        { text: "Export Data (CSV/PDF)", available: true },
+        { text: "Priority Support", available: true },
+      ],
+      icon: Crown,
+      button: "Upgrade to Premium",
+      highlight: true,
+    }
+  ],
+  ovo: [
+    {
+      id: "pro",
+      name: "Pro",
+      price: 25000,
+      description: "Automate OVO P2P and Bank transfers for your system.",
+      features: [
+        { text: "5,000 API Quota Requests", available: true },
+        { text: "Rate Limit 60 RPM", available: true },
+        { text: "Unlimited Bank Inquiry", available: true },
+        { text: "7-Day History Access", available: true },
+        { text: "Priority Support", available: false },
+      ],
+      icon: Briefcase,
+      button: "Buy Pro Plan",
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: 50000,
+      description: "Advanced automation for high-scale disbursement.",
+      features: [
+        { text: "15,000 API Quota Requests", available: true },
+        { text: "Rate Limit 180 RPM", available: true },
+        { text: "Unlimited Bank Inquiry", available: true },
+        { text: "30-Day History Access", available: true },
+        { text: "Priority Support", available: true },
+      ],
+      icon: Crown,
+      button: "Upgrade to Premium",
+      highlight: true,
+    }
   ]
 };
 
@@ -148,11 +214,25 @@ export default function SubscriptionPage() {
   }, [db, user?.uid]);
   const { data: gmSvc } = useDoc(gmRef);
 
+  const spSvcRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "shopeepay");
+  }, [db, user?.uid]);
+  const { data: spSvc } = useDoc(spSvcRef);
+
+  const ovoSvcRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "ovo");
+  }, [db, user?.uid]);
+  const { data: ovoSvc } = useDoc(ovoSvcRef);
+
   const isDev = profile?.dev === true;
 
   const currentPlans: Record<string, string> = {
     orderkuota: orkutSvc?.plan || "",
-    gomerchant: gmSvc?.plan || ""
+    gomerchant: gmSvc?.plan || "",
+    shopeepay: spSvc?.plan || "",
+    ovo: ovoSvc?.plan || ""
   };
 
   return (
@@ -172,7 +252,7 @@ export default function SubscriptionPage() {
 
       <Tabs defaultValue="gomerchant" className="w-full">
         <div className="flex justify-center mb-12">
-          <TabsList className="bg-muted p-1.5 rounded-2xl h-14 flex items-center border border-border shadow-sm">
+          <TabsList className="bg-muted p-1.5 rounded-2xl h-14 flex items-center border border-border shadow-sm overflow-x-auto no-scrollbar">
             <TabsTrigger 
               value="gomerchant" 
               className="rounded-xl px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[11px] uppercase tracking-widest transition-all"
@@ -184,6 +264,18 @@ export default function SubscriptionPage() {
               className="rounded-xl px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[11px] uppercase tracking-widest transition-all"
             >
               Orderkuota
+            </TabsTrigger>
+            <TabsTrigger 
+              value="shopeepay" 
+              className="rounded-xl px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[11px] uppercase tracking-widest transition-all"
+            >
+              ShopeePay
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ovo" 
+              className="rounded-xl px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[11px] uppercase tracking-widest transition-all"
+            >
+              OVO
             </TabsTrigger>
           </TabsList>
         </div>
