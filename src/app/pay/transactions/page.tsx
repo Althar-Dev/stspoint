@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +59,12 @@ export default function STSPayTransactionsPage() {
   };
 
   const transactions = useMemo(() => {
-    const processed = rawTransactions.map(tx => ({
+    // FOKUS: Filter hanya transaksi STSPay (Keluarkan GoMerchant dan Orderkuota)
+    const filtered = rawTransactions.filter(tx => 
+      tx.provider !== 'GoMerchant' && tx.provider !== 'Orderkuota'
+    );
+
+    const processed = filtered.map(tx => ({
       ...tx,
       effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
     }));
@@ -69,13 +75,13 @@ export default function STSPayTransactionsPage() {
       return dateB.getTime() - dateA.getTime();
     });
 
-    const filtered = sorted.filter(t => 
+    const finalFiltered = sorted.filter(t => 
       t.id?.toLowerCase().includes(search.toLowerCase()) ||
       (t.description || "").toLowerCase().includes(search.toLowerCase()) ||
       (t.payerEmail || "").toLowerCase().includes(search.toLowerCase())
     );
 
-    return filtered.slice(0, 50);
+    return finalFiltered.slice(0, 50);
   }, [rawTransactions, search]);
 
   const getLogoSource = (methodId: string) => {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,7 +100,12 @@ export default function STSPayBalancesPage() {
     const processedList: any[] = [];
     const now = new Date();
 
-    allTransactions.forEach((tx) => {
+    // FOKUS: Filter hanya transaksi STSPay (Keluarkan GoMerchant dan Orderkuota)
+    const filteredTransactions = allTransactions.filter(tx => 
+      tx.provider !== 'GoMerchant' && tx.provider !== 'Orderkuota'
+    );
+
+    filteredTransactions.forEach((tx) => {
       if (tx.type === 'payment' && ['PAID', 'SETTLED', 'SUCCEEDED'].includes(tx.status)) {
         const netAmount = (tx.amount || 0) - (tx.fee_amount || 0);
         const methodId = tx.payment_method_id || "";

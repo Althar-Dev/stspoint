@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,7 +72,12 @@ export default function STSPayDashboard() {
   };
 
   const transactions = useMemo(() => {
-    const processed = rawTransactions.map(tx => ({
+    // FOKUS: Filter hanya transaksi STSPay (Keluarkan GoMerchant dan Orderkuota)
+    const filtered = rawTransactions.filter(tx => 
+      tx.provider !== 'GoMerchant' && tx.provider !== 'Orderkuota'
+    );
+
+    const processed = filtered.map(tx => ({
       ...tx,
       effectiveStatus: getEffectiveStatus(tx.status, tx.createdAt)
     }));
@@ -132,11 +138,11 @@ export default function STSPayDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2" onClick={() => window.location.reload()}>
-            <RefreshCcw className="w-3 h-3" /> Sync Data
+            <RefreshCcw className="w-3" /> Sync Data
           </Button>
           <Button asChild size="sm" className="rounded-md font-bold text-[10px] uppercase tracking-widest gap-2 bg-primary">
             <Link href="/pay/payment-link">
-              <Plus className="w-3 h-3" /> New Payment
+              <Plus className="w-3" /> New Payment
             </Link>
           </Button>
         </div>
@@ -199,7 +205,7 @@ export default function STSPayDashboard() {
                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">STSPay Balance</p>
                 </div>
                 {stspayLoading ? <Skeleton className="h-10 w-full bg-white/20" /> : (
-                  <h3 className="text-3xl font-headline font-bold">Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}</h3>
+                  <h3 className="text-xl md:text-3xl font-headline font-bold">Rp {(stspaySvc?.balance || 0).toLocaleString('id-ID')}</h3>
                 )}
                 <div className="pt-4 flex gap-2">
                    <Button asChild className="flex-1 bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold rounded-md h-9 text-[10px] uppercase">
