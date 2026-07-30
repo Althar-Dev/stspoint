@@ -61,9 +61,31 @@ export default function OvoTransactionsPage() {
         });
         
         if (res.success && res.data) {
-          // Robust array extraction based on latest OVO documentation
-          const orders = res.data.orders || [];
-          setMutations(Array.isArray(orders) ? orders : []);
+          const rawData = res.data;
+          const extracted: any[] = [];
+
+          const visit = (item: any) => {
+            if (!item || typeof item !== 'object') return;
+            if (Array.isArray(item.complete)) extracted.push(...item.complete);
+            if (Array.isArray(item.pending)) extracted.push(...item.pending);
+            if (Array.isArray(item.orders)) extracted.push(...item.orders);
+            if (item.merchant_name || item.transaction_amount || item.desc1 || item.merchant_invoice) {
+              if (!item.complete && !item.pending && !item.orders) {
+                extracted.push(item);
+              }
+            }
+            if (Array.isArray(item.data)) {
+              item.data.forEach(visit);
+            }
+          };
+
+          if (Array.isArray(rawData)) {
+            rawData.forEach(visit);
+          } else if (typeof rawData === 'object') {
+            visit(rawData);
+          }
+
+          setMutations(extracted);
         } else {
           setMutations([]);
         }

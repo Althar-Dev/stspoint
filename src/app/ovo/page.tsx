@@ -7,12 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
 import {
@@ -26,14 +26,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
-  Wallet, 
-  RefreshCcw, 
-  Link as LinkIcon, 
-  ShieldAlert, 
-  PowerOff, 
-  Smartphone, 
-  Loader2, 
+import {
+  Wallet,
+  RefreshCcw,
+  Link as LinkIcon,
+  ShieldAlert,
+  PowerOff,
+  Smartphone,
+  Loader2,
   User as UserIcon,
   Save,
   Settings as SettingsIcon,
@@ -56,7 +56,7 @@ import { getOvoBalance, getOvoMutations } from "@/lib/ovo/data";
 export default function OvoDashboardPage() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
-  
+
   // Connection Flow States
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,7 +84,7 @@ export default function OvoDashboardPage() {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "ovo");
   }, [db, user?.uid]);
-  
+
   const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
 
   const isConnected = !!ovo?.token;
@@ -122,13 +122,30 @@ export default function OvoDashboardPage() {
         // Improved Robust Data Mapping for Mutations
         if (mutationRes.success && mutationRes.data) {
           const rawData = mutationRes.data;
-          if (Array.isArray(rawData.orders)) {
-            setMutations(rawData.orders);
-          } else if (Array.isArray(rawData)) {
-            setMutations(rawData);
-          } else {
-            setMutations([]);
+          const extracted: any[] = [];
+
+          const visit = (item: any) => {
+            if (!item || typeof item !== 'object') return;
+            if (Array.isArray(item.complete)) extracted.push(...item.complete);
+            if (Array.isArray(item.pending)) extracted.push(...item.pending);
+            if (Array.isArray(item.orders)) extracted.push(...item.orders);
+            if (item.merchant_name || item.transaction_amount || item.desc1 || item.merchant_invoice) {
+              if (!item.complete && !item.pending && !item.orders) {
+                extracted.push(item);
+              }
+            }
+            if (Array.isArray(item.data)) {
+              item.data.forEach(visit);
+            }
+          };
+
+          if (Array.isArray(rawData)) {
+            rawData.forEach(visit);
+          } else if (typeof rawData === 'object') {
+            visit(rawData);
           }
+
+          setMutations(extracted);
         } else {
           setMutations([]);
         }
@@ -179,11 +196,11 @@ export default function OvoDashboardPage() {
     if (!otpCode || !refId) return;
     setIsProcessing(true);
     try {
-      const res = await verifyOvoOtp({ 
-        refId, 
-        otp: otpCode, 
-        phone, 
-        deviceId: currentDeviceId 
+      const res = await verifyOvoOtp({
+        refId,
+        otp: otpCode,
+        phone,
+        deviceId: currentDeviceId
       });
       if (res.success && res.data) {
         setOtpToken(res.data.otp_token);
@@ -203,22 +220,22 @@ export default function OvoDashboardPage() {
     if (!pinCode || !refId || !otpToken) return;
     setIsProcessing(true);
     try {
-      const res = await verifyOvoPin({ 
+      const res = await verifyOvoPin({
         pin: pinCode,
         otpToken: otpToken,
         phone,
         refId,
         deviceId: currentDeviceId
       });
-      
+
       if (res.success && res.data && ovoRef) {
         await setDoc(ovoRef, {
           username: phone || "OVO User",
-          token: res.data.refreshToken, 
+          token: res.data.refreshToken,
           deviceId: currentDeviceId,
           updatedAt: serverTimestamp()
         }, { merge: true });
-        
+
         setIsDialogOpen(false);
         setStep(1);
         setPhone("");
@@ -314,12 +331,12 @@ export default function OvoDashboardPage() {
                         {step === 1 ? "OVO Login" : step === 2 ? "OTP Code" : "OVO PIN"}
                       </DialogTitle>
                       <DialogDescription className="text-xs text-center">
-                        {step === 1 ? "Enter your phone number to receive a WhatsApp OTP." : 
-                         step === 2 ? "Enter the 6-digit code received on WhatsApp." :
-                         "Enter your 6-digit OVO security PIN."}
+                        {step === 1 ? "Enter your phone number to receive a WhatsApp OTP." :
+                          step === 2 ? "Enter the 6-digit code received on WhatsApp." :
+                            "Enter your 6-digit OVO security PIN."}
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="py-4">
                       {step === 1 && (
                         <div className="space-y-4">
@@ -327,9 +344,9 @@ export default function OvoDashboardPage() {
                             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
                             <div className="relative">
                               <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                              <Input 
-                                placeholder="0812xxxx" 
-                                value={phone} 
+                              <Input
+                                placeholder="0812xxxx"
+                                value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 className="pl-10 rounded-xl h-12 bg-muted/50 border-transparent focus:bg-background transition-all font-bold"
                               />
@@ -345,9 +362,9 @@ export default function OvoDashboardPage() {
                         <div className="space-y-4">
                           <div className="space-y-2 text-center">
                             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">OTP Code</Label>
-                            <Input 
-                              placeholder="xxxx" 
-                              value={otpCode} 
+                            <Input
+                              placeholder="xxxx"
+                              value={otpCode}
                               onChange={(e) => setOtpCode(e.target.value)}
                               className="h-14 text-center text-2xl font-headline font-bold tracking-[0.5em] rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                               maxLength={6}
@@ -363,10 +380,10 @@ export default function OvoDashboardPage() {
                         <div className="space-y-4">
                           <div className="space-y-2 text-center">
                             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">PIN Code</Label>
-                            <Input 
+                            <Input
                               type="password"
-                              placeholder="••••••" 
-                              value={pinCode} 
+                              placeholder="••••••"
+                              value={pinCode}
                               onChange={(e) => setPinCode(e.target.value)}
                               className="h-14 text-center text-xl font-headline font-bold tracking-[0.8em] rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                               maxLength={6}
@@ -383,43 +400,59 @@ export default function OvoDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start mb-auto">
+                <div className="flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 mb-4">
                   <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
+                  {/* OVO POINTS Badge */}
+                  <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-[#4C2B9A] whitespace-nowrap bg-[#4C2B9A]/5 px-2.5 py-1 rounded-md border border-[#4C2B9A]/10 shrink-0">
+                    <span className="text-muted-foreground font-black opacity-50 text-[8px] tracking-tighter uppercase">OVO POINTS</span>
+                    <span>Rp {balances.points.toLocaleString('id-ID')}</span>
+                  </div>
                 </div>
 
-                {/* Amount Section - Right Above The Line */}
-                <div className="pb-4 mt-auto">
-                  <div className="flex items-end justify-between gap-4">
+                {/* Amount Section */}
+                <div className="pb-4">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="space-y-1">
                       {dataLoading ? (
                         <Skeleton className="h-8 md:h-10 w-32 md:w-48" />
                       ) : (
                         <div className="flex items-baseline gap-2">
-                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
+                          <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
                             Rp {balances.cash.toLocaleString('id-ID')}
                           </h2>
-                          <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm hidden sm:flex">Live</Badge>
+                          <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Live</Badge>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex flex-col items-end gap-2">
-                      {/* OVO POINTS Rp 0 (Inline & Above Logo) */}
-                      <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-[#4C2B9A] whitespace-nowrap bg-[#4C2B9A]/5 px-2 py-0.5 rounded-md border border-[#4C2B9A]/10">
-                        <span className="text-muted-foreground font-black opacity-50 text-[8px] tracking-tighter uppercase">OVO POINTS</span>
-                        <span>Rp {balances.points.toLocaleString('id-ID')}</span>
-                      </div>
-                      <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm">
-                        <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
-                      </div>
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm shrink-0">
+                      <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex wrap gap-3 pt-6 border-t border-border">
-                  <Button 
-                    variant="outline" 
-                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider gap-2" 
+                {/* Action Buttons Section */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3 pt-4 sm:pt-6 border-t border-border">
+                  <Link href="/ovo/transfer" className="w-full sm:w-auto">
+                    <Button
+                      className="w-full sm:w-auto bg-[#4C2B9A] hover:bg-[#4C2B9A]/90 text-white font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider gap-2 shadow-md"
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      Transfer
+                    </Button>
+                  </Link>
+                  <Link href="/ovo/transactions" className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto bg-transparent border-border hover:bg-accent font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider gap-2"
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      Riwayat Transaksi
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto bg-transparent border-border hover:bg-accent font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider gap-2"
                     onClick={handleManualRefresh}
                     disabled={dataLoading}
                   >
@@ -486,16 +519,16 @@ export default function OvoDashboardPage() {
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Master QR Payload</Label>
-                          <Textarea 
-                            placeholder="Paste your OVO static QR string here..." 
-                            value={baseQrInput} 
+                          <Textarea
+                            placeholder="Paste your OVO static QR string here..."
+                            value={baseQrInput}
                             onChange={(e) => setBaseQrInput(e.target.value)}
                             className="rounded-xl min-h-[120px] text-xs font-mono bg-muted/30 border-transparent focus:bg-background transition-all break-all"
                           />
                         </div>
                         <Button onClick={handleSaveSettings} disabled={isProcessing} className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white">
-                           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                           Save Settings
+                          {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                          Save Settings
                         </Button>
                       </div>
                     </DialogContent>
@@ -511,66 +544,66 @@ export default function OvoDashboardPage() {
       <div className="w-full max-w-full grid grid-cols-1 min-w-0 overflow-hidden">
         <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card h-[450px] flex flex-col">
           <CardHeader className="px-8 py-5 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A] flex flex-row items-center justify-between shrink-0">
-             <CardTitle className="text-[12px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
-                <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
-                OVO Transactions
-             </CardTitle>
-             <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Records</Badge>
+            <CardTitle className="text-[12px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+              <RefreshCcw className={`w-4 h-4 text-[#4C2B9A] ${dataLoading ? 'animate-spin' : ''}`} />
+              OVO Transactions
+            </CardTitle>
+            <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{mutations.length} Records</Badge>
           </CardHeader>
           <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
-             <table className="w-full min-w-[700px] text-left text-xs border-collapse">
-                <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10">
-                   <tr className="border-b border-border">
-                      <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Source / Description</th>
-                      <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Amount</th>
-                      <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Type</th>
-                      <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Waktu</th>
-                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {dataLoading ? (
-                     Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
-                     ))
-                  ) : mutations.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
-                         <div className="flex flex-col items-center gap-3 opacity-20">
-                            <Clock className="w-10 h-10" />
-                            <p className="text-[10px] font-bold uppercase tracking-widest">No mutations found</p>
-                         </div>
+            <table className="w-full min-w-[700px] text-left text-xs border-collapse">
+              <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10">
+                <tr className="border-b border-border">
+                  <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Source / Description</th>
+                  <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Amount</th>
+                  <th className="px-6 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Type</th>
+                  <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Waktu</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {dataLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}><td colSpan={4} className="px-8 py-6"><Skeleton className="h-4 w-full" /></td></tr>
+                  ))
+                ) : mutations.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-8 py-24 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center gap-3 opacity-20">
+                        <Clock className="w-10 h-10" />
+                        <p className="text-[10px] font-bold uppercase tracking-widest">No mutations found</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : mutations.map((item, i) => {
+                  const amtValue = parseNumericValue(item.transaction_amount);
+                  const isTopup = String(item.transaction_type || "").includes("TOPUP") || (item.emoney_topup && item.emoney_topup > 0);
+
+                  return (
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-8 py-4 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</span>
+                          <span className="text-[10px] text-muted-foreground italic truncate max-w-[200px]">{item.desc2}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`font-bold ${isTopup ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <Badge variant="outline" className="border-border text-[8px] uppercase font-bold px-1.5 h-4">
+                          {item.transaction_type || "FINANCIAL"}
+                        </Badge>
+                      </td>
+                      <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
+                        {item.transaction_date} {item.transaction_time}
                       </td>
                     </tr>
-                  ) : mutations.map((item, i) => {
-                    const amtValue = parseNumericValue(item.transaction_amount);
-                    const isTopup = String(item.transaction_type || "").includes("TOPUP") || (item.emoney_topup && item.emoney_topup > 0);
-                    
-                    return (
-                      <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-8 py-4 whitespace-nowrap">
-                           <div className="flex flex-col">
-                              <span className="font-bold text-foreground/80">{item.merchant_name || item.desc1 || "OVO Transaction"}</span>
-                              <span className="text-[10px] text-muted-foreground italic truncate max-w-[200px]">{item.desc2}</span>
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <span className={`font-bold ${isTopup ? 'text-emerald-600' : 'text-rose-500'}`}>
-                            {isTopup ? '+' : '-'}Rp {Math.abs(amtValue).toLocaleString('id-ID')}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <Badge variant="outline" className="border-border text-[8px] uppercase font-bold px-1.5 h-4">
-                            {item.transaction_type || "FINANCIAL"}
-                          </Badge>
-                        </td>
-                        <td className="px-8 py-4 whitespace-nowrap text-right text-muted-foreground font-medium text-[10px]">
-                           {item.transaction_date} {item.transaction_time}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-             </table>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>
