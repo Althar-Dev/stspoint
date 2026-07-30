@@ -33,7 +33,7 @@ export function DocsOvo() {
         </div>
         <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">OVO API</h1>
         <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
-          Integrasi OVO memungkinkan sistem Anda untuk memantau mutasi secara real-time, melakukan verifikasi akun tujuan, serta mengeksekusi transfer dana ke sesama OVO maupun ke rekening bank melalui saldo akun OVO Anda yang terhubung.
+          Integrasi OVO memungkinkan sistem Anda untuk memantau mutasi secara real-time, melakukan verifikasi akun tujuan, serta mengeksekusi transfer dana ke sesama OVO maupun ke rekening bank melalui saldo akun OVO Anda yang terhubung secara otomatis.
         </p>
       </section>
 
@@ -42,10 +42,10 @@ export function DocsOvo() {
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
             <History className="w-6 h-6 text-purple-600" />
-            Get OVO Transactions
+            Riwayat Mutasi
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Menarik riwayat mutasi dana masuk dan keluar dari akun OVO yang terhubung.
+            Tarik log mutasi transaksi (dana masuk & keluar) dari akun OVO Anda untuk keperluan rekonsiliasi otomatis.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
@@ -56,19 +56,107 @@ export function DocsOvo() {
         <div className="space-y-4">
            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Code2 className="w-3.5 h-3.5" />
-             Request Example
+             Implementation Snippets
            </h4>
-           <CodeBlock 
-              title="Shell / cURL"
-              type="curl"
-              code={`curl -X POST https://api.stspoint.id/api/ovo/transactions \\
+           <Tabs defaultValue="curl" className="w-full">
+              <TabsList className="bg-muted p-1 rounded-xl h-11 w-fit mb-4">
+                <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
+                <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
+                <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
+                <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="curl">
+                <CodeBlock 
+                  title="Shell / cURL"
+                  type="curl"
+                  code={`curl -X POST https://api.stspoint.id/api/ovo/transactions \\
   -H "Content-Type: application/json" \\
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
     "page": 1,
     "limit": 10
   }'`}
-           />
+                />
+              </TabsContent>
+              <TabsContent value="node">
+                <CodeBlock 
+                  title="Node.js (Fetch)"
+                  type="node"
+                  code={`const res = await fetch('https://api.stspoint.id/api/ovo/transactions', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    secret_key: 'STS-Key-XXXXXXXX',
+    page: 1,
+    limit: 10
+  })
+});
+const data = await res.json();
+console.log(data);`}
+                />
+              </TabsContent>
+              <TabsContent value="python">
+                <CodeBlock 
+                  title="Python (Requests)"
+                  type="python"
+                  code={`import requests
+
+payload = {
+    "secret_key": "STS-Key-XXXXXXXX",
+    "page": 1,
+    "limit": 10
+}
+res = requests.post("https://api.stspoint.id/api/ovo/transactions", json=payload)
+print(res.json())`}
+                />
+              </TabsContent>
+              <TabsContent value="php">
+                <CodeBlock 
+                  title="PHP (CURL)"
+                  type="php"
+                  code={`<?php
+$payload = [
+    "secret_key" => "STS-Key-XXXXXXXX",
+    "page" => 1,
+    "limit" => 10
+];
+
+$ch = curl_init("https://api.stspoint.id/api/ovo/transactions");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+$response = curl_exec($ch);
+echo $response;
+?>`}
+                />
+              </TabsContent>
+           </Tabs>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2 px-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Response Example
+          </p>
+          <CodeBlock 
+            title="Transactions JSON"
+            type="json"
+            code={`{
+  "success": true,
+  "data": [
+    {
+      "merchant_name": "OVO Cash Topup",
+      "transaction_amount": "50000.00",
+      "transaction_type": "TOPUP",
+      "transaction_date": "2024-10-24",
+      "transaction_time": "08:42:11",
+      "status": "SUCCESS"
+    }
+  ]
+}`}
+          />
         </div>
       </section>
 
@@ -77,16 +165,26 @@ export function DocsOvo() {
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
             <Search className="w-6 h-6 text-purple-600" />
-            Check OVO Number
+            Inquiry Nomor OVO
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Melakukan inkuiri nomor telepon untuk mendapatkan nama pemilik akun OVO sebelum melakukan transfer.
+            Dapatkan nama asli pemilik akun OVO berdasarkan nomor telepon untuk memastikan dana dikirim ke orang yang tepat.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
             <span className="text-primary">/api/ovo/check</span>
           </div>
         </div>
+
+        <CodeBlock 
+          title="Request Payload"
+          type="json"
+          code={`{
+  "secret_key": "STS-Key-XXXXXXXX",
+  "phone": "081234567890",
+  "amount": 10000
+}`}
+        />
 
         <CodeBlock 
           title="Response Success (200)"
@@ -106,10 +204,10 @@ export function DocsOvo() {
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
             <Send className="w-6 h-6 text-purple-600" />
-            Transfer to OVO
+            Transfer Sesama OVO
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Eksekusi pengiriman dana dari akun Anda ke akun OVO lain.
+            Kirim dana secara instan dari saldo OVO Anda ke pengguna OVO lainnya tanpa biaya admin.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
             <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
@@ -117,36 +215,29 @@ export function DocsOvo() {
           </div>
         </div>
 
-        <div className="space-y-6">
-           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Request Parameters</h4>
-           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
-              <table className="w-full text-left text-xs border-collapse min-w-[500px]">
-                 <thead className="bg-muted/50 border-b border-border">
-                    <tr>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Type</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Description</th>
-                    </tr>
-                 </thead>
-                 <tbody className="divide-y divide-border">
-                    <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-purple-600 whitespace-nowrap">phone</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nomor tujuan (e.g. 0812xxx)</td>
-                    </tr>
-                    <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-purple-600 whitespace-nowrap">amount</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Nominal transfer (IDR)</td>
-                    </tr>
-                    <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-purple-600 whitespace-nowrap">message</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap italic">Opsional. Catatan transfer.</td>
-                    </tr>
-                 </tbody>
-              </table>
-           </div>
+        <div className="space-y-4">
+           <CodeBlock 
+              title="Execute Transfer Request"
+              type="json"
+              code={`{
+  "secret_key": "STS-Key-XXXXXXXX",
+  "phone": "081234567890",
+  "amount": 50000,
+  "message": "Pembayaran Invoice #99"
+}`}
+           />
+           <CodeBlock 
+              title="Response Success"
+              type="json"
+              code={`{
+  "success": true,
+  "message": "Transfer berhasil ke ALHADI ADRIANO",
+  "data": {
+    "refId": "OVO-TRX-12345",
+    "amount": 50000
+  }
+}`}
+           />
         </div>
       </section>
 
@@ -155,10 +246,10 @@ export function DocsOvo() {
         <div className="space-y-4">
           <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
             <Landmark className="w-6 h-6 text-purple-600" />
-            Bank Disbursement
+            Kirim ke Rekening Bank
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-            Kirim dana dari saldo OVO Anda ke seluruh rekening bank di Indonesia.
+            Gunakan saldo OVO Anda sebagai sumber dana untuk melakukan pencairan (*disbursement*) ke ratusan bank di Indonesia.
           </p>
         </div>
 
@@ -169,7 +260,7 @@ export function DocsOvo() {
                     <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px]">POST</UiBadge>
                     <span className="font-bold text-xs font-mono">/api/transfer/banks</span>
                  </div>
-                 <p className="text-xs text-muted-foreground">Mengambil daftar kode bank tujuan yang didukung oleh OVO Bridge.</p>
+                 <p className="text-xs text-muted-foreground">Mengambil daftar kode bank resmi (e.g. BCA: 014, Mandiri: 008).</p>
               </CardContent>
            </Card>
            <Card className="border-border shadow-none bg-muted/20 rounded-2xl overflow-hidden">
@@ -178,7 +269,7 @@ export function DocsOvo() {
                     <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px]">POST</UiBadge>
                     <span className="font-bold text-xs font-mono">/api/ovo/transfer/bank-inquiry</span>
                  </div>
-                 <p className="text-xs text-muted-foreground">Verifikasi nomor rekening bank dan nama pemilik sebelum transfer.</p>
+                 <p className="text-xs text-muted-foreground">Verifikasi pemilik rekening bank secara real-time sebelum pengiriman.</p>
               </CardContent>
            </Card>
         </div>
@@ -193,14 +284,28 @@ export function DocsOvo() {
               <span className="text-primary">/api/ovo/transfer/bank</span>
            </div>
            <CodeBlock 
-              title="Bank Transfer Request Payload"
+              title="Full Bank Payout Payload"
               type="json"
               code={`{
   "secret_key": "STS-Key-XXXXXXXX",
   "bank_code": "014",
   "account_no": "1234567890",
-  "amount": 50000,
-  "message": "Payout ID #8329"
+  "amount": 150000,
+  "message": "Payout for Merchant ID #123",
+  "account_name": "JOHN DOE"
+}`}
+           />
+           <CodeBlock 
+              title="Disbursement Success Response"
+              type="json"
+              code={`{
+  "success": true,
+  "message": "Transfer ke Rekening Bank Berhasil",
+  "data": {
+    "txId": "BANK-WD-8392",
+    "amount": 150000,
+    "fee": 2500
+  }
 }`}
            />
         </div>
@@ -213,7 +318,7 @@ export function DocsOvo() {
             <div className="space-y-1">
                <p className="text-sm font-bold text-purple-900 uppercase tracking-tight">Security Warning</p>
                <p className="text-xs text-purple-800 leading-relaxed">
-                  Semua transaksi transfer dana OVO bersifat final dan tidak dapat dibatalkan. Pastikan Anda melakukan <strong>Check Number</strong> atau <strong>Bank Inquiry</strong> terlebih dahulu untuk meminimalisir kesalahan kirim.
+                  Semua transaksi transfer dana OVO bersifat final dan tidak dapat dibatalkan. Pastikan Anda selalu melakukan <strong>Bank Inquiry</strong> atau <strong>OVO Check</strong> terlebih dahulu untuk meminimalisir kesalahan kirim.
                </p>
             </div>
          </div>
