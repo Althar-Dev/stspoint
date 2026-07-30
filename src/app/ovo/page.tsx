@@ -44,7 +44,6 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
@@ -275,7 +274,7 @@ export default function OvoDashboardPage() {
         {/* Balance Card */}
         <Card className="lg:col-span-2 border border-border shadow-sm rounded-3xl bg-card overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#4C2B9A]/5 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
-          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[220px]">
+          <CardContent className="p-6 md:p-10 relative z-10 h-full flex flex-col min-h-[260px]">
             {isLoading ? (
               <div className="space-y-6 h-full flex flex-col">
                 <div className="flex justify-between items-start mb-auto">
@@ -284,8 +283,8 @@ export default function OvoDashboardPage() {
                   </div>
                   <Skeleton className="w-12 h-12 rounded-2xl" />
                 </div>
-                <div className="pb-4">
-                  <Skeleton className="h-10 w-48 mt-1" />
+                <div className="pb-4 mt-auto">
+                  <Skeleton className="h-10 w-48" />
                 </div>
                 <div className="flex gap-3 pt-6 border-t border-border">
                   <Skeleton className="h-12 w-32 rounded-xl" />
@@ -386,32 +385,39 @@ export default function OvoDashboardPage() {
               <>
                 <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] mb:text-xl font-bold uppercase tracking-widest">Available OVO Cash</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-3">
-                    <div className="flex items-center gap-1.5 whitespace-nowrap bg-[#4C2B9A]/5 px-2.5 py-1 rounded-lg border border-[#4C2B9A]/10">
-                       <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO POINTS</p>
-                       <p className="text-[11px] font-bold text-[#4C2B9A]">
-                          {dataLoading ? "---" : `Rp ${balances.points.toLocaleString('id-ID')}`}
-                       </p>
-                    </div>
-                    <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm group-hover:border-[#4C2B9A]/20 transition-colors p-2">
-                      <img src="/assets/main/ovo.png" alt="OVO" className="w-14 h-14 object-contain" />
-                    </div>
+                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
                   </div>
                 </div>
 
                 <div className="pb-4 mt-auto">
-                  {dataLoading ? (
-                    <Skeleton className="h-10 w-48 mt-1" />
-                  ) : (
-                    <div className="flex items-baseline gap-2">
-                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
-                        Rp {balances.cash.toLocaleString('id-ID')}
-                      </h2>
-                      <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm">Sync Active</Badge>
+                  <div className="flex items-end justify-between gap-4">
+                    {/* Kiri: Cash Amount */}
+                    <div className="space-y-1">
+                      {dataLoading ? (
+                        <Skeleton className="h-8 md:h-10 w-32 md:w-48" />
+                      ) : (
+                        <div className="flex items-baseline gap-2">
+                          <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#4C2B9A]">
+                            Rp {balances.cash.toLocaleString('id-ID')}
+                          </h2>
+                          <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[8px] font-bold uppercase h-4 px-1.5 rounded-sm hidden sm:flex">Live</Badge>
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    {/* Kanan: Points & Logo */}
+                    <div className="flex flex-col items-end gap-2">
+                      {/* OVO POINTS Rp 0 (Inline) */}
+                      <div className="flex items-center gap-1.5 text-[10px] md:text-xs font-bold text-[#4C2B9A] whitespace-nowrap bg-[#4C2B9A]/5 px-2 py-0.5 rounded-md border border-[#4C2B9A]/10">
+                        <span className="text-muted-foreground font-black opacity-50 text-[8px] tracking-tighter uppercase">OVO POINTS</span>
+                        <span>Rp {balances.points.toLocaleString('id-ID')}</span>
+                      </div>
+                      {/* Logo */}
+                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm p-1.5">
+                        <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex wrap gap-3 pt-6 border-t border-border">
@@ -516,7 +522,7 @@ export default function OvoDashboardPage() {
              <Badge variant="outline" className="border-border text-[9px] font-bold h-6 uppercase">{Array.isArray(mutations) ? mutations.length : 0} Records</Badge>
           </CardHeader>
           <div className="flex-1 overflow-x-auto overflow-y-auto w-full">
-             <table className="w-full min-w-[700px] text-left text-xs">
+             <table className="w-full min-w-[700px] text-left text-xs border-collapse">
                 <thead className="sticky top-0 bg-muted/80 backdrop-blur-md z-10">
                    <tr className="border-b border-border">
                       <th className="px-8 py-3 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Source / Description</th>
