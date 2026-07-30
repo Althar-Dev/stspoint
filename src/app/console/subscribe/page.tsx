@@ -265,28 +265,28 @@ export default function SubscriptionPage() {
               value="gomerchant" 
               className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              <Globe className="w-4 h-4 sm:hidden" />
+              <img src="/assets/main/gm.png" alt="GM" className="w-5 h-5 sm:hidden object-contain" />
               <span className="hidden sm:inline">GoMerchant</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orderkuota" 
               className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              <Code2 className="w-4 h-4 sm:hidden" />
+              <img src="/assets/img/orkut.png" alt="Orkut" className="w-5 h-5 sm:hidden object-contain" />
               <span className="hidden sm:inline">Orderkuota</span>
             </TabsTrigger>
             <TabsTrigger 
               value="shopeepay" 
               className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              <ShoppingBag className="w-4 h-4 sm:hidden" />
+              <img src="/assets/main/spm.png" alt="ShopeePay" className="w-5 h-5 sm:hidden object-contain" />
               <span className="hidden sm:inline">ShopeePay</span>
             </TabsTrigger>
             <TabsTrigger 
               value="ovo" 
               className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              <Wallet className="w-4 h-4 sm:hidden" />
+              <img src="/assets/main/ovo.png" alt="OVO" className="w-5 h-5 sm:hidden object-contain" />
               <span className="hidden sm:inline">OVO</span>
             </TabsTrigger>
           </TabsList>
