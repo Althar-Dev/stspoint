@@ -5,7 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Crown, Building2, Briefcase, X, Loader2, ShieldCheck } from "lucide-react";
+import { 
+  Check, 
+  Crown, 
+  Building2, 
+  Briefcase, 
+  X, 
+  Loader2, 
+  ShieldCheck,
+  Globe,
+  Code2,
+  ShoppingBag,
+  Wallet
+} from "lucide-react";
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
@@ -168,7 +180,6 @@ const servicePlans = {
       features: [
         { text: "15,000 API Quota Requests", available: true },
         { text: "Rate Limit 180 RPM", available: true },
-        { text: "Unlimited Bank Inquiry", available: true },
         { text: "30-Day History Access", available: true },
         { text: "Priority Support", available: true },
       ],
@@ -186,11 +197,9 @@ export default function SubscriptionPage() {
   const [basePath, setBasePath] = useState("/console/subscribe/checkout");
 
   useEffect(() => {
-    // Generate stable ref ID on mount to avoid hydration mismatch
     const randomRef = `STS${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
     setRefId(randomRef);
 
-    // Adjust path for subdomain production
     if (typeof window !== 'undefined' && window.location.hostname.startsWith("console.")) {
       setBasePath("/subscribe/checkout");
     }
@@ -237,7 +246,6 @@ export default function SubscriptionPage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-8 md:space-y-12 animate-in fade-in duration-500 px-4">
-      {/* Header Section */}
       <div className="flex flex-col items-center justify-center text-center gap-3 md:gap-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-primary/5 border border-primary/10 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
           Premium Infrastructure
@@ -252,30 +260,34 @@ export default function SubscriptionPage() {
 
       <Tabs defaultValue="gomerchant" className="w-full">
         <div className="flex justify-center mb-8 md:mb-12">
-          <TabsList className="bg-muted p-1 rounded-xl md:rounded-2xl h-12 md:h-16 flex items-center border border-border shadow-sm overflow-x-auto no-scrollbar w-full sm:w-fit sm:min-w-[400px]">
+          <TabsList className="bg-muted p-1 rounded-xl md:rounded-2xl h-12 md:h-16 flex items-center border border-border shadow-sm overflow-x-auto no-scrollbar w-full sm:w-fit sm:min-w-[450px]">
             <TabsTrigger 
               value="gomerchant" 
-              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
+              className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              GoMerchant
+              <Globe className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline">GoMerchant</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orderkuota" 
-              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
+              className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              Orderkuota
+              <Code2 className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline">Orderkuota</span>
             </TabsTrigger>
             <TabsTrigger 
               value="shopeepay" 
-              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
+              className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              ShopeePay
+              <ShoppingBag className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline">ShopeePay</span>
             </TabsTrigger>
             <TabsTrigger 
               value="ovo" 
-              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
+              className="flex-1 sm:flex-none sm:min-w-[120px] rounded-lg md:rounded-xl px-2 sm:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0 gap-2"
             >
-              OVO
+              <Wallet className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline">OVO</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -316,7 +328,7 @@ export default function SubscriptionPage() {
                         {plan.description}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="px-6 md:px-10 pb-6 md:pb-10 flex-1 space-y-6 md:space-y-10">
+                    <CardContent className="px-6 md:p-10 pb-6 md:pb-10 flex-1 space-y-6 md:space-y-10">
                       <div className="flex flex-col">
                         <div className="flex items-baseline gap-1">
                           <span className="text-2xl md:text-4xl font-headline font-bold tracking-tight">{priceString}</span>
