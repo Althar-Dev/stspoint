@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -132,18 +133,16 @@ export function MainHeader({
   const isSubscriptionPage = pathname.includes('/subscribe');
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
+    <header className="h-16 w-full flex items-center justify-between px-6 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="flex items-center gap-4 flex-1">
         <div className="flex items-center gap-2">
           {isSubscriptionPage ? (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <button 
               onClick={() => router.back()}
-              className="h-8 w-8 text-muted-foreground hover:text-primary rounded-md"
+              className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-primary rounded-md transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-            </Button>
+            </button>
           ) : (
             <SidebarTrigger className="text-muted-foreground hover:text-primary" />
           )}
@@ -162,7 +161,7 @@ export function MainHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="center" 
-              className="w-[400px] rounded-2xl p-2 border-border"
+              className="w-[320px] sm:w-[400px] rounded-2xl p-2 border-border"
             >
               <DropdownMenuLabel className="font-headline font-bold text-xs uppercase tracking-widest text-muted-foreground px-3 py-2 flex items-center justify-between">
                 Notifications

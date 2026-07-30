@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -114,7 +115,7 @@ export default function STSPaySettingsPage() {
         {/* Identitas Bisnis & Merchant */}
         <Card className="border-border shadow-sm rounded-2xl md:rounded-[2rem] bg-card overflow-hidden">
           <CardHeader className="px-6 md:px-8 py-5 md:py-6 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
-            <CardTitle className="text-[11px] md:text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+            <CardTitle className="text-[11px] md:text-xs font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
               <Building2 className="w-4 h-4 text-primary" />
               Profil Identitas
             </CardTitle>

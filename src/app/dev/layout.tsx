@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -133,7 +134,6 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
 
   const isUrlActive = (itemUrl: string) => {
     const cleanItemUrl = itemUrl.split('?')[0];
-    // Support both /dev/xxx and /xxx (subdomain)
     return pathname === cleanItemUrl || pathname === cleanItemUrl.replace('/dev', '');
   };
 
@@ -257,7 +257,7 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary">
+    <div className="flex h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
@@ -297,9 +297,9 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1 bg-transparent min-w-0">
+      <SidebarInset className="flex flex-col flex-1 bg-transparent min-w-0 overflow-hidden">
         <MainHeader showSidebarTrigger={false} />
-        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           {children}
         </main>
       </SidebarInset>

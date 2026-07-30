@@ -1,3 +1,4 @@
+
 "use client";
 
 import { 
@@ -248,7 +249,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1 min-w-0 bg-background">
+      <SidebarInset className="flex flex-col flex-1 min-w-0 bg-background overflow-hidden">
         <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 min-w-0 overflow-y-auto p-4 md:p-8">
           {children}

@@ -42,8 +42,10 @@ import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { MainHeader } from "@/components/main-header";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { toast } from "@/hooks/use-toast";
 
 const stspayMenuItems = [
   {
@@ -93,6 +95,7 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
   const { setOpen, isMobile } = useSidebar();
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
+  const auth = useAuth();
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -195,7 +198,7 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
+    <div className="flex h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card z-40 transition-all duration-300 ease-in-out"
@@ -242,7 +245,7 @@ function STSPayLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1 bg-background">
+      <SidebarInset className="flex flex-col flex-1 bg-background overflow-hidden">
         <MainHeader searchPlaceholder="Cari data transaksi STSPay..." showSidebarTrigger={false} />
         <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full overflow-y-auto">
           {children}

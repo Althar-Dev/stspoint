@@ -27,7 +27,6 @@ import Image from "next/image";
 import { MainHeader } from "@/components/main-header";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Icon } from "@iconify/react";
 
 const ovoMenuItems = [
   { title: "Dashboard", icon: LayoutDashboard, url: "/ovo" },
@@ -69,7 +68,7 @@ function OvoLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background overflow-hidden">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card shadow-sm z-40 transition-all duration-300 ease-in-out"
@@ -128,7 +127,7 @@ function OvoLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1">
+      <SidebarInset className="flex flex-col flex-1 overflow-hidden">
         <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 p-6 md:p-8 bg-background overflow-y-auto">
           {children}
@@ -138,7 +137,7 @@ function OvoLayoutInner({ children }: { children: ReactNode }) {
   );
 }
 
-export default function OvoLayout({ children }: { children: ReactNode }) {
+export default function OrkutLayout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"

@@ -71,7 +71,7 @@ function ShopeepayLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background overflow-hidden">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
       <Sidebar 
         collapsible="icon" 
         className="border-r border-border bg-card shadow-sm z-40 transition-all duration-300 ease-in-out"
@@ -130,7 +130,7 @@ function ShopeepayLayoutInner({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col flex-1">
+      <SidebarInset className="flex flex-col flex-1 overflow-hidden">
         <MainHeader showSidebarTrigger={false} />
         <main className="flex-1 p-6 md:p-8 bg-background overflow-y-auto">
           {children}

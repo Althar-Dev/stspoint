@@ -96,7 +96,7 @@ function AiLayoutInner({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
+    <div className="flex h-screen w-full bg-background selection:bg-primary/10 selection:text-primary overflow-hidden">
       {isDocsPage ? (
         <SidebarDocs />
       ) : (
@@ -163,7 +163,7 @@ function AiLayoutInner({ children }: { children: ReactNode }) {
         </Sidebar>
       )}
 
-      <SidebarInset className="flex flex-col flex-1 bg-background">
+      <SidebarInset className="flex flex-col flex-1 bg-background overflow-hidden">
         <MainHeader 
           showNotifications={true}
           showProfile={true}
