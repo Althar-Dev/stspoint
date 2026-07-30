@@ -7,12 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
 import {
@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
+import {
   RefreshCcw,
   Clock,
   Link as LinkIcon,
@@ -89,7 +89,7 @@ export default function OrkutPage() {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "orderkuota");
   }, [db, user?.uid]);
-  
+
   const { data: orderkuota, loading: serviceLoading } = useDoc(orderkuotaRef);
 
   const isConnected = !!orderkuota?.token;
@@ -110,7 +110,7 @@ export default function OrkutPage() {
           username: orderkuota.username,
           token: orderkuota.token
         });
-        
+
         if (res.status && res.result?.success) {
           const apiBalance = res.result.account.results.balance;
           // Update Firestore if local balance differs or just to stay fresh
@@ -204,7 +204,7 @@ export default function OrkutPage() {
           balance: parseFloat(res.result.balance),
           updatedAt: serverTimestamp()
         });
-        
+
         setIsDialogOpen(false);
         setStep(1);
         setOtp("");
@@ -317,19 +317,19 @@ export default function OrkutPage() {
                         {step === 1 ? "Connect Orderkuota" : "Verify OTP"}
                       </DialogTitle>
                       <DialogDescription className="text-xs">
-                        {step === 1 
+                        {step === 1
                           ? "Enter your Orkut username and password to receive an OTP."
                           : `Enter the code sent to ${otpInfo}`}
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     {step === 1 ? (
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Username</Label>
-                          <Input 
-                            placeholder="Your Orkut Username" 
-                            value={username} 
+                          <Input
+                            placeholder="Your Orkut Username"
+                            value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                           />
@@ -338,18 +338,18 @@ export default function OrkutPage() {
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                            <Input 
+                            <Input
                               type="password"
-                              placeholder="Orkut Password" 
-                              value={password} 
+                              placeholder="Orkut Password"
+                              value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               className="pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                             />
                           </div>
                         </div>
-                        <Button 
-                          onClick={handleRequestOtp} 
-                          className="w-full h-11 rounded-xl font-bold" 
+                        <Button
+                          onClick={handleRequestOtp}
+                          className="w-full h-11 rounded-xl font-bold"
                           disabled={isProcessing || !username || !password}
                         >
                           {isProcessing ? "Processing..." : "Get OTP Code"}
@@ -359,24 +359,24 @@ export default function OrkutPage() {
                       <div className="space-y-4 py-4">
                         <div className="space-y-2 text-center">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">OTP Code</Label>
-                          <Input 
-                            placeholder="Enter Code" 
-                            value={otp} 
+                          <Input
+                            placeholder="Enter Code"
+                            value={otp}
                             onChange={(e) => setOtp(e.target.value)}
                             className="h-14 text-center text-xl font-headline font-bold tracking-[0.5em] rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all"
                             maxLength={6}
                           />
                         </div>
-                        <Button 
-                          onClick={handleVerifyOtp} 
-                          className="w-full h-11 rounded-xl font-bold" 
+                        <Button
+                          onClick={handleVerifyOtp}
+                          className="w-full h-11 rounded-xl font-bold"
                           disabled={isProcessing || !otp}
                         >
                           {isProcessing ? "Verifying..." : "Verify & Connect"}
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          onClick={() => setStep(1)} 
+                        <Button
+                          variant="ghost"
+                          onClick={() => setStep(1)}
                           className="w-full text-xs font-bold"
                           disabled={isProcessing}
                         >
@@ -389,41 +389,41 @@ export default function OrkutPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start mb-auto">
+                <div className="flex justify-between items-center gap-2 mb-4">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available Balance (Orderkuota)</p>
+                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available Balance</p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-1.5">
-                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={48} height={48} className="w-12 h-12 object-contain" />
+                  <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-primary/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-primary/20 transition-colors p-1.5 shrink-0">
+                    <Image src="/assets/img/orkut.png" alt="Orderkuota" width={48} height={48} className="w-9 h-9 sm:w-12 sm:h-12 object-contain" />
                   </div>
                 </div>
-                
+
                 <div className="pb-4">
                   <div className="flex items-baseline gap-2">
                     {isSyncingBalance ? (
-                       <Skeleton className="h-10 w-48 mt-1" />
+                      <Skeleton className="h-8 sm:h-10 w-32 sm:w-48 mt-1" />
                     ) : (
-                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tighter">
                         Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
                       </h2>
                     )}
                     <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
                   </div>
                 </div>
-                
-                <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
-                  <Button 
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-primary/10 transition-all active:scale-95"
+
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3 pt-4 sm:pt-6 border-t border-border">
+                  <Button
+                    className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider shadow-lg shadow-primary/10 transition-all active:scale-95 gap-2"
                     onClick={handleManualRefresh}
                     disabled={isSyncingBalance || mutationsLoading}
                   >
-                    {isSyncingBalance ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    {isSyncingBalance ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
                     Refresh Balance
                   </Button>
-                  <Button 
+                  <Button
                     asChild
-                    variant="outline" 
-                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider transition-all active:scale-95"
+                    variant="outline"
+                    className="w-full sm:w-auto bg-transparent border-border hover:bg-accent font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider transition-all active:scale-95"
                   >
                     <Link href="/orkut/qris">Generate QRIS</Link>
                   </Button>
@@ -455,9 +455,9 @@ export default function OrkutPage() {
                   <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Connection Info</h4>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-7 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"
                       >
                         <PowerOff className="w-3 h-3 mr-1" />
@@ -473,7 +473,7 @@ export default function OrkutPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter className="gap-2">
                         <AlertDialogCancel className="rounded-xl border-border">Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                           onClick={handleDisconnect}
                           className="bg-red-500 hover:bg-red-600 rounded-xl"
                           disabled={isProcessing}
@@ -488,22 +488,21 @@ export default function OrkutPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                       <UserIcon className="w-5 h-5" />
+                      <UserIcon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{orderkuota?.username}</p>
                       <div className="flex items-center gap-2 mt-1 w-full">
-                        <div className={`shrink-0 w-1.5 h-1.5 rounded-full ${
-                          isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-50'
-                        }`} />
+                        <div className={`shrink-0 w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-50'
+                          }`} />
                         <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
                           <p className="text-[10px] text-muted-foreground font-mono font-medium truncate">
                             {orderkuota?.token || "No Token"}
                           </p>
                           {orderkuota?.token && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-5 w-5 rounded-md hover:bg-background shrink-0"
                               onClick={() => copyToClipboard(orderkuota.token, "Token")}
                             >
@@ -514,7 +513,7 @@ export default function OrkutPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-primary/20 transition-all">
@@ -532,9 +531,9 @@ export default function OrkutPage() {
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">QR String Payload</Label>
-                          <Textarea 
-                            placeholder="Enter your QR string payload here..." 
-                            value={baseQrInput} 
+                          <Textarea
+                            placeholder="Enter your QR string payload here..."
+                            value={baseQrInput}
                             onChange={(e) => setBaseQrInput(e.target.value)}
                             className="rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[150px] text-xs font-mono break-all"
                           />
@@ -557,9 +556,9 @@ export default function OrkutPage() {
                           <p className="text-[9px] text-muted-foreground ml-1">Digunakan untuk menghasilkan nominal unik saat sinkronisasi.</p>
                         </div>
 
-                        <Button 
-                          onClick={handleSaveSettings} 
-                          className="w-full h-11 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/10" 
+                        <Button
+                          onClick={handleSaveSettings}
+                          className="w-full h-11 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/10"
                           disabled={isProcessing}
                         >
                           {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -583,17 +582,16 @@ export default function OrkutPage() {
               Orderkuota Logs
             </CardTitle>
             <div className="flex items-center gap-2">
-               <Badge variant="outline" className={`${
-                 serviceStatus === 'Operational' ? 'border-green-500/20 text-green-600 bg-green-500/5' : 
-                 serviceStatus === 'Unstable' ? 'border-orange-500/20 text-orange-600 bg-orange-500/5' :
-                 'border-red-500/20 text-red-600 bg-red-500/5'
-               } font-bold text-[9px] uppercase h-6 px-2 rounded-md hidden md:flex items-center gap-1.5`}>
-                 <Activity className="w-3 h-3" />
-                 {serviceStatus === 'Unstable' ? 'unstable' : serviceStatus}
-               </Badge>
-               <Button 
-                variant="ghost" 
-                size="sm" 
+              <Badge variant="outline" className={`${serviceStatus === 'Operational' ? 'border-green-500/20 text-green-600 bg-green-500/5' :
+                  serviceStatus === 'Unstable' ? 'border-orange-500/20 text-orange-600 bg-orange-500/5' :
+                    'border-red-500/20 text-red-600 bg-red-500/5'
+                } font-bold text-[9px] uppercase h-6 px-2 rounded-md hidden md:flex items-center gap-1.5`}>
+                <Activity className="w-3 h-3" />
+                {serviceStatus === 'Unstable' ? 'unstable' : serviceStatus}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-[11px] font-bold hover:bg-accent h-8"
                 onClick={handleManualRefresh}
                 disabled={mutationsLoading || !isConnected}
@@ -601,7 +599,7 @@ export default function OrkutPage() {
                 {mutationsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-3 h-3" />}
                 Refresh Logs
               </Button>
-               <Button variant="ghost" size="sm" asChild className="text-[11px] font-bold hover:bg-accent h-8">
+              <Button variant="ghost" size="sm" asChild className="text-[11px] font-bold hover:bg-accent h-8">
                 <Link href="/orkut/transactions">
                   View All Logs
                   <ArrowUpRight className="w-3 h-3 ml-1" />
@@ -641,7 +639,7 @@ export default function OrkutPage() {
                     </td>
                   </tr>
                 ) : serviceStatus === "Maintenance" ? (
-                   <tr>
+                  <tr>
                     <td colSpan={5} className="px-6 py-24 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-3 w-full">
                         <ShieldAlert className="w-8 h-8 text-red-500 opacity-40" />

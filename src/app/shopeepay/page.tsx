@@ -299,21 +299,21 @@ export default function ShopeepayDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start mb-auto">
+                <div className="flex justify-between items-center gap-2 mb-4">
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Total Net Sales (Hari Ini)</p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors p-2.5">
-                    <Image src="/assets/main/spm.png" alt="ShopeePay" width={40} height={40} className="w-10 h-10 object-contain" />
+                  <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-[#EE4D2D]/5 flex items-center justify-center backdrop-blur-md border border-border group-hover:border-[#EE4D2D]/20 transition-colors p-2 shrink-0">
+                    <Image src="/assets/main/spm.png" alt="ShopeePay" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
                   </div>
                 </div>
                 
                 <div className="pb-4">
                   {mutationsLoading ? (
-                    <Skeleton className="h-10 w-48 mt-1" />
+                    <Skeleton className="h-8 sm:h-10 w-32 sm:w-48 mt-1" />
                   ) : (
                     <div className="flex items-baseline gap-2">
-                      <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter text-[#EE4D2D]">
+                      <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tighter text-[#EE4D2D]">
                         Rp {stats.totalNetSales.toLocaleString('id-ID')}
                       </h2>
                       <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
@@ -321,19 +321,19 @@ export default function ShopeepayDashboardPage() {
                   )}
                 </div>
                 
-                <div className="flex flex-wrap gap-3 pt-6 border-t border-border">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-3 pt-4 sm:pt-6 border-t border-border">
                   <Button 
-                    className="bg-[#EE4D2D] text-white hover:bg-[#EE4D2D]/90 font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider shadow-xl shadow-[#EE4D2D]/10 transition-all active:scale-95"
+                    className="w-full sm:w-auto bg-[#EE4D2D] text-white hover:bg-[#EE4D2D]/90 font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider shadow-lg shadow-[#EE4D2D]/10 transition-all active:scale-95 gap-2"
                     onClick={handleManualRefresh}
                     disabled={mutationsLoading}
                   >
-                    {mutationsLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
+                    {mutationsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
                     Refresh Mutasi
                   </Button>
                   <Button 
                     asChild
                     variant="outline" 
-                    className="bg-transparent border-border hover:bg-accent font-bold rounded-xl px-8 h-12 text-[10px] uppercase tracking-wider transition-all active:scale-95"
+                    className="w-full sm:w-auto bg-transparent border-border hover:bg-accent font-bold rounded-xl px-6 h-11 text-[10px] uppercase tracking-wider transition-all active:scale-95"
                   >
                     <Link href="/shopeepay/transactions">Lihat Semua</Link>
                   </Button>
