@@ -1,44 +1,55 @@
 'use server';
 /**
  * @fileOverview Library Pengambilan Data Akun OVO (Mutasi, Saldo, Profil).
+ * Menggunakan Header Authentication sesuai Dokumentasi v1.2.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
 
-const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  'stspointkey': OVO_BRIDGE_KEY,
-  'User-Agent': 'STSPoint-Infrastructure/1.2'
-};
-
-interface OVODataParams {
-  token: string;
-  deviceId: string;
+function getHeaders(token: string, deviceId: string) {
+  return {
+    'Content-Type': 'application/json',
+    'x-ovo-token': token,
+    'x-device-id': deviceId,
+    'stspointkey': OVO_BRIDGE_KEY,
+    'User-Agent': 'STSPoint-Infrastructure/1.2'
+  };
 }
 
 /**
- * Menarik data mutasi transaksi OVO
+ * GET /api/account/transactions
  */
-export async function getOvoMutations(params: OVODataParams & { page?: number; limit?: number }) {
+export async function getOvoMutations(params: { token: string; deviceId: string; page?: number; limit?: number }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/mutasi`, {
-      method: 'POST',
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        token: params.token,
-        deviceId: params.deviceId,
-        page: params.page || 1,
-        limit: params.limit || 15
-      }),
+    const query = new URLSearchParams({
+      page: (params.page || 1).toString(),
+      limit: (params.limit || 10).toString()
+    });
+
+    const response = await fetch(`${OVO_BRIDGE_URL}/account/transactions?${query}`, {
+      method: 'GET',
+      headers: getHeaders(params.token, params.deviceId),
       signal: AbortSignal.timeout(20000),
       cache: 'no-store'
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal menarik data mutasi: Respon server bukan JSON.' };
-    }
+    return await response.json();
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * GET /api/account/balance
+ */
+export async function getOvoBalance(params: { token: string; deviceId: string }) {
+  try {
+    const response = await fetch(`${OVO_BRIDGE_URL}/account/balance`, {
+      method: 'GET',
+      headers: getHeaders(params.token, params.deviceId),
+      signal: AbortSignal.timeout(15000),
+      cache: 'no-store'
+    });
 
     return await response.json();
   } catch (error: any) {
@@ -47,54 +58,16 @@ export async function getOvoMutations(params: OVODataParams & { page?: number; l
 }
 
 /**
- * Mengambil Saldo OVO Cash & Point
+ * GET /api/account/profile
  */
-export async function getOvoBalance(params: OVODataParams) {
+export async function getOvoProfile(params: { token: string; deviceId: string }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/balance`, {
-      method: 'POST',
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        token: params.token,
-        deviceId: params.deviceId
-      }),
+    const response = await fetch(`${OVO_BRIDGE_URL}/account/profile`, {
+      method: 'GET',
+      headers: getHeaders(params.token, params.deviceId),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal cek saldo: Respon server bukan JSON.' };
-    }
-
-    return await response.json();
-  } catch (error: any) {
-    return { success: false, message: error.message };
-  }
-}
-
-/**
- * Mengambil Data Profil Akun
- */
-export async function getOvoProfile(params: OVODataParams) {
-  try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/profile`, {
-      method: 'POST',
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        token: params.token,
-        deviceId: params.deviceId
-      }),
-      signal: AbortSignal.timeout(15000),
-      cache: 'no-store'
-    });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal ambil profil: Respon server bukan JSON.' };
-    }
 
     return await response.json();
   } catch (error: any) {

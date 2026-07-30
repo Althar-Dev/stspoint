@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +69,8 @@ export default function OvoDashboardPage() {
   const [otpCode, setOtpCode] = useState("");
   const [pinCode, setPinCode] = useState("");
   const [refId, setRefId] = useState("");
+  const [currentDeviceId, setCurrentDeviceId] = useState("");
+  const [otpToken, setOtpToken] = useState("");
 
   // Live Data States
   const [balances, setBalances] = useState({ cash: 0, points: 0 });
@@ -88,8 +89,6 @@ export default function OvoDashboardPage() {
   const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
 
   const isConnected = !!ovo?.token;
-  
-  // FIX: Definisi isLoading untuk mencegah ReferenceError
   const isLoading = authLoading || serviceLoading || (!!user && !ovoRef);
 
   /**
@@ -103,7 +102,7 @@ export default function OvoDashboardPage() {
   };
 
   /**
-   * Data Fetching Logic - Aligned with OVO Bridge API Docs
+   * Data Fetching Logic
    */
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -146,6 +145,9 @@ export default function OvoDashboardPage() {
     toast({ title: "Syncing...", description: "Fetching latest data from OVO Bridge." });
   };
 
+  /**
+   * Login Step 1: Login 2FA (OTP Request)
+   */
   const handleRequestOtp = async () => {
     if (!phone) return;
     setIsProcessing(true);
@@ -153,6 +155,7 @@ export default function OvoDashboardPage() {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
         setRefId(res.data.otp_refId);
+        setCurrentDeviceId(res.data.device_id);
         toast({ title: "OTP Sent", description: res.message });
         setStep(2);
       } else {
@@ -165,12 +168,21 @@ export default function OvoDashboardPage() {
     }
   };
 
+  /**
+   * Login Step 2: Verify 2FA
+   */
   const handleVerifyOtp = async () => {
     if (!otpCode || !refId) return;
     setIsProcessing(true);
     try {
-      const res = await verifyOvoOtp({ refId, otp: otpCode });
-      if (res.success) {
+      const res = await verifyOvoOtp({ 
+        refId, 
+        otp: otpCode, 
+        phone, 
+        deviceId: currentDeviceId 
+      });
+      if (res.success && res.data) {
+        setOtpToken(res.data.otp_token);
         toast({ title: "OTP Verified", description: "Please enter your OVO PIN." });
         setStep(3);
       } else {
@@ -183,17 +195,26 @@ export default function OvoDashboardPage() {
     }
   };
 
+  /**
+   * Login Step 3: Security Code (PIN)
+   */
   const handleVerifyPin = async () => {
-    if (!pinCode || !refId) return;
+    if (!pinCode || !refId || !otpToken) return;
     setIsProcessing(true);
     try {
-      const res = await verifyOvoPin({ refId, pin: pinCode });
+      const res = await verifyOvoPin({ 
+        pin: pinCode,
+        otpToken: otpToken,
+        phone,
+        refId,
+        deviceId: currentDeviceId
+      });
+      
       if (res.success && res.data && ovoRef) {
         await setDoc(ovoRef, {
           username: phone || "OVO User",
-          token: res.data.token,
-          refreshToken: res.data.refreshToken,
-          deviceId: res.data.deviceId,
+          token: res.data.refreshToken, // refreshToken is used as the access token in v1.2
+          deviceId: currentDeviceId,
           updatedAt: serverTimestamp()
         }, { merge: true });
         
@@ -236,7 +257,6 @@ export default function OvoDashboardPage() {
       await setDoc(ovoRef, {
         username: "",
         token: "",
-        refreshToken: "",
         deviceId: "",
         balance: 0,
         updatedAt: serverTimestamp()
@@ -366,23 +386,22 @@ export default function OvoDashboardPage() {
               <>
                 <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
+                    <p className="text-muted-foreground text-[10px] mb:text-font-bold uppercase tracking-widest">Available OVO Cash</p>
                   </div>
                   <div className="flex flex-col items-end gap-3">
-                    {/* OVO POINTS INLINE ABOVE LOGO */}
+                    {/* OVO POINTS Rp 0 - SEJAJAR & DI ATAS LOGO */}
                     <div className="flex items-center gap-1.5 whitespace-nowrap bg-[#4C2B9A]/5 px-2.5 py-1 rounded-lg border border-[#4C2B9A]/10">
                        <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO POINTS</p>
                        <p className="text-[11px] font-bold text-[#4C2B9A]">
                           {dataLoading ? "---" : `Rp ${balances.points.toLocaleString('id-ID')}`}
                        </p>
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm group-hover:border-[#4C2B9A]/20 transition-colors p-2">
-                      <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
+                    <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm group-hover:border-[#4C2B9A]/20 transition-colors p-2">
+                      <img src="/assets/main/ovo.png" alt="OVO" className="w-14 h-14 object-contain" />
                     </div>
                   </div>
                 </div>
 
-                {/* AMOUNT RIGHT ABOVE THE LINE */}
                 <div className="pb-4 mt-auto">
                   {dataLoading ? (
                     <Skeleton className="h-10 w-48 mt-1" />
@@ -418,7 +437,7 @@ export default function OvoDashboardPage() {
             {!isConnected && !isLoading ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-6 space-y-4 opacity-30">
                 <ShieldAlert className="w-6 h-6" />
-                <p className="text-[10px] font-bold uppercase tracking-widest">Node Offline</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-center">Node Offline</p>
               </div>
             ) : isConnected ? (
               <div className="space-y-6">

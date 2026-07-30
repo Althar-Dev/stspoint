@@ -1,7 +1,7 @@
 'use server';
 /**
- * @fileOverview Library Autentikasi OVO (2FA & PIN).
- * Terintegrasi dengan STSPoint Infrastructure v1.2.
+ * @fileOverview Library Autentikasi OVO (Login 3 Tahap).
+ * Patuh pada Dokumentasi OVO Native Microservice API.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
@@ -13,26 +13,21 @@ const DEFAULT_HEADERS = {
 };
 
 /**
- * Tahap 1: Request OTP OVO (2FA)
+ * Step 1: Request Kode OTP (2FA)
  */
-export async function requestOvoLogin(params: { phone: string; channel?: 'WHATSAPP' | 'SMS' }) {
+export async function requestOvoLogin(params: { phone: string; deviceId?: string; channel?: 'WHATSAPP' | 'SMS' }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/auth/login`, {
+    const response = await fetch(`${OVO_BRIDGE_URL}/auth/login-2fa`, {
       method: 'POST',
       headers: DEFAULT_HEADERS,
       body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
         phone: params.phone,
+        deviceId: params.deviceId || "",
         channel: params.channel || 'WHATSAPP'
       }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Bridge mengembalikan format non-JSON.' };
-    }
 
     return await response.json();
   } catch (error: any) {
@@ -41,29 +36,22 @@ export async function requestOvoLogin(params: { phone: string; channel?: 'WHATSA
 }
 
 /**
- * Tahap 2: Verifikasi Kode OTP
+ * Step 2: Verifikasi Kode OTP
  */
 export async function verifyOvoOtp(params: { 
   refId: string; 
   otp: string;
+  phone: string;
+  deviceId: string;
 }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/auth/verify`, {
+    const response = await fetch(`${OVO_BRIDGE_URL}/auth/verify-2fa`, {
       method: 'POST',
       headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        refId: params.refId,
-        otp: params.otp
-      }),
+      body: JSON.stringify(params),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Respon verifikasi OTP bukan JSON valid.' };
-    }
 
     return await response.json();
   } catch (error: any) {
@@ -72,29 +60,42 @@ export async function verifyOvoOtp(params: {
 }
 
 /**
- * Tahap 3: Verifikasi PIN & Dapatkan Sesi Token
+ * Step 3: Masukkan PIN OVO (Security Code)
  */
 export async function verifyOvoPin(params: {
-  refId: string;
   pin: string;
+  otpToken: string;
+  phone: string;
+  refId: string;
+  deviceId: string;
 }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/auth/pin`, {
+    const response = await fetch(`${OVO_BRIDGE_URL}/auth/security-code`, {
       method: 'POST',
       headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        refId: params.refId,
-        pin: params.pin
-      }),
+      body: JSON.stringify(params),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Respon verifikasi PIN bukan JSON valid.' };
-    }
+    return await response.json();
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Verifikasi Token Tersimpan
+ */
+export async function directTokenLogin(token: string) {
+  try {
+    const response = await fetch(`${OVO_BRIDGE_URL}/auth/direct-token`, {
+      method: 'POST',
+      headers: DEFAULT_HEADERS,
+      body: JSON.stringify({ token }),
+      signal: AbortSignal.timeout(15000),
+      cache: 'no-store'
+    });
 
     return await response.json();
   } catch (error: any) {

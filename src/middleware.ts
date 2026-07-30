@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -38,7 +37,7 @@ export function middleware(request: NextRequest) {
   const TOP_LEVEL_SERVICES = ['/orkut', '/gopay', '/pay', '/ai', '/shopeepay', '/ovo'];
   
   // CONSOLE NESTED PATHS: Rute yang berada di dalam folder src/app/console/
-  const CONSOLE_NESTED_PATHS = ['/subscribe', '/setting', '/transactions', '/services'];
+  const CONSOLE_NESTED_PATHS = ['/subscribe', '/setting', '/transactions', '/services', '/developer'];
   
   // ALL MERCHANT CONTEXT PATHS: Untuk keperluan redirect dari root domain
   const ALL_MERCHANT_PATHS = [...TOP_LEVEL_SERVICES, ...CONSOLE_NESTED_PATHS];
@@ -106,15 +105,18 @@ export function middleware(request: NextRequest) {
         return NextResponse.next(); 
       }
 
+      // Rewrite rute console nested (subscribe, setting, dll)
+      const isConsoleNested = CONSOLE_NESTED_PATHS.some(p => pathname === p || pathname.startsWith(`${p}/`));
+      if (isConsoleNested) {
+        url.pathname = `/console${pathname}`;
+        return NextResponse.rewrite(url);
+      }
+
       // Bersihkan rute /console eksplisit
       if (pathname.startsWith('/console')) {
         const cleanPath = pathname.replace('/console', '') || '/';
         return NextResponse.redirect(new URL(`https://${host}${cleanPath}${search}`, request.url));
       }
-
-      // Rewrite rute console nested (subscribe, setting, dll)
-      url.pathname = `/console${pathname}`;
-      return NextResponse.rewrite(url);
     }
 
     // Rewrite rute untuk subdomain lain (partner, docs, dev)

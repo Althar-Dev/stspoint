@@ -5,37 +5,31 @@
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';
 
-const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  'stspointkey': OVO_BRIDGE_KEY,
-  'User-Agent': 'STSPoint-Infrastructure/1.2'
-};
-
-interface OVOBaseParams {
-  token: string;
-  deviceId: string;
+function getHeaders(token: string, deviceId: string) {
+  return {
+    'Content-Type': 'application/json',
+    'x-ovo-token': token,
+    'x-device-id': deviceId,
+    'stspointkey': OVO_BRIDGE_KEY,
+    'User-Agent': 'STSPoint-Infrastructure/1.2'
+  };
 }
 
 /**
- * Validasi Nomor HP Sesama OVO
+ * Cek Nomor HP Tujuan OVO
  */
-export async function checkOvoNumber(params: OVOBaseParams & { phone: string; amount: number }) {
+export async function checkOvoNumber(params: { token: string; deviceId: string; phone: string; amount: number }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/check-ovo`, {
+    const response = await fetch(`${OVO_BRIDGE_URL}/transfer/check-ovo`, {
       method: 'POST',
-      headers: DEFAULT_HEADERS,
+      headers: getHeaders(params.token, params.deviceId),
       body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        ...params
+        phone: params.phone,
+        amount: params.amount
       }),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal cek nomor OVO: Respon server bukan JSON.' };
-    }
 
     return await response.json();
   } catch (error: any) {
@@ -44,26 +38,22 @@ export async function checkOvoNumber(params: OVOBaseParams & { phone: string; am
 }
 
 /**
- * Eksekusi Transfer Sesama OVO
+ * Transfer Sesama OVO
  */
-export async function transferToOvo(params: OVOBaseParams & { phone: string; amount: number; message?: string }) {
+export async function transferToOvo(params: { token: string; deviceId: string; phone: string; amount: number; message?: string }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/ovo`, {
+    const response = await fetch(`${OVO_BRIDGE_URL}/transfer/ovo`, {
       method: 'POST',
-      headers: DEFAULT_HEADERS,
+      headers: getHeaders(params.token, params.deviceId),
       body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        ...params
+        phone: params.phone,
+        amount: params.amount,
+        message: params.message
       }),
       signal: AbortSignal.timeout(30000),
       cache: 'no-store'
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal transfer OVO: Respon server bukan JSON.' };
-    }
-
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -71,26 +61,17 @@ export async function transferToOvo(params: OVOBaseParams & { phone: string; amo
 }
 
 /**
- * Mengambil Daftar Kode Bank Master
+ * Daftar Kode Bank Master
  */
-export async function getOvoBankList(params: OVOBaseParams) {
+export async function getOvoBankList(params: { token: string; deviceId: string }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/banks`, {
-      method: 'POST',
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        ...params
-      }),
+    const response = await fetch(`${OVO_BRIDGE_URL}/transfer/banks`, {
+      method: 'GET',
+      headers: getHeaders(params.token, params.deviceId),
       signal: AbortSignal.timeout(15000),
       cache: 'no-store'
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal ambil daftar bank: Respon server bukan JSON.' };
-    }
-
     return await response.json();
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -98,9 +79,11 @@ export async function getOvoBankList(params: OVOBaseParams) {
 }
 
 /**
- * Inquiry Rekening Bank (Cek Nama Pemilik)
+ * Inquiry Rekening Bank
  */
-export async function bankInquiry(params: OVOBaseParams & { 
+export async function bankInquiry(params: { 
+  token: string;
+  deviceId: string;
   accountNo: string; 
   bankCode: string; 
   bankName: string; 
@@ -108,21 +91,14 @@ export async function bankInquiry(params: OVOBaseParams & {
   message?: string 
 }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/bank-inquiry`, {
+    const { token, deviceId, ...body } = params;
+    const response = await fetch(`${OVO_BRIDGE_URL}/transfer/bank-inquiry`, {
       method: 'POST',
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        ...params
-      }),
+      headers: getHeaders(token, deviceId),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(20000),
       cache: 'no-store'
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal inquiry bank: Respon server bukan JSON.' };
-    }
 
     return await response.json();
   } catch (error: any) {
@@ -131,9 +107,11 @@ export async function bankInquiry(params: OVOBaseParams & {
 }
 
 /**
- * Eksekusi Transfer ke Rekening Bank
+ * Transfer Direct ke Bank
  */
-export async function transferToBank(params: OVOBaseParams & {
+export async function transferToBank(params: {
+  token: string;
+  deviceId: string;
   accountName: string;
   accountNo: string;
   accountNoDestination: string;
@@ -144,21 +122,14 @@ export async function transferToBank(params: OVOBaseParams & {
   notes?: string;
 }) {
   try {
-    const response = await fetch(`${OVO_BRIDGE_URL}/api/transfer/bank`, {
+    const { token, deviceId, ...body } = params;
+    const response = await fetch(`${OVO_BRIDGE_URL}/transfer/bank`, {
       method: 'POST',
-      headers: DEFAULT_HEADERS,
-      body: JSON.stringify({
-        secret_key: OVO_BRIDGE_KEY,
-        ...params
-      }),
+      headers: getHeaders(token, deviceId),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
       cache: 'no-store'
     });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      return { success: false, message: 'Gagal transfer bank: Respon server bukan JSON.' };
-    }
 
     return await response.json();
   } catch (error: any) {
