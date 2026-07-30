@@ -27,10 +27,6 @@ import { format } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-/**
- * ShopeePay Full Transaction Journal Page
- * Integrates directly with the Shopee Bridge API to fetch history and provide export tools.
- */
 export default function ShopeepayTransactionsPage() {
   const { user, loading: authLoading } = useUser();
   const db = useFirestore();
@@ -38,7 +34,6 @@ export default function ShopeepayTransactionsPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // 1. Fetch ShopeePay Service Config from Firestore
   const shopeepayRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "shopeepay");
@@ -48,14 +43,24 @@ export default function ShopeepayTransactionsPage() {
 
   const isConnected = !!shopeepay?.token;
 
-  // 2. Fetch mutations from Bridge API
+  /**
+   * Robust parser to handle Shopee amount strings like "5.170"
+   */
+  const parseAmount = (val: any): number => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+      return parseInt(val.replace(/\./g, '')) || 0;
+    }
+    return 0;
+  };
+
   const fetchMutations = useCallback(async (silent = false) => {
     if (isConnected && shopeepay?.token) {
       if (!silent) setLoading(true);
       try {
         const res = await getShopeeMutations({ 
           token: shopeepay.token,
-          limit: 100 // Fetch more records for the full history page
+          limit: 100 
         });
 
         if (res.success) {
@@ -65,7 +70,6 @@ export default function ShopeepayTransactionsPage() {
         }
       } catch (error) {
         console.error("Fetch Shopee history error:", error);
-        toast({ variant: "destructive", title: "Network Error", description: "Gagal terhubung ke bridge ShopeePay." });
       } finally {
         setLoading(false);
       }
@@ -83,7 +87,6 @@ export default function ShopeepayTransactionsPage() {
     toast({ title: "Syncing", description: "Mengambil data mutasi terbaru dari ShopeePay." });
   };
 
-  // 3. Search Logic
   const filteredMutations = useMemo(() => {
     if (!Array.isArray(mutations)) return [];
     return mutations.filter(m => 
@@ -91,7 +94,6 @@ export default function ShopeepayTransactionsPage() {
     );
   }, [mutations, search]);
 
-  // 4. Export Handlers
   const handleExportCSV = () => {
     if (filteredMutations.length === 0) {
       toast({ variant: "destructive", title: "Export Gagal", description: "Tidak ada data untuk diekspor." });
@@ -102,7 +104,7 @@ export default function ShopeepayTransactionsPage() {
       m.created_at,
       m.transaction_id,
       "ShopeePay",
-      m.amount,
+      parseAmount(m.amount),
       m.status
     ]);
     const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -125,7 +127,7 @@ export default function ShopeepayTransactionsPage() {
       m.created_at,
       m.transaction_id,
       "ShopeePay",
-      m.amount.toLocaleString('id-ID', { minimumFractionDigits: 0 }),
+      parseAmount(m.amount).toLocaleString('id-ID'),
       m.status
     ]);
     autoTable(doc, {
@@ -133,7 +135,7 @@ export default function ShopeepayTransactionsPage() {
       body: tableData,
       startY: 20,
       theme: 'grid',
-      headStyles: { fillColor: [238, 77, 45] } // ShopeePay Orange
+      headStyles: { fillColor: [238, 77, 45] } 
     });
     doc.save(`ShopeePay_Journal_${format(new Date(), "yyyyMMdd")}.pdf`);
     toast({ title: "Export Berhasil", description: "Laporan PDF telah diunduh." });
@@ -142,7 +144,7 @@ export default function ShopeepayTransactionsPage() {
   const isGlobalLoading = authLoading || serviceLoading;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 h-screen overflow-hidden flex flex-col">
+    <div className="space-y-6 animate-in fade-in duration-500 flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
@@ -209,10 +211,10 @@ export default function ShopeepayTransactionsPage() {
               <table className="w-full min-w-[850px] text-xs text-left">
                 <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-md">
                   <tr>
-                    <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Waktu Transaksi</th>
-                    <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">ID Transaksi</th>
-                    <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-muted-foreground whitespace-nowrap">Metode Pembayaran</th>
-                    <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Nominal</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Waktu Transaksi</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">ID Transaksi</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Metode Pembayaran</th>
+                    <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-center whitespace-nowrap">Nominal</th>
                     <th className="px-6 py-4 font-bold uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
                   </tr>
                 </thead>
@@ -262,7 +264,7 @@ export default function ShopeepayTransactionsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center font-bold text-[13px] text-[#EE4D2D]">
-                          Rp {item.amount.toLocaleString('id-ID', { minimumFractionDigits: 0 })}
+                          Rp {parseAmount(item.amount).toLocaleString('id-ID')}
                         </td>
                         <td className="px-6 py-4 text-right">
                            <Badge className={`${

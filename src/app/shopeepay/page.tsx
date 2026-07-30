@@ -86,6 +86,18 @@ export default function ShopeepayDashboardPage() {
 
   const isConnected = !!shopeepay?.token;
 
+  /**
+   * Robust parser to handle Shopee amount strings like "5.170"
+   */
+  const parseAmount = (val: any): number => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+      // Remove thousands separator (dot) used in Shopee response strings
+      return parseInt(val.replace(/\./g, '')) || 0;
+    }
+    return 0;
+  };
+
   useEffect(() => {
     if (shopeepay) {
       setBaseQrInput(shopeepay.baseQr || "");
@@ -105,7 +117,7 @@ export default function ShopeepayDashboardPage() {
         if (res.success) {
           setMutations(res.data || []);
           setStats({
-            totalNetSales: res.totalNetSales || 0,
+            totalNetSales: parseAmount(res.totalNetSales || 0),
             totalCount: res.total || 0
           });
           setIsSessionExpired(false);
@@ -207,7 +219,7 @@ export default function ShopeepayDashboardPage() {
   const isLoading = authLoading || serviceLoading;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 h-screen overflow-hidden flex flex-col">
+    <div className="space-y-6 animate-in fade-in duration-500 flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         {isSessionExpired && (
           <div className="bg-red-50 border border-red-100 p-4 rounded-2xl flex items-center justify-between mb-6">
@@ -315,7 +327,7 @@ export default function ShopeepayDashboardPage() {
                     ) : (
                       <div className="flex items-baseline gap-2">
                         <h2 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tighter text-[#EE4D2D]">
-                          Rp {stats.totalNetSales.toLocaleString('id-ID', { minimumFractionDigits: 0 })}
+                          Rp {stats.totalNetSales.toLocaleString('id-ID')}
                         </h2>
                         <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-bold uppercase py-0 px-1.5 h-4">Live</Badge>
                       </div>
@@ -500,7 +512,7 @@ export default function ShopeepayDashboardPage() {
                              {item.transaction_id}
                           </td>
                           <td className="px-6 py-4 font-bold text-[13px] whitespace-nowrap text-[#EE4D2D]">
-                             Rp {item.amount.toLocaleString('id-ID', { minimumFractionDigits: 0 })}
+                             Rp {parseAmount(item.amount).toLocaleString('id-ID')}
                           </td>
                           <td className="px-6 py-4 text-right whitespace-nowrap">
                              <Badge className={`${
