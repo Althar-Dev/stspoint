@@ -169,7 +169,7 @@ export default function OvoDashboardPage() {
   };
 
   /**
-   * Login Step 2: Verify 2FA
+   * Login Step 2: Verifikasi Kode OTP
    */
   const handleVerifyOtp = async () => {
     if (!otpCode || !refId) return;
@@ -213,7 +213,7 @@ export default function OvoDashboardPage() {
       if (res.success && res.data && ovoRef) {
         await setDoc(ovoRef, {
           username: phone || "OVO User",
-          token: res.data.refreshToken, // refreshToken is used as the access token in v1.2
+          token: res.data.refreshToken, 
           deviceId: currentDeviceId,
           updatedAt: serverTimestamp()
         }, { merge: true });
@@ -386,10 +386,9 @@ export default function OvoDashboardPage() {
               <>
                 <div className="flex justify-between items-start mb-auto">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] mb:text-font-bold uppercase tracking-widest">Available OVO Cash</p>
+                    <p className="text-muted-foreground text-[10px] mb:text-xl font-bold uppercase tracking-widest">Available OVO Cash</p>
                   </div>
                   <div className="flex flex-col items-end gap-3">
-                    {/* OVO POINTS Rp 0 - SEJAJAR & DI ATAS LOGO */}
                     <div className="flex items-center gap-1.5 whitespace-nowrap bg-[#4C2B9A]/5 px-2.5 py-1 rounded-lg border border-[#4C2B9A]/10">
                        <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO POINTS</p>
                        <p className="text-[11px] font-bold text-[#4C2B9A]">

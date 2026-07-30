@@ -1,7 +1,7 @@
 'use server';
 /**
  * @fileOverview Library Autentikasi OVO (Login 3 Tahap).
- * Patuh pada Dokumentasi OVO Native Microservice API.
+ * Patuh pada Dokumentasi OVO Native Microservice API v1.2.
  */
 
 import { OVO_BRIDGE_URL, OVO_BRIDGE_KEY } from './init';

@@ -88,8 +88,9 @@ export function middleware(request: NextRequest) {
     }
 
     // CROSS-SUBDOMAIN REDIRECTS: Jika path milik layanan merchant diakses di subdomain non-console
+    // KECUALI SUBDOMAIN API - API harus tetap di jalurnya
     const isMerchantPath = ALL_MERCHANT_PATHS.some(p => pathname === p || pathname.startsWith(`${p}/`));
-    if (isMerchantPath && sub !== 'console') {
+    if (isMerchantPath && sub !== 'console' && sub !== 'api') {
       return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}${search}`, request.url));
     }
 
