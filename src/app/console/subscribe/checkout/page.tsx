@@ -228,15 +228,15 @@ function CheckoutContent() {
 
   if (!plan) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
+      <div className="flex flex-col items-center justify-center py-20 space-y-4 px-4 text-center">
         <div className="p-4 rounded-full bg-destructive/10 text-destructive mb-2">
-           <AlertCircle className="w-10 h-10" />
+           <AlertCircle className="w-8 h-8 md:w-10 md:h-10" />
         </div>
-        <div className="space-y-1 text-center">
+        <div className="space-y-1">
           <p className="text-foreground font-bold">Plan or Service mismatch.</p>
-          <p className="text-muted-foreground text-xs">Missing required parameters: service={serviceId}, plan={planId}</p>
+          <p className="text-muted-foreground text-[10px] md:text-xs">Missing or invalid parameters.</p>
         </div>
-        <Button onClick={() => router.push("/console/subscribe")} variant="outline" className="rounded-xl font-bold h-11 px-8">
+        <Button onClick={() => router.push("/console/subscribe")} variant="outline" className="rounded-xl font-bold h-11 px-8 w-full sm:w-auto">
           Back to Subscriptions
         </Button>
       </div>
@@ -246,15 +246,15 @@ function CheckoutContent() {
   // --- Render Paid State ---
   if (transaction?.status === 'PAID') {
     return (
-      <div className="max-w-2xl mx-auto space-y-8 animate-in zoom-in-95 duration-500 py-10 px-4 text-center">
-        <div className="w-48 h-48 mx-auto">
+      <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 animate-in zoom-in-95 duration-500 py-10 px-4 text-center">
+        <div className="w-32 h-32 md:w-48 md:h-48 mx-auto">
           <Player autoplay loop src="/assets/lottie/success.json" />
         </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl font-headline font-bold text-emerald-600">Payment Successful!</h2>
-          <p className="text-muted-foreground">Thank you for your purchase. Your account has been upgraded to <strong>{plan.name}</strong>.</p>
-          <div className="pt-6">
-            <Button asChild className="h-12 px-10 rounded-xl font-bold bg-primary text-white dark:text-black shadow-xl shadow-primary/10">
+        <div className="space-y-3 md:space-y-4">
+          <h2 className="text-2xl md:text-3xl font-headline font-bold text-emerald-600">Payment Successful!</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">Thank you for your purchase. Your account has been upgraded to <strong>{plan.name}</strong>.</p>
+          <div className="pt-4 md:pt-6">
+            <Button asChild className="w-full sm:w-auto h-12 px-10 rounded-xl font-bold bg-primary text-white dark:text-black shadow-xl shadow-primary/10">
               <Link href="/console">Go to Dashboard</Link>
             </Button>
           </div>
@@ -266,15 +266,15 @@ function CheckoutContent() {
   // --- Render Expired / Canceled State ---
   if (transaction?.status === 'EXPIRED' || transaction?.status === 'CANCELED') {
     return (
-      <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 py-10 px-4 text-center">
-        <div className="w-24 h-24 mx-auto flex items-center justify-center rounded-full bg-destructive/10 text-destructive mb-4">
-          <XCircle className="w-16 h-16" />
+      <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 py-10 px-4 text-center">
+        <div className="w-20 h-20 md:w-24 md:h-24 mx-auto flex items-center justify-center rounded-full bg-destructive/10 text-destructive mb-2 md:mb-4">
+          <XCircle className="w-12 h-12 md:w-16 md:h-16" />
         </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl font-headline font-bold">Transaction {transaction.status === 'EXPIRED' ? 'Expired' : 'Canceled'}</h2>
-          <p className="text-muted-foreground">This session is no longer active. If you still wish to upgrade, please start a new request from the subscription menu.</p>
-          <div className="pt-6">
-            <Button asChild variant="outline" className="h-12 px-10 rounded-xl font-bold gap-2">
+        <div className="space-y-3 md:space-y-4">
+          <h2 className="text-2xl md:text-3xl font-headline font-bold">Transaction {transaction.status === 'EXPIRED' ? 'Expired' : 'Canceled'}</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">This session is no longer active. If you still wish to upgrade, please start a new request.</p>
+          <div className="pt-4 md:pt-6">
+            <Button asChild variant="outline" className="w-full sm:w-auto h-12 px-10 rounded-xl font-bold gap-2">
               <Link href="/console/subscribe">
                 <ArrowLeft className="w-4 h-4" /> Return to Subscriptions
               </Link>
@@ -288,8 +288,8 @@ function CheckoutContent() {
   const paymentData = transaction?.payment_info;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in duration-500 px-4">
-      <div className="flex items-center gap-4">
+    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 px-4">
+      <div className="flex items-center gap-3 md:gap-4">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -300,99 +300,99 @@ function CheckoutContent() {
           Back
         </Button>
         <div className="h-4 w-px bg-border"></div>
-        <h1 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Payment Checkout</h1>
+        <h1 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Payment Checkout</h1>
       </div>
 
-      <Card className="border-border shadow-2xl rounded-[2.5rem] overflow-hidden bg-card">
-        <CardHeader className="p-8 border-b border-border bg-muted/30">
+      <Card className="border-border shadow-2xl rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-card">
+        <CardHeader className="p-6 md:p-8 border-b border-border bg-muted/30">
            <div className="flex items-center justify-between">
-              <Badge className="bg-primary text-primary-foreground border-none text-[9px] font-bold uppercase px-3 py-1 rounded-md">Account Upgrade</Badge>
-              <ShieldCheck className="w-5 h-5 text-primary" />
+              <Badge className="bg-primary text-primary-foreground border-none text-[8px] md:text-[9px] font-bold uppercase px-2 md:px-3 py-1 rounded-md">Account Upgrade</Badge>
+              <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-primary" />
            </div>
-           <div className="pt-6 space-y-2 text-center">
-              <CardTitle className="text-2xl md:text-3xl font-headline font-bold tracking-tight">{plan.name}</CardTitle>
-              <CardDescription className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{plan.desc}</CardDescription>
+           <div className="pt-4 md:pt-6 space-y-1 md:space-y-2 text-center">
+              <CardTitle className="text-xl md:text-3xl font-headline font-bold tracking-tight">{plan.name}</CardTitle>
+              <CardDescription className="text-[10px] md:text-xs font-medium uppercase tracking-widest text-muted-foreground">{plan.desc}</CardDescription>
            </div>
         </CardHeader>
-        <CardContent className="p-8">
+        <CardContent className="p-6 md:p-8">
            {txLoading ? (
              <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-8 h-8 animate-spin text-primary/20" />
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Syncing Transaction...</p>
+                <Loader2 className="w-6 h-6 md:w-8 md:h-8 animate-spin text-primary/20" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Syncing...</p>
              </div>
            ) : paymentData ? (
-             <div className="space-y-10 w-full animate-in zoom-in-95 duration-500 flex flex-col items-center text-center">
+             <div className="space-y-8 md:space-y-10 w-full animate-in zoom-in-95 duration-500 flex flex-col items-center text-center">
                 <div className="space-y-4">
-                   <div className="p-5 bg-white border border-border rounded-[2rem] shadow-xl inline-block relative">
+                   <div className="p-4 md:p-5 bg-white border border-border rounded-[1.5rem] md:rounded-[2rem] shadow-xl inline-block relative">
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentData.qr_string)}`} 
                         alt="QRIS Payment"
-                        className="w-56 h-56 md:w-64 md:h-64 object-contain"
+                        className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 object-contain"
                       />
                       <div className="absolute inset-x-0 -bottom-3 flex justify-center">
-                         <Badge className="bg-primary text-primary-foreground border-none px-4 py-1 rounded-full font-bold text-[9px] uppercase tracking-widest shadow-lg">Official QRIS</Badge>
+                         <Badge className="bg-primary text-primary-foreground border-none px-3 md:px-4 py-1 rounded-full font-bold text-[8px] md:text-[9px] uppercase tracking-widest shadow-lg">Official QRIS</Badge>
                       </div>
                    </div>
                 </div>
 
-                <div className="space-y-6 w-full">
-                   <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-                         <Clock className="w-3 h-3" /> Payment Deadline
+                <div className="space-y-4 md:space-y-6 w-full">
+                   <div className="p-4 md:p-5 rounded-xl md:rounded-2xl bg-primary/5 border border-primary/10 space-y-1 md:space-y-2">
+                      <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+                         <Clock className="w-3 h-3" /> Deadline
                       </p>
-                      <p className="text-3xl font-headline font-bold text-primary">{timeLeft}</p>
+                      <p className="text-2xl md:text-3xl font-headline font-bold text-primary">{timeLeft}</p>
                    </div>
                    
                    <div className="flex flex-col gap-3">
-                      <div className="flex justify-between items-center text-sm border-t border-dashed border-border pt-4">
-                        <span className="text-muted-foreground font-medium uppercase text-[10px] tracking-widest">Total Bill</span>
-                        <span className="font-bold text-xl text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
+                      <div className="flex justify-between items-center text-sm border-t border-dashed border-border pt-4 px-1">
+                        <span className="text-muted-foreground font-medium uppercase text-[9px] md:text-[10px] tracking-widest">Total Bill</span>
+                        <span className="font-bold text-lg md:text-xl text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
                       </div>
                       
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
                         <Button 
                           onClick={handleDownloadQR}
                           variant="outline" 
-                          className="flex-1 h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest border-border gap-2"
+                          className="flex-1 h-11 md:h-12 rounded-xl font-bold uppercase text-[9px] md:text-[10px] tracking-widest border-border gap-2"
                         >
-                          <Download className="w-4 h-4" /> Download QR
+                          <Download className="w-3.5 h-3.5" /> Download
                         </Button>
                         <Button 
                           variant="ghost" 
-                          className="flex-1 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors" 
+                          className="flex-1 h-11 md:h-12 rounded-xl font-bold text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors" 
                           onClick={handleCancelPayment}
                           disabled={isCanceling}
                         >
                           {isCanceling ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
-                          Cancel Payment
+                          Cancel
                         </Button>
                       </div>
                    </div>
                 </div>
              </div>
            ) : (
-             <div className="space-y-8">
-               <div className="space-y-4">
-                  <div className="flex justify-between items-center text-sm">
+             <div className="space-y-6 md:space-y-8">
+               <div className="space-y-3 md:space-y-4">
+                  <div className="flex justify-between items-center text-xs md:text-sm">
                     <span className="text-muted-foreground font-medium">Plan Price</span>
                     <span className={isDev ? "text-muted-foreground line-through" : "font-bold"}>
                       Rp {PLAN_DETAILS[serviceId]?.[planId]?.price?.toLocaleString('id-ID') || 0}
                     </span>
                   </div>
                   {isDev && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-emerald-600 font-bold text-[10px] uppercase tracking-widest">Developer Pricing</span>
+                    <div className="flex justify-between items-center text-xs md:text-sm">
+                      <span className="text-emerald-600 font-bold text-[9px] md:text-[10px] uppercase tracking-widest">Dev Pricing</span>
                       <span className="font-bold text-emerald-600">Rp 1</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center text-sm">
+                  <div className="flex justify-between items-center text-xs md:text-sm">
                     <span className="text-muted-foreground font-medium">Service Fee</span>
                     <span className="font-bold text-primary italic">Free</span>
                   </div>
-                  <div className="pt-6 border-t border-dashed border-border flex justify-between items-end">
-                    <div className="space-y-1">
-                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Total Bill</span>
-                       <span className="text-3xl font-headline font-bold text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
+                  <div className="pt-4 md:pt-6 border-t border-dashed border-border flex justify-between items-end">
+                    <div className="space-y-0.5">
+                       <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Total Bill</span>
+                       <span className="text-2xl md:text-3xl font-headline font-bold text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
                     </div>
                   </div>
                </div>
@@ -400,20 +400,20 @@ function CheckoutContent() {
                <Button 
                 onClick={handleGenerateQRIS}
                 disabled={isGenerating}
-                className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[11px] shadow-xl shadow-primary/10 gap-3 transition-all active:scale-95"
+                className="w-full h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[10px] md:text-[11px] shadow-xl shadow-primary/10 gap-3 transition-all active:scale-95"
                >
-                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <QrCode className="w-5 h-5" />}
-                 Generate QRIS Payment
+                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 md:w-5 md:h-5" />}
+                 Generate Payment
                </Button>
 
-               <div className="flex items-start gap-4 p-5 rounded-2xl bg-muted/50 border border-border">
-                  <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center shrink-0 border border-border">
-                     <Info className="w-5 h-5 text-primary" />
+               <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl bg-muted/50 border border-border">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-background flex items-center justify-center shrink-0 border border-border">
+                     <Info className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-bold uppercase tracking-tight">Important Information</p>
-                    <p className="text-[10px] leading-relaxed text-muted-foreground">
-                      The plan will activate automatically after the system detects a successful payment. Please ensure you pay the exact amount shown.
+                  <div className="space-y-0.5 md:space-y-1">
+                    <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-tight">Information</p>
+                    <p className="text-[9px] md:text-[10px] leading-relaxed text-muted-foreground">
+                      The plan will activate automatically after the system detects a successful payment.
                     </p>
                   </div>
                </div>
@@ -422,8 +422,8 @@ function CheckoutContent() {
         </CardContent>
       </Card>
       
-      <div className="text-center pt-8">
-         <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-[0.4em] opacity-30">STSPay Secure Checkout Engine v1.0.2</p>
+      <div className="text-center pt-6 md:pt-8 opacity-20">
+         <p className="text-[8px] md:text-[9px] text-muted-foreground font-bold uppercase tracking-[0.4em]">STSPay Secure Checkout Engine v1.0.2</p>
       </div>
     </div>
   );
@@ -433,8 +433,8 @@ export default function SubscriptionCheckoutPage() {
   return (
     <Suspense fallback={
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Preparing Transaction...</p>
+        <Loader2 className="w-6 h-6 md:w-8 md:h-8 animate-spin text-primary opacity-20" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Preparing...</p>
       </div>
     }>
       <CheckoutContent />
