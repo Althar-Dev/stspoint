@@ -15,7 +15,8 @@ import {
   Rocket,
   X,
   Copy,
-  Wallet
+  Wallet,
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ const DOCS_NAV = [
       { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs/ppob" },
       { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs/orderkuota" },
       { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay" },
+      { id: "shopeepay", title: "ShopeePay", icon: ShoppingBag, href: "/docs/shopeepay" },
       { id: "ovo", title: "OVO", icon: Wallet, href: "/docs/ovo" },
     ],
   },

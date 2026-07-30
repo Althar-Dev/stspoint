@@ -9,6 +9,7 @@ import { DocsWebhooks } from "@/components/docs/webhooks";
 import { DocsErrors } from "@/components/docs/errors";
 import { DocsGeneral } from "@/components/docs/general";
 import { DocsOvo } from "@/components/docs/ovo";
+import { DocsShopeePay } from "@/components/docs/shopeepay";
 
 interface DocsSlugPageProps {
   params: Promise<{ slug: string }>;
@@ -43,6 +44,8 @@ export default function DocsSlugPage({ params }: DocsSlugPageProps) {
         return <DocsOrderkuota />;
       case "gopay":
         return <DocsGoMerchant />;
+      case "shopeepay":
+        return <DocsShopeePay />;
       case "ovo":
         return <DocsOvo />;
       case "webhooks":
