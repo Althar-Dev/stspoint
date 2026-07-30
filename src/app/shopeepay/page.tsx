@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,14 +89,14 @@ export default function ShopeepayDashboardPage() {
 
   /**
    * Robust parser to handle Shopee amount strings like "5.170"
+   * Removes any dot or comma separators to ensure it's treated as a whole number.
    */
   const parseAmount = (val: any): number => {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') {
-      // Remove thousands separator (dot) used in Shopee response strings
-      return parseInt(val.replace(/\./g, '')) || 0;
-    }
-    return 0;
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return Math.floor(val);
+    // If string "5.170" -> "5170"
+    const cleaned = String(val).replace(/[.,]/g, '');
+    return parseInt(cleaned) || 0;
   };
 
   useEffect(() => {
@@ -117,7 +118,7 @@ export default function ShopeepayDashboardPage() {
         if (res.success) {
           setMutations(res.data || []);
           setStats({
-            totalNetSales: parseAmount(res.totalNetSales || 0),
+            totalNetSales: parseAmount(res.totalNetSales),
             totalCount: res.total || 0
           });
           setIsSessionExpired(false);
@@ -410,7 +411,7 @@ export default function ShopeepayDashboardPage() {
                     
                     <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-[#EE4D2D]/20 transition-all">
+                        <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-primary/20 transition-all">
                           <SettingsIcon className="w-3.5 h-3.5 text-[#EE4D2D]" />
                           Configuration
                         </Button>

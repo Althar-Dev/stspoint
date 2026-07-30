@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,16 +43,17 @@ export default function ShopeepayTransactionsPage() {
   const { data: shopeepay, loading: serviceLoading } = useDoc(shopeepayRef);
 
   const isConnected = !!shopeepay?.token;
+  const isGlobalLoading = authLoading || serviceLoading;
 
   /**
    * Robust parser to handle Shopee amount strings like "5.170"
+   * Removes all punctuation to prevent JS from interpreting it as a small decimal (5.17).
    */
   const parseAmount = (val: any): number => {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') {
-      return parseInt(val.replace(/\./g, '')) || 0;
-    }
-    return 0;
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return Math.floor(val);
+    const cleaned = String(val).replace(/[.,]/g, '');
+    return parseInt(cleaned) || 0;
   };
 
   const fetchMutations = useCallback(async (silent = false) => {
@@ -140,8 +142,6 @@ export default function ShopeepayTransactionsPage() {
     doc.save(`ShopeePay_Journal_${format(new Date(), "yyyyMMdd")}.pdf`);
     toast({ title: "Export Berhasil", description: "Laporan PDF telah diunduh." });
   };
-
-  const isGlobalLoading = authLoading || serviceLoading;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 flex flex-col h-screen">
