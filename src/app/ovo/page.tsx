@@ -409,7 +409,7 @@ export default function OvoDashboardPage() {
                         <span className="text-muted-foreground font-black opacity-50 text-[8px] tracking-tighter uppercase">OVO POINTS</span>
                         <span>Rp {balances.points.toLocaleString('id-ID')}</span>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm p-1.5">
+                      <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm">
                         <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
                       </div>
                     </div>
