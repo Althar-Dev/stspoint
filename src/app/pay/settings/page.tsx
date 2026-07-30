@@ -34,6 +34,7 @@ import React, { useState, useEffect } from "react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "@/hooks/use-toast";
+import { sendBankVerificationRequestEmail } from "@/lib/email/sendRequester";
 
 export default function STSPaySettingsPage() {
   const { user } = useUser();
@@ -101,6 +102,16 @@ export default function STSPaySettingsPage() {
         payoutAccountStatus: 'PENDING',
         updatedAt: serverTimestamp()
       });
+      
+      // Kirim email notifikasi verifikasi ke admin
+      await sendBankVerificationRequestEmail({
+        userName: businessName || user?.displayName || "Merchant",
+        userEmail: user?.email || "",
+        bankName: bankName,
+        accountNumber: bankAccountNumber,
+        accountName: bankAccountName
+      });
+
       toast({ title: "Berhasil", description: "Rekening Bank telah diajukan untuk verifikasi." });
     } catch (e) {
       toast({ variant: "destructive", title: "Gagal", description: "Gagal menyimpan rekening." });

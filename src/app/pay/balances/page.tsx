@@ -39,11 +39,8 @@ import { isAfter, format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { sendWithdrawRequestEmail } from "@/lib/email/sendRequester";
 
-/**
- * STSPay Balances Page
- * Menampilkan saldo tersedia dari field balance di database dan saldo tertahan berdasarkan settlement T+n.
- */
 export default function STSPayBalancesPage() {
   const { user } = useUser();
   const db = useFirestore();
@@ -59,7 +56,6 @@ export default function STSPayBalancesPage() {
     setMounted(true);
   }, []);
 
-  // 1. Profil pengguna (untuk verifikasi rekening bank)
   const profileRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid);
@@ -67,7 +63,6 @@ export default function STSPayBalancesPage() {
 
   const { data: profile, loading: profileLoading } = useDoc(profileRef);
 
-  // 2. Saldo Utama STSPay (Source of Truth)
   const stspaySvcRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "stspay");
@@ -75,7 +70,6 @@ export default function STSPayBalancesPage() {
 
   const { data: stspaySvc, loading: stspayLoading } = useDoc(stspaySvcRef);
 
-  // 3. Ambil seluruh transaksi milik merchant ini
   const txQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return query(
@@ -86,7 +80,6 @@ export default function STSPayBalancesPage() {
 
   const { data: allTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // 4. Ambil kebijakan channel untuk menentukan masa settlement
   const channelsQuery = useMemoFirebase(() => {
     if (!db) return null;
     return collection(db, "payment_channels");
@@ -94,13 +87,11 @@ export default function STSPayBalancesPage() {
 
   const { data: channels } = useCollection(channelsQuery);
 
-  // 5. Kalkulasi Saldo Tertahan & Aktivitas Terbaru
   const { pendingBalance, recentActivity } = useMemo(() => {
     let pendingRevenue = 0;
     const processedList: any[] = [];
     const now = new Date();
 
-    // FOKUS: Filter hanya transaksi STSPay (Keluarkan GoMerchant dan Orderkuota)
     const filteredTransactions = allTransactions.filter(tx => 
       tx.provider !== 'GoMerchant' && tx.provider !== 'Orderkuota'
     );
@@ -120,7 +111,6 @@ export default function STSPayBalancesPage() {
         while (businessDaysAdded < daysToAdd) {
           settlementDate.setDate(settlementDate.getDate() + 1);
           const dayOfWeek = settlementDate.getDay();
-          // Skip Sabtu (6) dan Minggu (0)
           if (dayOfWeek !== 0 && dayOfWeek !== 6) businessDaysAdded++;
         }
 
@@ -197,7 +187,6 @@ export default function STSPayBalancesPage() {
         createdAt: serverTimestamp()
       };
 
-      // Mutation: Potong saldo merchant seketika (Deduction flow)
       if (stspaySvcRef) {
         updateDoc(stspaySvcRef, {
           balance: increment(-amount),
@@ -208,7 +197,17 @@ export default function STSPayBalancesPage() {
       await Promise.all([
         setDoc(doc(db, "stspay_transactions", trxId), payoutData),
         setDoc(doc(db, "transactions", trxId), ledgerData),
-        setDoc(doc(db, "users", user!.uid, "transactions", trxId), ledgerData)
+        setDoc(doc(db, "users", user!.uid, "transactions", trxId), ledgerData),
+        // Kirim email notifikasi ke admin
+        sendWithdrawRequestEmail({
+          userName: profile.name || user?.displayName || "Merchant",
+          userEmail: user?.email || "",
+          amount: amount,
+          bankName: profile.payoutBankName,
+          accountNumber: profile.payoutAccountNumber,
+          accountName: profile.payoutAccountName,
+          txId: trxId
+        })
       ]);
 
       toast({ title: "Berhasil Diajukan", description: "Permintaan penarikan dana Anda sedang diproses." });
@@ -234,7 +233,6 @@ export default function STSPayBalancesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Balance Card */}
         <Card className="lg:col-span-2 border-none shadow-xl shadow-emerald-500/10 bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-2xl overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] -mr-32 -mt-32 transition-transform group-hover:scale-110"></div>
           <CardContent className="p-8 md:p-12 relative z-10 space-y-8 h-full flex flex-col justify-between">
@@ -334,7 +332,6 @@ export default function STSPayBalancesPage() {
           </CardContent>
         </Card>
 
-        {/* Pending Balance Column */}
         <div className="space-y-6">
            <Card className="border-border shadow-sm rounded-2xl bg-card p-6 border-l-4 border-l-amber-500">
               <div className="space-y-4">
@@ -368,7 +365,6 @@ export default function STSPayBalancesPage() {
         </div>
       </div>
 
-      {/* Transaction History Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <Card className="lg:col-span-12 border-border shadow-sm rounded-2xl bg-card overflow-hidden">
           <CardHeader className="px-6 py-5 border-b border-border bg-muted/30 dark:bg-[#0A0A0A]">
