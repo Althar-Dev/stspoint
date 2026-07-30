@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,7 +101,7 @@ export default function OvoDashboardPage() {
   };
 
   /**
-   * Data Fetching Logic - Aligned with AltharDev OVO Bridge API Docs
+   * Data Fetching Logic - Aligned with OVO Bridge API Docs
    */
   const fetchLiveData = useCallback(async () => {
     if (isConnected && ovo?.token && ovo?.deviceId) {
@@ -112,7 +113,6 @@ export default function OvoDashboardPage() {
         ]);
 
         if (balanceRes.success && balanceRes.data) {
-          // Extract specific numerical values from docs: data.cash.card_balance
           setBalances({
             cash: parseNumericValue(balanceRes.data.cash?.card_balance || 0),
             points: parseNumericValue(balanceRes.data.point?.card_balance || 0)
@@ -120,7 +120,6 @@ export default function OvoDashboardPage() {
         }
 
         if (mutationRes.success && mutationRes.data && Array.isArray(mutationRes.data.orders)) {
-          // Extract array from docs: data.orders
           setMutations(mutationRes.data.orders);
         } else {
           setMutations([]);
@@ -153,7 +152,7 @@ export default function OvoDashboardPage() {
     try {
       const res = await requestOvoLogin({ phone, channel: 'WHATSAPP' });
       if (res.success && res.data) {
-        setRefId(res.data.otp_refId); // Docs: otp_refId
+        setRefId(res.data.otp_refId);
         toast({ title: "OTP Sent", description: res.message });
         setStep(2);
       } else {
@@ -190,7 +189,6 @@ export default function OvoDashboardPage() {
     try {
       const res = await verifyOvoPin({ refId, pin: pinCode });
       if (res.success && res.data && ovoRef) {
-        // Save token and deviceId from docs success response
         await setDoc(ovoRef, {
           username: phone || "OVO User",
           token: res.data.token,
@@ -367,19 +365,19 @@ export default function OvoDashboardPage() {
             ) : (
               <>
                 <div className="flex justify-between items-start mb-auto">
-                  <div className="space-y-6">
-                    <div className="space-y-1">
-                      <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
+                      <img src="/assets/main/ovo.png" alt="OVO" className="w-10 h-10 object-contain" />
                     </div>
-                    <div className="space-y-0.5">
+                    <div className="text-right space-y-0.5">
                        <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO Points</p>
-                       <p className="text-lg font-bold text-foreground/80">
+                       <p className="text-sm font-bold text-foreground/80">
                           {dataLoading ? "---" : `Rp ${balances.points.toLocaleString('id-ID')}`}
                        </p>
                     </div>
-                  </div>
-                  <div className="w-16 h-16 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
-                    <img src="/assets/main/ovo.png" alt="OVO" className="w-12 h-12 object-contain" />
                   </div>
                 </div>
 
