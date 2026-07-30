@@ -14,7 +14,8 @@ import {
   Code2,
   Rocket,
   X,
-  Copy
+  Copy,
+  Wallet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ const DOCS_NAV = [
       { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs/ppob" },
       { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs/orderkuota" },
       { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay" },
+      { id: "ovo", title: "OVO Bridge", icon: Wallet, href: "/docs/ovo" },
     ],
   },
   {
@@ -115,8 +117,6 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   // Detect active section from path segment
-  // docs.stspoint.id/gopay -> pathname is /gopay
-  // stspoint.id/docs/gopay -> pathname is /docs/gopay
   const activeType = pathname.replace('/docs', '').replace('/', '') || "general";
 
   const handleCopyPage = () => {

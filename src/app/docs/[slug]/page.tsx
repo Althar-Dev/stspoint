@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { use, useEffect } from "react";
@@ -9,6 +8,7 @@ import { DocsGoMerchant } from "@/components/docs/gomerchant";
 import { DocsWebhooks } from "@/components/docs/webhooks";
 import { DocsErrors } from "@/components/docs/errors";
 import { DocsGeneral } from "@/components/docs/general";
+import { DocsOvo } from "@/components/docs/ovo";
 
 interface DocsSlugPageProps {
   params: Promise<{ slug: string }>;
@@ -43,6 +43,8 @@ export default function DocsSlugPage({ params }: DocsSlugPageProps) {
         return <DocsOrderkuota />;
       case "gopay":
         return <DocsGoMerchant />;
+      case "ovo":
+        return <DocsOvo />;
       case "webhooks":
         return <DocsWebhooks />;
       case "errors":
