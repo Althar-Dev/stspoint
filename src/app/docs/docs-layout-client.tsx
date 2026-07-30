@@ -43,9 +43,9 @@ const DOCS_NAV = [
     items: [
       { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs/ppob" },
       { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs/orderkuota" },
-      { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay" },
-      { id: "shopeepay", title: "ShopeePay", icon: ShoppingBag, href: "/docs/shopeepay" },
-      { id: "ovo", title: "OVO", icon: Wallet, href: "/docs/ovo" },
+      { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay-merchant" },
+      { id: "shopeepay", title: "ShopeePay", icon: ShoppingBag, href: "/docs/shopee" },
+      { id: "ovo", title: "OVO", icon: Wallet, href: "/docs/ovo-api" },
     ],
   },
   {
