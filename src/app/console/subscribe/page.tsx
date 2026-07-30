@@ -252,28 +252,28 @@ export default function SubscriptionPage() {
 
       <Tabs defaultValue="gomerchant" className="w-full">
         <div className="flex justify-center mb-8 md:mb-12">
-          <TabsList className="bg-muted p-1 rounded-xl md:rounded-2xl h-11 md:h-14 flex items-center border border-border shadow-sm overflow-x-auto no-scrollbar w-full max-w-md sm:w-auto">
+          <TabsList className="bg-muted p-1 rounded-xl md:rounded-2xl h-12 md:h-16 flex items-center border border-border shadow-sm overflow-x-auto no-scrollbar w-full sm:w-fit sm:min-w-[400px]">
             <TabsTrigger 
               value="gomerchant" 
-              className="flex-1 sm:flex-none rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all"
+              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
             >
               GoMerchant
             </TabsTrigger>
             <TabsTrigger 
               value="orderkuota" 
-              className="flex-1 sm:flex-none rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all"
+              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
             >
               Orderkuota
             </TabsTrigger>
             <TabsTrigger 
               value="shopeepay" 
-              className="flex-1 sm:flex-none rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all"
+              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
             >
               ShopeePay
             </TabsTrigger>
             <TabsTrigger 
               value="ovo" 
-              className="flex-1 sm:flex-none rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all"
+              className="flex-1 sm:flex-none min-w-[100px] rounded-lg md:rounded-xl px-4 md:px-8 font-bold data-[state=active]:bg-background data-[state=active]:shadow-md h-full text-[9px] md:text-[11px] uppercase tracking-widest transition-all shrink-0"
             >
               OVO
             </TabsTrigger>
