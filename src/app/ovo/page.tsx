@@ -88,6 +88,8 @@ export default function OvoDashboardPage() {
   const { data: ovo, loading: serviceLoading } = useDoc(ovoRef);
 
   const isConnected = !!ovo?.token;
+  
+  // FIX: Definisi isLoading untuk mencegah ReferenceError
   const isLoading = authLoading || serviceLoading || (!!user && !ovoRef);
 
   /**
@@ -143,8 +145,6 @@ export default function OvoDashboardPage() {
     setRefreshKey(prev => prev + 1);
     toast({ title: "Syncing...", description: "Fetching latest data from OVO Bridge." });
   };
-
-  // --- Auth Handlers ---
 
   const handleRequestOtp = async () => {
     if (!phone) return;
@@ -368,20 +368,22 @@ export default function OvoDashboardPage() {
                   <div className="space-y-1">
                     <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Available OVO Cash</p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="w-14 h-14 rounded-2xl bg-[#4C2B9A]/5 flex items-center justify-center border border-border group-hover:border-[#4C2B9A]/20 transition-colors">
-                      <img src="/assets/main/ovo.png" alt="OVO" className="w-10 h-10 object-contain" />
-                    </div>
-                    <div className="text-right space-y-0.5">
-                       <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO Points</p>
-                       <p className="text-sm font-bold text-foreground/80">
+                  <div className="flex flex-col items-end gap-3">
+                    {/* OVO POINTS INLINE ABOVE LOGO */}
+                    <div className="flex items-center gap-1.5 whitespace-nowrap bg-[#4C2B9A]/5 px-2.5 py-1 rounded-lg border border-[#4C2B9A]/10">
+                       <p className="text-muted-foreground text-[9px] font-bold uppercase tracking-tighter">OVO POINTS</p>
+                       <p className="text-[11px] font-bold text-[#4C2B9A]">
                           {dataLoading ? "---" : `Rp ${balances.points.toLocaleString('id-ID')}`}
                        </p>
+                    </div>
+                    <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-border shadow-sm group-hover:border-[#4C2B9A]/20 transition-colors p-2">
+                      <img src="/assets/main/ovo.png" alt="OVO" className="w-full h-full object-contain" />
                     </div>
                   </div>
                 </div>
 
-                <div className="pb-4">
+                {/* AMOUNT RIGHT ABOVE THE LINE */}
+                <div className="pb-4 mt-auto">
                   {dataLoading ? (
                     <Skeleton className="h-10 w-48 mt-1" />
                   ) : (
