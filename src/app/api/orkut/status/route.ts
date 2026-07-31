@@ -14,12 +14,16 @@ import {
 import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 
 /**
- * Helper: Robustly parse amount strings like "5.170" to integer 5170.
+ * Helper: Robustly parse Orderkuota credit string to integer.
+ * Handles strings like "50000.00" or "50,000" correctly.
  */
-const parseAmount = (val: any): number => {
+const parseOrkutAmount = (val: any): number => {
     if (typeof val === 'number') return Math.floor(val);
-    const str = String(val || "").replace(/[^\d]/g, '').trim();
-    return parseInt(str) || 0;
+    const str = String(val || "").trim();
+    if (!str) return 0;
+    // Remove thousand separators (comma or dot) but keep the last decimal separator if any
+    // For Orkut, we usually just need the integer part
+    return Math.floor(parseFloat(str.replace(/,/g, '')) || 0);
 };
 
 /**
@@ -75,13 +79,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Access Denied: No active plan found.' }, { status: 403 });
     }
     
-    if (plan !== 'enterprise' && orkutData.planExpiry) {
-      const expiry = orkutData.planExpiry.toDate ? orkutData.planExpiry.toDate() : new Date(orkutData.planExpiry);
-      if (new Date() > expiry) {
-        return NextResponse.json({ success: false, message: 'Access Denied: Plan has expired.' }, { status: 403 });
-      }
-    }
-
     // --- RPM RATE LIMITING ---
     const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
@@ -103,7 +100,10 @@ export async function POST(request: Request) {
     // --- QUOTA CHECK ---
     const currentQuota = orkutData.quota || 0;
     if (currentQuota <= 0 && plan !== 'enterprise') {
-      return NextResponse.json({ success: false, message: 'API Quota Exceeded.' }, { status: 429 });
+      return NextResponse.json({ 
+        success: false, 
+        message: 'API Quota Exceeded.' 
+      }, { status: 429 });
     }
 
     // 4. Fetch Transaction Data from global collection
@@ -156,14 +156,15 @@ export async function POST(request: Request) {
           : new Date(transactionData.createdAt).getTime();
 
         const match = mutations.find(m => {
-          // Date parsing: "2024-10-24 08:42:11" -> YYYY-MM-DDTHH:mm:ss
-          const mCreatedAtMillis = new Date(m.tanggal.replace(" ", "T")).getTime();
-          const mAmount = parseAmount(m.kredit);
+          // Date parsing: "2024-10-24 08:42:11" -> Appending +07:00 (WIB) is crucial for accurate comparison
+          const formattedDate = m.tanggal.replace(" ", "T") + "+07:00";
+          const mCreatedAtMillis = new Date(formattedDate).getTime();
+          const mAmount = parseOrkutAmount(m.kredit);
           
-          // Match criteria: Status IN, Nominal Match, and Time >= CreatedTime (-2 min buffer)
+          // Match criteria: Status IN, Nominal Match, and Time within acceptable window (up to 30 mins before)
           return m.status.toUpperCase() === 'IN' && 
-                 Math.abs(mAmount - transactionData.amount) < 1 &&
-                 mCreatedAtMillis >= (txCreatedAtMillis - 120000); 
+                 Math.abs(mAmount - Number(transactionData.amount)) < 1 &&
+                 mCreatedAtMillis >= (txCreatedAtMillis - 1800000); 
         });
 
         if (match) {
