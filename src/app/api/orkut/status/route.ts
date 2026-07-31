@@ -9,27 +9,16 @@ import {
   getDoc,
   updateDoc,
   increment,
-  serverTimestamp 
+  serverTimestamp,
+  setDoc
 } from 'firebase/firestore';
 import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
-
-/**
- * Helper: Robustly parse Orderkuota credit string to integer.
- * Handles strings like "50000.00" or "50,000" correctly.
- */
-const parseOrkutAmount = (val: any): number => {
-    if (typeof val === 'number') return Math.floor(val);
-    const str = String(val || "").trim();
-    if (!str) return 0;
-    // Remove thousand separators (comma or dot) but keep the last decimal separator if any
-    // For Orkut, we usually just need the integer part
-    return Math.floor(parseFloat(str.replace(/,/g, '')) || 0);
-};
 
 /**
  * API: Check Orderkuota Transaction Status
  * Method: POST
  * URL: /orkut/status (via api subdomain)
+ * FIX: Logika disamakan dengan Action Console (parseFloat + processed_topups ledger)
  */
 export async function POST(request: Request) {
   try {
@@ -149,34 +138,37 @@ export async function POST(request: Request) {
 
       if (mutationRes.status && mutationRes.result && Array.isArray(mutationRes.result)) {
         const mutations = mutationRes.result;
+        const expectedAmount = Number(transactionData.amount);
         
-        // --- RECONCILIATION LOGIC ---
-        const txCreatedAtMillis = transactionData.createdAt?.toMillis 
-          ? transactionData.createdAt.toMillis() 
-          : new Date(transactionData.createdAt).getTime();
+        let foundMatch = null;
 
-        const match = mutations.find(m => {
-          // Date parsing: "2024-10-24 08:42:11" -> Appending +07:00 (WIB) is crucial for accurate comparison
-          const formattedDate = m.tanggal.replace(" ", "T") + "+07:00";
-          const mCreatedAtMillis = new Date(formattedDate).getTime();
-          const mAmount = parseOrkutAmount(m.kredit);
-          
-          // Match criteria: Status IN, Nominal Match, and Time within acceptable window (up to 30 mins before)
-          return m.status.toUpperCase() === 'IN' && 
-                 Math.abs(mAmount - Number(transactionData.amount)) < 1 &&
-                 mCreatedAtMillis >= (txCreatedAtMillis - 1800000); 
-        });
+        for (const m of mutations) {
+          const amount = parseFloat(m.kredit);
+          const isNominalMatch = m.status === 'IN' && Math.abs(amount - expectedAmount) < 1;
 
-        if (match) {
+          if (isNominalMatch) {
+            // Check global ledger (processed_topups) to ensure this mutation ID hasn't been claimed
+            const ledgerRef = doc(firestore, 'processed_topups', m.id.toString());
+            const ledgerSnap = await getDoc(ledgerRef);
+
+            if (!ledgerSnap.exists()) {
+              foundMatch = m;
+              break;
+            }
+          }
+        }
+
+        if (foundMatch) {
           const userHistoryRef = doc(firestore, 'users', userId, 'transactions', external_id);
           const globalHistoryRef = doc(firestore, 'transactions', external_id);
+          const ledgerRef = doc(firestore, 'processed_topups', foundMatch.id.toString());
           
           await Promise.all([
             updateDoc(transactionRef, {
               status: 'PAID',
               updatedAt: serverTimestamp(),
-              paid_at: match.tanggal,
-              orkut_trx_id: match.id
+              paid_at: foundMatch.tanggal,
+              orkut_trx_id: foundMatch.id
             }),
             updateDoc(userHistoryRef, {
               status: 'Success',
@@ -185,6 +177,14 @@ export async function POST(request: Request) {
             updateDoc(globalHistoryRef, {
               status: 'Success',
               updatedAt: serverTimestamp()
+            }),
+            setDoc(ledgerRef, {
+              userId,
+              external_id,
+              amount: expectedAmount,
+              orkutTrxId: foundMatch.id,
+              processedAt: serverTimestamp(),
+              type: 'API_PAYMENT'
             })
           ]);
 
@@ -194,7 +194,7 @@ export async function POST(request: Request) {
               external_id: transactionData.id,
               status: 'PAID',
               amount: transactionData.amount,
-              paid_at: match.tanggal,
+              paid_at: foundMatch.tanggal,
               message: 'Payment detected via live mutation.',
               remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
             }

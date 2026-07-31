@@ -15,7 +15,7 @@ import {
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
 
 /**
- * API: Create Orderkuota QRIS Transaction with Strict Plan Validation
+ * API: Create Orderkuota QRIS Transaction
  * Method: POST
  * URL: /orkut/create (via api subdomain)
  */
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 
     const orkutData = orkutSnap.data();
     
-    // --- STRICT PLAN CHECK ---
+    // --- PLAN CHECK ---
     let plan = (orkutData.plan || '').toLowerCase();
     if (!plan) {
       return NextResponse.json({ 
@@ -80,20 +80,6 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
-    // --- EXPIRY CHECK ---
-    if (plan !== 'enterprise') {
-      if (!orkutData.planExpiry) {
-        return NextResponse.json({ success: false, message: 'Access Denied: Invalid plan configuration.' }, { status: 403 });
-      }
-      const expiry = orkutData.planExpiry.toDate ? orkutData.planExpiry.toDate() : new Date(orkutData.planExpiry);
-      if (new Date() > expiry) {
-        return NextResponse.json({ 
-          success: false, 
-          message: 'Access Denied: Your subscription has expired. Please renew.' 
-        }, { status: 403 });
-      }
-    }
-    
     // --- RPM RATE LIMITING ---
     const rpmLimit = plan === 'pro' ? 100 : plan === 'premium' ? 300 : plan === 'enterprise' ? 999999 : 1;
     const now = Date.now();
@@ -112,7 +98,7 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    // --- QUOTA LOGIC ---
+    // --- TOTAL QUOTA LOGIC ---
     const currentQuota = orkutData.quota || 0;
     if (currentQuota <= 0 && plan !== 'enterprise') {
       return NextResponse.json({ 
