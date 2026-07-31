@@ -14,12 +14,21 @@ import {
 import { getShopeeMutations } from '@/lib/shopeepay/mutasi';
 
 /**
- * Helper: Parse amount string like "5.170" to integer 5170.
+ * Helper: Robustly parse amount string like "5.000" or "5000.00" to integer.
+ * This ensures that dots as thousand separators are not misinterpreted as decimals.
  */
 const parseAmount = (val: any): number => {
     if (typeof val === 'number') return val;
-    const str = String(val || "").replace(/\./g, '').trim();
-    return parseInt(str) || 0;
+    const str = String(val || "").trim();
+    if (!str) return 0;
+
+    // Logic: If contains dot but no comma, and exactly 3 digits after last dot, it's likely a thousand separator
+    if (str.includes('.') && !str.includes(',') && str.split('.').pop()?.length === 3) {
+      return parseInt(str.replace(/\./g, '')) || 0;
+    }
+    
+    // Normal numeric conversion for standard strings or decimal strings
+    return Math.floor(Number(str)) || 0;
 };
 
 /**
@@ -146,7 +155,7 @@ export async function POST(request: Request) {
       if (mutationRes.success && Array.isArray(mutationRes.data)) {
         const mutations = mutationRes.data;
         
-        // Match criteria: Amount match (parsed) and Status SUCCESS
+        // Match criteria: Amount match (parsed correctly) and Status SUCCESS
         const match = mutations.find(m => {
           const mAmount = parseAmount(m.amount);
           return m.status === 'SUCCESS' && Math.abs(mAmount - transactionData.amount) < 1;
