@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase/core';
 import { 
@@ -18,7 +19,7 @@ import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
  * API: Check Orderkuota Transaction Status
  * Method: POST
  * URL: /orkut/status (via api subdomain)
- * FIX: Logika disamakan dengan Action Console (parseFloat + processed_topups ledger)
+ * FIX: Aligned with working Console Action (parseFloat + dot-safe handling)
  */
 export async function POST(request: Request) {
   try {
@@ -143,7 +144,13 @@ export async function POST(request: Request) {
         let foundMatch = null;
 
         for (const m of mutations) {
-          const amount = parseFloat(m.kredit);
+          // Robust parsing: Remove potential thousand dots to ensure match
+          const rawKredit = String(m.kredit || "").trim();
+          const cleanKredit = rawKredit.includes('.') && !rawKredit.includes(',') && rawKredit.split('.').pop()?.length === 3
+             ? rawKredit.replace(/\./g, '')
+             : rawKredit;
+             
+          const amount = parseFloat(cleanKredit);
           const isNominalMatch = m.status === 'IN' && Math.abs(amount - expectedAmount) < 1;
 
           if (isNominalMatch) {

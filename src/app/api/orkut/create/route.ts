@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { initializeFirebase } from '@/firebase/core';
 import { 
@@ -32,7 +33,18 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    const baseAmount = Math.floor(Number(amount));
+    // Aligned Parser: Ensure thousand separators like "5.000" are handled correctly
+    const parseAmount = (val: any): number => {
+      if (typeof val === 'number') return val;
+      const str = String(val || "").trim();
+      // If contains dot but no comma, and length is > 3, likely thousand separator
+      if (str.includes('.') && !str.includes(',') && str.split('.').pop()?.length === 3) {
+        return parseInt(str.replace(/\./g, '')) || 0;
+      }
+      return Math.floor(Number(str)) || 0;
+    };
+
+    const baseAmount = parseAmount(amount);
     
     if (isNaN(baseAmount) || baseAmount < 100) {
       return NextResponse.json({ 
