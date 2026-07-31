@@ -107,7 +107,7 @@ export function DocsShopeePay() {
                 <CodeBlock 
                   title="Shell / cURL"
                   type="curl"
-                  code={`curl -X POST https://api.stspoint.id/api/shopee/create \\
+                  code={`curl -X POST https://api.stspoint.id/shopee/create \\
   -H "Content-Type: application/json" \\
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
@@ -122,7 +122,7 @@ export function DocsShopeePay() {
                 <CodeBlock 
                   title="Node.js (Fetch)"
                   type="node"
-                  code={`const res = await fetch('https://api.stspoint.id/api/shopee/create', {
+                  code={`const res = await fetch('https://api.stspoint.id/shopee/create', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -146,7 +146,7 @@ payload = {
     "amount": 10000,
     "payer_email": "customer@email.com"
 }
-res = requests.post("https://api.stspoint.id/api/shopee/create", json=payload)
+res = requests.post("https://api.stspoint.id/shopee/create", json=payload)
 print(res.json())`}
                 />
               </TabsContent>
@@ -162,7 +162,7 @@ $payload = [
     "payer_email" => "customer@email.com"
 ];
 
-$ch = curl_init("https://api.stspoint.id/api/shopee/create");
+$ch = curl_init("https://api.stspoint.id/shopee/create");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);

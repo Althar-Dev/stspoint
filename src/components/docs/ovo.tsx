@@ -70,7 +70,7 @@ export function DocsOvo() {
                 <CodeBlock 
                   title="Shell / cURL"
                   type="curl"
-                  code={`curl -X POST https://api.stspoint.id/api/ovo/transactions \\
+                  code={`curl -X POST https://api.stspoint.id/ovo/transactions \\
   -H "Content-Type: application/json" \\
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
@@ -83,7 +83,7 @@ export function DocsOvo() {
                 <CodeBlock 
                   title="Node.js (Fetch)"
                   type="node"
-                  code={`const res = await fetch('https://api.stspoint.id/api/ovo/transactions', {
+                  code={`const res = await fetch('https://api.stspoint.id/ovo/transactions', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -107,7 +107,7 @@ payload = {
     "page": 1,
     "limit": 10
 }
-res = requests.post("https://api.stspoint.id/api/ovo/transactions", json=payload)
+res = requests.post("https://api.stspoint.id/ovo/transactions", json=payload)
 print(res.json())`}
                 />
               </TabsContent>
@@ -122,7 +122,7 @@ $payload = [
     "limit" => 10
 ];
 
-$ch = curl_init("https://api.stspoint.id/api/ovo/transactions");
+$ch = curl_init("https://api.stspoint.id/ovo/transactions");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
@@ -260,7 +260,7 @@ echo $response;
         <CodeBlock 
           title="Get Bank List Example"
           type="curl"
-          code={`curl -X POST https://api.stspoint.id/api/transfer/banks \\
+          code={`curl -X POST https://api.stspoint.id/transfer/banks \\
   -H "Content-Type: application/json" \\
   -d '{"secret_key": "STS-Key-XXXXXXXX"}'`}
         />
@@ -375,7 +375,7 @@ echo $response;
                 <CodeBlock 
                   title="Shell / cURL"
                   type="curl"
-                  code={`curl -X POST https://api.stspoint.id/api/ovo/transfer/bank \\
+                  code={`curl -X POST https://api.stspoint.id/ovo/transfer/bank \\
   -H "Content-Type: application/json" \\
   -d '{
     "secret_key": "STS-Key-XXXXXXXX",
@@ -391,7 +391,7 @@ echo $response;
                 <CodeBlock 
                   title="Node.js (Fetch)"
                   type="node"
-                  code={`const res = await fetch('https://api.stspoint.id/api/ovo/transfer/bank', {
+                  code={`const res = await fetch('https://api.stspoint.id/ovo/transfer/bank', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -420,7 +420,7 @@ payload = {
     "amount": 100000,
     "message": "Payout #123"
 }
-res = requests.post("https://api.stspoint.id/api/ovo/transfer/bank", json=payload)`}
+res = requests.post("https://api.stspoint.id/ovo/transfer/bank", json=payload)`}
                 />
               </TabsContent>
               <TabsContent value="php">
@@ -436,7 +436,7 @@ $payload = [
     "amount" => 100000
 ];
 
-$ch = curl_init("https://api.stspoint.id/api/ovo/transfer/bank");
+$ch = curl_init("https://api.stspoint.id/ovo/transfer/bank");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
