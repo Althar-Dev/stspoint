@@ -344,7 +344,11 @@ export default function OverviewPage() {
                         Top Up
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="rounded-[2rem] border-border w-[92vw] sm:max-w-[420px] max-h-[90vh] overflow-y-auto p-0">
+                    <DialogContent 
+                      onPointerDownOutside={(e) => e.preventDefault()} 
+                      onEscapeKeyDown={(e) => e.preventDefault()}
+                      className="rounded-[2rem] border-border w-[92vw] sm:max-w-[420px] max-h-[90vh] overflow-y-auto p-0"
+                    >
                       <div className="p-6 sm:p-8 space-y-6">
                         <DialogHeader>
                           <DialogTitle className="font-headline font-bold flex items-center gap-2">
@@ -407,7 +411,7 @@ export default function OverviewPage() {
                                       <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
                                          <Download className="w-4 h-4" /> Download
                                       </Button>
-                                      <Button onClick={() => {setQrisData(null); setFinalAmount(null);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
+                                      <Button onClick={() => {setQrisData(null); setFinalAmount(null); setIsTopUpOpen(false);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
                                    </div>
                                 </div>
                              </div>
