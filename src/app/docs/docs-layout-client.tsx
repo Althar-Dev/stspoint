@@ -118,8 +118,16 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { toast } = useToast();
 
+  // Mapping slugs to their respective component IDs for highlighting
+  const slugMapping: Record<string, string> = {
+    "gopay-merchant": "gopay",
+    "shopee": "shopeepay",
+    "ovo-api": "ovo"
+  };
+
   // Detect active section from path segment
-  const activeType = pathname.replace('/docs', '').replace('/', '') || "general";
+  const rawType = pathname.replace('/docs', '').replace('/', '') || "general";
+  const activeType = slugMapping[rawType] || rawType;
 
   const handleCopyPage = () => {
     if (typeof window !== "undefined") {

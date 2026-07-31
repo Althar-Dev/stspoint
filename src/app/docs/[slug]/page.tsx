@@ -35,6 +35,7 @@ export default function DocsSlugPage({ params }: DocsSlugPageProps) {
   }, [slug]);
 
   const renderSection = () => {
+    // Standardizing slugs to match components
     switch (slug) {
       case "stspay":
         return <DocsStsPay />;
@@ -43,10 +44,13 @@ export default function DocsSlugPage({ params }: DocsSlugPageProps) {
       case "orderkuota":
         return <DocsOrderkuota />;
       case "gopay":
+      case "gopay-merchant":
         return <DocsGoMerchant />;
       case "shopeepay":
+      case "shopee":
         return <DocsShopeePay />;
       case "ovo":
+      case "ovo-api":
         return <DocsOvo />;
       case "webhooks":
         return <DocsWebhooks />;
