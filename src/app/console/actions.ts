@@ -46,7 +46,16 @@ export async function checkTopUpStatusAction(userId: string, expectedAmount: num
     let foundMatch = null;
 
     for (const m of mutationRes.result) {
-      const amount = parseFloat(m.kredit);
+      // FIX: Robust parsing for dots as thousand separators (e.g., "5.000" -> 5000)
+      // Orderkuota returns numbers as strings that often include dots
+      const rawKredit = String(m.kredit || "").trim();
+      
+      // Logic: If contains dot but no comma, and exactly 3 digits after last dot, it's likely a thousand separator
+      const cleanKredit = rawKredit.includes('.') && !rawKredit.includes(',') && rawKredit.split('.').pop()?.length === 3
+        ? rawKredit.replace(/\./g, '')
+        : rawKredit;
+
+      const amount = parseFloat(cleanKredit);
       const isNominalMatch = m.status === 'IN' && Math.abs(amount - expectedAmount) < 1;
 
       if (isNominalMatch) {
