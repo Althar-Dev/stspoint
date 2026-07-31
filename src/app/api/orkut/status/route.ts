@@ -14,11 +14,18 @@ import {
 import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 
 /**
+ * Helper: Parse amount string like "5.170" to integer 5170.
+ */
+const parseAmount = (val: any): number => {
+    if (typeof val === 'number') return val;
+    const str = String(val || "").replace(/[^\d]/g, '').trim();
+    return parseInt(str) || 0;
+};
+
+/**
  * API: Check Orderkuota Transaction Status
  * Method: POST
  * URL: /orkut/status (via api subdomain)
- * 
- * FIX: Menambahkan pengecekan waktu mutasi agar tidak mengambil transaksi lama.
  */
 export async function POST(request: Request) {
   try {
@@ -143,19 +150,19 @@ export async function POST(request: Request) {
       if (mutationRes.status && mutationRes.result && Array.isArray(mutationRes.result)) {
         const mutations = mutationRes.result;
         
-        // --- FIX: JANGAN CEK TRANSAKSI SEBELUMNYA ---
-        // Ambil waktu pembuatan transaksi dalam milidetik
+        // --- FIX: Robust Reconciliation ---
         const txCreatedAtMillis = transactionData.createdAt?.toMillis 
           ? transactionData.createdAt.toMillis() 
           : new Date(transactionData.createdAt).getTime();
 
         const match = mutations.find(m => {
-          // Parsing tanggal mutasi (format: YYYY-MM-DD HH:mm:ss)
-          const mCreatedAtMillis = new Date(m.tanggal).getTime();
+          // Robust date parsing (replace space with T for ISO)
+          const mCreatedAtMillis = new Date(m.tanggal.replace(" ", "T")).getTime();
+          const mAmount = parseAmount(m.kredit);
           
-          return m.status === 'IN' && 
-                 Math.abs(parseFloat(m.kredit) - transactionData.amount) < 1 &&
-                 mCreatedAtMillis >= (txCreatedAtMillis - 30000); // 30s buffer
+          return m.status.toUpperCase() === 'IN' && 
+                 Math.abs(mAmount - transactionData.amount) < 1 &&
+                 mCreatedAtMillis >= (txCreatedAtMillis - 60000); // 60s buffer for safety
         });
 
         if (match) {
@@ -208,9 +215,9 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('API Orkut Status Error:', error);
-    return { 
+    return NextResponse.json({ 
       success: false, 
       message: 'Internal Server Error: ' + (error.message || 'Unknown error') 
-    };
+    }, { status: 500 });
   }
 }
