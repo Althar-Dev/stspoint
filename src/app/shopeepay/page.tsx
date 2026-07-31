@@ -102,6 +102,14 @@ export default function ShopeepayDashboardPage() {
         let str = String(val).trim();
         if (!str) return 0;
 
+        const directNum = parseFloat(str);
+        if (!isNaN(directNum) && directNum > 0 && directNum < 1000 && !Number.isInteger(directNum)) {
+            const parts = str.split(/[.,]/);
+            if (parts.length === 2 && parts[1].length < 3) {
+                return Math.round(directNum * 1000);
+            }
+        }
+
         if (str.includes('.')) {
             if (str.includes(',')) {
                 str = str.replace(/\./g, '').replace(',', '.');
@@ -535,7 +543,7 @@ export default function ShopeepayDashboardPage() {
                                                 {item.transaction_id}
                                             </td>
                                             <td className="px-6 py-4 font-bold text-[13px] whitespace-nowrap text-[#EE4D2D]">
-                                                Rp {item.amount}
+                                                Rp {parseShopeeAmount(item.amount).toLocaleString('id-ID')}
                                             </td>
                                             <td className="px-6 py-4 text-right whitespace-nowrap">
                                                 <Badge className={`${item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'

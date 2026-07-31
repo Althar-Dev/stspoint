@@ -85,6 +85,49 @@ export default function ShopeepayTransactionsPage() {
         );
     }, [mutations, search]);
 
+    /**
+     * Helper: Parse amount & format Rupiah secara aman.
+     * Mengubah string "5.170" atau float 5.17 menjadi integer murni (5170 IDR).
+     */
+    const parseShopeeAmount = (val: any): number => {
+        if (val === null || val === undefined) return 0;
+        if (typeof val === 'number') {
+            if (val > 0 && val < 1000 && !Number.isInteger(val)) {
+                return Math.round(val * 1000);
+            }
+            return Math.floor(val);
+        }
+        let str = String(val).trim();
+        if (!str) return 0;
+
+        const directNum = parseFloat(str);
+        if (!isNaN(directNum) && directNum > 0 && directNum < 1000 && !Number.isInteger(directNum)) {
+            const parts = str.split(/[.,]/);
+            if (parts.length === 2 && parts[1].length < 3) {
+                return Math.round(directNum * 1000);
+            }
+        }
+
+        if (str.includes('.')) {
+            if (str.includes(',')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else {
+                str = str.replace(/\./g, '');
+            }
+        } else if (str.includes(',')) {
+            str = str.replace(',', '.');
+        }
+
+        const num = parseFloat(str);
+        if (isNaN(num)) return 0;
+
+        if (num > 0 && num < 1000 && !Number.isInteger(num)) {
+            return Math.round(num * 1000);
+        }
+
+        return Math.floor(num);
+    };
+
     const handleExportCSV = () => {
         if (filteredMutations.length === 0) {
             toast({ variant: "destructive", title: "Export Gagal", description: "Tidak ada data untuk diekspor." });
@@ -95,7 +138,7 @@ export default function ShopeepayTransactionsPage() {
             m.created_at,
             m.transaction_id,
             "ShopeePay",
-            m.amount,
+            parseShopeeAmount(m.amount),
             m.status
         ]);
         const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -118,7 +161,7 @@ export default function ShopeepayTransactionsPage() {
             m.created_at,
             m.transaction_id,
             "ShopeePay",
-            m.amount,
+            parseShopeeAmount(m.amount).toLocaleString('id-ID'),
             m.status
         ]);
         autoTable(doc, {
@@ -252,7 +295,7 @@ export default function ShopeepayTransactionsPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-center font-bold text-[13px] text-[#EE4D2D]">
-                                                Rp {item.amount}
+                                                Rp {parseShopeeAmount(item.amount).toLocaleString('id-ID')}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <Badge className={`${item.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
