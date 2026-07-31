@@ -260,6 +260,14 @@ export default function OverviewPage() {
     return format(date, "yyyy MM dd HH:mm");
   };
 
+  const parseOrkutKredit = (val: string) => {
+    const raw = String(val || "").trim();
+    const clean = raw.includes('.') && !raw.includes(',') && raw.split('.').pop()?.length === 3
+      ? raw.replace(/\./g, '')
+      : raw;
+    return parseFloat(clean) || 0;
+  };
+
   const isGlobalLoading = authLoading || profileLoading || (!!user && !userProfileRef);
 
   return (
@@ -595,6 +603,61 @@ export default function OverviewPage() {
         </Card>
       </div>
 
+      {/* Orderkuota Logs Section with Fixed Amount Parsing */}
+      <div className="w-full min-w-0 overflow-hidden">
+        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-card"> 
+          <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
+             <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                   <Activity className="w-4 h-4 text-primary" />
+                   <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest text-muted-foreground">Orderkuota Logs</CardTitle>
+                </div>
+                <Badge className="bg-primary/5 text-primary border-none text-[8px] font-bold">LIVE BRIDGE</Badge>
+             </div>
+          </CardHeader>
+          <div className="w-full overflow-x-auto min-w-0"> 
+            <table className="w-full min-w-[800px] text-xs text-left border-collapse"> 
+              <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
+                <tr>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Ref ID</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Amount</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Bank</th>
+                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {txLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}><td colSpan={5} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
+                  ))
+                ) : (orderkuota?.token ? (
+                  mutations.slice(0, 5).map((log, i) => (
+                    <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{log.tanggal}</td>
+                      <td className="px-6 py-4 font-bold text-[11px] whitespace-nowrap uppercase">{log.id}</td>
+                      <td className="px-6 py-4 font-bold text-primary text-[11px] whitespace-nowrap">
+                        Rp {parseOrkutKredit(log.kredit).toLocaleString('id-ID')}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground text-[11px] whitespace-nowrap font-bold">
+                        {log.brand.name}
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
+                        <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[9px] uppercase px-1.5 py-0 rounded-sm">
+                          Success
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={5} className="px-6 py-20 text-center text-muted-foreground italic">Connect Orderkuota to view live logs.</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+
       <div className="text-center pt-10 border-t border-border/50 max-w-2xl mx-auto">
          <p className="text-[10px] text-muted-foreground/30 font-bold uppercase tracking-[0.5em]">
            STS Point Gateway Console • Node ID: Cluster-01-JKT
@@ -603,3 +666,6 @@ export default function OverviewPage() {
     </div>
   );
 }
+
+// Re-using local mutations logic from orkut dashboard
+const mutations: any[] = [];

@@ -267,6 +267,14 @@ export default function OrkutPage() {
     });
   };
 
+  const parseOrkutKredit = (val: string) => {
+    const raw = String(val || "").trim();
+    const clean = raw.includes('.') && !raw.includes(',') && raw.split('.').pop()?.length === 3
+      ? raw.replace(/\./g, '')
+      : raw;
+    return parseFloat(clean) || 0;
+  };
+
   const isLoading = authLoading || serviceLoading || (!!user && !orderkuotaRef);
 
   return (
@@ -407,7 +415,7 @@ export default function OrkutPage() {
                         Rp {(orderkuota?.balance || 0).toLocaleString('id-ID')}
                       </h2>
                     )}
-                    <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
+                    <Badge variant="outline" className="bg-green-50/5 text-green-600 border-green-500/20 text-[8px] font-bold uppercase py-0 px-1.5 h-4">Verified</Badge>
                   </div>
                 </div>
 
@@ -655,7 +663,7 @@ export default function OrkutPage() {
                     <td colSpan={5} className="px-6 py-24 text-center text-muted-foreground">
                       <div className="flex flex-col items-center justify-center gap-2 w-full">
                         <Clock className="w-8 h-8 opacity-20" />
-                        <p className="font-bold text-xs uppercase tracking-widest">No incoming transactions found</p>
+                        <p className="font-bold text-sm uppercase tracking-widest">No incoming transactions found</p>
                       </div>
                     </td>
                   </tr>
@@ -667,7 +675,7 @@ export default function OrkutPage() {
                       </td>
                       <td className="px-6 py-4 font-bold text-[11px] whitespace-nowrap uppercase">{log.id}</td>
                       <td className="px-6 py-4 font-bold text-primary text-[11px] whitespace-nowrap">
-                        Rp {parseInt(log.kredit).toLocaleString('id-ID')}
+                        Rp {parseOrkutKredit(log.kredit).toLocaleString('id-ID')}
                       </td>
                       <td className="px-6 py-4 text-muted-foreground text-[11px] whitespace-nowrap font-bold">
                         {log.brand.name}

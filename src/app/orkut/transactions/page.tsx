@@ -60,6 +60,14 @@ export default function OrkutTransactionsPage() {
     fetchMutations();
   }, [isConnected, orderkuota?.username, orderkuota?.token]);
 
+  const parseOrkutKredit = (val: string) => {
+    const raw = String(val || "").trim();
+    const clean = raw.includes('.') && !raw.includes(',') && raw.split('.').pop()?.length === 3
+      ? raw.replace(/\./g, '')
+      : raw;
+    return parseFloat(clean) || 0;
+  };
+
   const isGlobalLoading = authLoading || serviceLoading;
 
   return (
@@ -158,7 +166,7 @@ export default function OrkutTransactionsPage() {
                       <td className="px-6 py-4 font-bold text-[11px] whitespace-nowrap uppercase">{log.id}</td>
                       <td className="px-6 py-4 text-muted-foreground font-bold whitespace-nowrap">{log.brand.name}</td>
                       <td className="px-6 py-4 font-bold text-primary text-[11px] whitespace-nowrap">
-                        Rp {parseInt(log.kredit).toLocaleString('id-ID')}
+                        Rp {parseOrkutKredit(log.kredit).toLocaleString('id-ID')}
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm">
