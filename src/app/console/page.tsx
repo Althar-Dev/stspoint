@@ -77,6 +77,7 @@ export default function OverviewPage() {
   }, [db]);
   const { data: masterConfig } = useDoc(masterOrkutRef);
 
+  // Service References
   const orderkuotaRef = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
     return doc(db, "users", user.uid, "services", "orderkuota");
@@ -88,6 +89,18 @@ export default function OverviewPage() {
     return doc(db, "users", user.uid, "services", "gomerchant");
   }, [db, user?.uid]);
   const { data: gomerchant } = useDoc(gomerchantRef);
+
+  const shopeepayRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "shopeepay");
+  }, [db, user?.uid]);
+  const { data: shopeepay } = useDoc(shopeepayRef);
+
+  const ovoRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, "users", user.uid, "services", "ovo");
+  }, [db, user?.uid]);
+  const { data: ovo } = useDoc(ovoRef);
 
   const transactionsQuery = useMemoFirebase(() => {
     if (!db || !user?.uid) return null;
@@ -247,8 +260,10 @@ export default function OverviewPage() {
     return [
       { name: "Orderkuota", value: orderkuota?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.8) },
       { name: "GoMerchant", value: gomerchant?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.5) },
+      { name: "ShopeePay", value: shopeepay?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.3) },
+      { name: "OVO", value: ovo?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.4) },
     ];
-  }, [orderkuota, gomerchant, weeklyUsageTrend]);
+  }, [orderkuota, gomerchant, shopeepay, ovo, weeklyUsageTrend]);
 
   const formatTransactionDate = (timestamp: any) => {
     if (!isMounted || !timestamp) return "...";
