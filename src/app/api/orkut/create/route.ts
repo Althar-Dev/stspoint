@@ -15,6 +15,16 @@ import {
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
 
 /**
+ * Helper: Robustly parse amount strings like "5.170" to integer 5170.
+ * This prevents "5.170" from being treated as 5.17 by Number().
+ */
+const parseAmount = (val: any): number => {
+    if (typeof val === 'number') return Math.floor(val);
+    const str = String(val || "").replace(/[^\d]/g, '').trim();
+    return parseInt(str) || 0;
+};
+
+/**
  * API: Create Orderkuota QRIS Transaction with Strict Plan Validation
  * Method: POST
  * URL: /orkut/create (via api subdomain)
@@ -32,8 +42,10 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    const baseAmount = Number(amount);
-    if (isNaN(baseAmount) || baseAmount < 100) {
+    // CRITICAL FIX: Use parseAmount instead of Number() to handle "5.170" as 5170
+    const baseAmount = parseAmount(amount);
+    
+    if (baseAmount < 100) {
       return NextResponse.json({ 
         success: false, 
         message: 'Amount must be at least 100.' 

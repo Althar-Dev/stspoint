@@ -14,10 +14,10 @@ import {
 import { getOrderkuotaMutation } from '@/lib/orderkuota/mutation';
 
 /**
- * Helper: Parse amount string like "5.170" to integer 5170.
+ * Helper: Robustly parse amount strings like "5.170" to integer 5170.
  */
 const parseAmount = (val: any): number => {
-    if (typeof val === 'number') return val;
+    if (typeof val === 'number') return Math.floor(val);
     const str = String(val || "").replace(/[^\d]/g, '').trim();
     return parseInt(str) || 0;
 };
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const userData = authSnap.docs[0].data();
     const userId = userData.uid;
 
-    // 3. Check Service Config & Plan Validation
+    // 3. Check Service Config & Validate Plan
     const orkutRef = doc(firestore, 'users', userId, 'services', 'orderkuota');
     const orkutSnap = await getDoc(orkutRef);
 
@@ -150,23 +150,23 @@ export async function POST(request: Request) {
       if (mutationRes.status && mutationRes.result && Array.isArray(mutationRes.result)) {
         const mutations = mutationRes.result;
         
-        // --- FIX: Robust Reconciliation ---
+        // --- RECONCILIATION LOGIC ---
         const txCreatedAtMillis = transactionData.createdAt?.toMillis 
           ? transactionData.createdAt.toMillis() 
           : new Date(transactionData.createdAt).getTime();
 
         const match = mutations.find(m => {
-          // Robust date parsing (replace space with T for ISO)
+          // Date parsing: "2024-10-24 08:42:11" -> YYYY-MM-DDTHH:mm:ss
           const mCreatedAtMillis = new Date(m.tanggal.replace(" ", "T")).getTime();
           const mAmount = parseAmount(m.kredit);
           
+          // Match criteria: Status IN, Nominal Match, and Time >= CreatedTime (-2 min buffer)
           return m.status.toUpperCase() === 'IN' && 
                  Math.abs(mAmount - transactionData.amount) < 1 &&
-                 mCreatedAtMillis >= (txCreatedAtMillis - 60000); // 60s buffer for safety
+                 mCreatedAtMillis >= (txCreatedAtMillis - 120000); 
         });
 
         if (match) {
-          // Update technical record and ledgers
           const userHistoryRef = doc(firestore, 'users', userId, 'transactions', external_id);
           const globalHistoryRef = doc(firestore, 'transactions', external_id);
           
