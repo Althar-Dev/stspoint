@@ -15,6 +15,47 @@ import {
 import { createDynamicQrisString } from '@/lib/qris/dynamic';
 
 /**
+ * Robustly parse ShopeePay amount.
+ * Normalizes input strings or numbers into clean integers.
+ */
+const parseShopeeAmount = (val: any): number => {
+    if (val === null || val === undefined) return 0;
+    
+    let num: number;
+    if (typeof val === 'number') {
+        num = val;
+    } else {
+        let str = String(val).trim().replace(/[^\d.,]/g, '');
+        if (str.includes('.') && str.includes(',')) {
+            // European format: 1.234,56
+            str = str.replace(/\./g, '').replace(',', '.');
+        } else if (str.includes('.')) {
+            // Check if dot is thousand separator (e.g. 5.000)
+            const parts = str.split('.');
+            if (parts[parts.length - 1].length === 3) {
+                str = str.replace(/\./g, '');
+            }
+        } else if (str.includes(',')) {
+            // Comma as decimal
+            str = str.replace(',', '.');
+        }
+        num = parseFloat(str);
+    }
+
+    if (isNaN(num)) return 0;
+
+    // Shopee shorthand detection: 5.17 often means 5170
+    if (num > 0 && num < 1000 && !Number.isInteger(num)) {
+        return Math.round(num * 1000);
+    }
+    
+    // If it's a very small integer (e.g. 5), but we are in a top-up context where min is 100, 
+    // it's likely a misparsed thousand (5.000 -> 5).
+    // However, during CREATE, we usually get the full number from the merchant UI.
+    return Math.floor(num);
+};
+
+/**
  * API: Create ShopeePay QRIS Transaction
  * Method: POST
  * URL: /shopee/create (via api subdomain)
@@ -32,18 +73,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Robust Parser: Ensure thousand separators like "5.000" are handled correctly
-    const parseAmount = (val: any): number => {
-      if (typeof val === 'number') return val;
-      const str = String(val || "").trim();
-      // If contains dot but no comma, and length is > 3, likely thousand separator
-      if (str.includes('.') && !str.includes(',') && str.split('.').pop()?.length === 3) {
-        return parseInt(str.replace(/\./g, '')) || 0;
-      }
-      return Math.floor(Number(str)) || 0;
-    };
-
-    const baseAmount = parseAmount(amount);
+    const baseAmount = parseShopeeAmount(amount);
     
     if (isNaN(baseAmount) || baseAmount < 100) {
       return NextResponse.json({ 

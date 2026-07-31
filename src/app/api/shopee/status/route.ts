@@ -14,21 +14,34 @@ import {
 import { getShopeeMutations } from '@/lib/shopeepay/mutasi';
 
 /**
- * Helper: Robustly parse amount string like "5.000" or "5000.00" to integer.
- * This ensures that dots as thousand separators are not misinterpreted as decimals.
+ * Robustly parse ShopeePay amount from mutation data.
+ * Returns the raw numerical value.
  */
-const parseAmount = (val: any): number => {
-    if (typeof val === 'number') return val;
-    const str = String(val || "").trim();
-    if (!str) return 0;
-
-    // Logic: If contains dot but no comma, and exactly 3 digits after last dot, it's likely a thousand separator
-    if (str.includes('.') && !str.includes(',') && str.split('.').pop()?.length === 3) {
-      return parseInt(str.replace(/\./g, '')) || 0;
-    }
+const parseShopeeAmount = (val: any): number => {
+    if (val === null || val === undefined) return 0;
     
-    // Normal numeric conversion for standard strings or decimal strings
-    return Math.floor(Number(str)) || 0;
+    let num: number;
+    if (typeof val === 'number') {
+        num = val;
+    } else {
+        let str = String(val).trim().replace(/[^\d.,]/g, '');
+        if (str.includes('.') && str.includes(',')) {
+            // European: 1.234,56
+            str = str.replace(/\./g, '').replace(',', '.');
+        } else if (str.includes('.')) {
+            const parts = str.split('.');
+            // If it has 3 digits after dot, it's likely thousand separator (5.000)
+            if (parts[parts.length - 1].length === 3) {
+                str = str.replace(/\./g, '');
+            }
+        } else if (str.includes(',')) {
+            str = str.replace(',', '.');
+        }
+        num = parseFloat(str);
+    }
+
+    if (isNaN(num)) return 0;
+    return num;
 };
 
 /**
@@ -154,11 +167,18 @@ export async function POST(request: Request) {
 
       if (mutationRes.success && Array.isArray(mutationRes.data)) {
         const mutations = mutationRes.data;
+        const targetAmount = Number(transactionData.amount);
         
-        // Match criteria: Amount match (parsed correctly) and Status SUCCESS
+        // Match criteria: Amount match and Status SUCCESS
+        // We handle shorthand (5.17 -> 5170) and truncated (5.000 -> 5) formats
         const match = mutations.find(m => {
-          const mAmount = parseAmount(m.amount);
-          return m.status === 'SUCCESS' && Math.abs(mAmount - transactionData.amount) < 1;
+          const mAmount = parseShopeeAmount(m.amount);
+          const isSuccess = String(m.status).toUpperCase() === 'SUCCESS';
+          
+          const directMatch = Math.abs(mAmount - targetAmount) < 1;
+          const thousandMatch = Math.abs((mAmount * 1000) - targetAmount) < 1;
+          
+          return isSuccess && (directMatch || thousandMatch);
         });
 
         if (match) {
