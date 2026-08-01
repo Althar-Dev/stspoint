@@ -290,7 +290,7 @@ export default function OvoTransferPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <div className="md:col-span-7 space-y-5">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor OVO Tujuan</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nomor HP OVO Tujuan</Label>
                     <div className="relative">
                       <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -306,7 +306,7 @@ export default function OvoTransferPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nominal</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Nominal (Min. Rp 10.000)</Label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
                       <Input
@@ -335,7 +335,7 @@ export default function OvoTransferPage() {
                   {!ovoInquiryName ? (
                     <Button
                       onClick={handleCheckOvo}
-                      disabled={isProcessing || !ovoTarget || !ovoAmount || parseInt(ovoAmount) < 1000}
+                      disabled={isProcessing || !ovoTarget || !ovoAmount || parseInt(ovoAmount) < 10000}
                       className="w-full h-11 rounded-xl font-bold bg-[#4C2B9A] text-white gap-2 shadow-lg shadow-[#4C2B9A]/20 text-[10px] uppercase tracking-widest"
                     >
                       <Search className="w-4 h-4" />
