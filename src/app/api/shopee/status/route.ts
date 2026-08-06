@@ -15,7 +15,7 @@ import { getShopeeMutations } from '@/lib/shopeepay/mutasi';
 
 /**
  * Robustly parse ShopeePay amount from mutation data.
- * Returns the raw numerical value.
+ * Handles both raw integers and shorthand decimal formats (e.g., 5.17 for 5170).
  */
 const parseShopeeAmount = (val: any): number => {
     if (val === null || val === undefined) return 0;
@@ -26,11 +26,11 @@ const parseShopeeAmount = (val: any): number => {
     } else {
         let str = String(val).trim().replace(/[^\d.,]/g, '');
         if (str.includes('.') && str.includes(',')) {
-            // European: 1.234,56
+            // European: 1.234,56 -> 1234.56
             str = str.replace(/\./g, '').replace(',', '.');
         } else if (str.includes('.')) {
             const parts = str.split('.');
-            // If it has 3 digits after dot, it's likely thousand separator (5.000)
+            // If it has 3 digits after last dot, it's likely thousand separator (5.000)
             if (parts[parts.length - 1].length === 3) {
                 str = str.replace(/\./g, '');
             }
@@ -48,6 +48,7 @@ const parseShopeeAmount = (val: any): number => {
  * API: Check ShopeePay Transaction Status
  * Method: POST
  * URL: /shopee/status (via api subdomain)
+ * FIX: Menambahkan proteksi agar tidak mengambil mutasi dari transaksi sebelumnya.
  */
 export async function POST(request: Request) {
   try {
@@ -146,7 +147,8 @@ export async function POST(request: Request) {
     });
 
     // 5. If already PAID, return success immediately
-    if (transactionData.status === 'PAID') {
+    const paidStatuses = ['PAID', 'SETTLED', 'SUCCEEDED', 'SUCCESS'];
+    if (paidStatuses.includes(transactionData.status.toUpperCase())) {
       return NextResponse.json({
         success: true,
         data: {
@@ -169,16 +171,27 @@ export async function POST(request: Request) {
         const mutations = mutationRes.data;
         const targetAmount = Number(transactionData.amount);
         
-        // Match criteria: Amount match and Status SUCCESS
-        // We handle shorthand (5.17 -> 5170) and truncated (5.000 -> 5) formats
+        // --- FIX: JANGAN CEK TRANSAKSI SEBELUMNYA (Time Fencing) ---
+        // Dapatkan waktu pembuatan transaksi dalam milidetik
+        const txCreatedAtMillis = transactionData.createdAt?.toMillis 
+          ? transactionData.createdAt.toMillis() 
+          : new Date(transactionData.createdAt).getTime();
+
         const match = mutations.find(m => {
           const mAmount = parseShopeeAmount(m.amount);
           const isSuccess = String(m.status).toUpperCase() === 'SUCCESS';
           
+          // Hitung waktu mutasi (prefer raw_timestamp dari bridge jika ada)
+          const mCreatedAtMillis = m.raw_timestamp ? m.raw_timestamp * 1000 : new Date(m.created_at).getTime();
+          
+          // Kriteria Waktu: Mutasi harus terjadi setelah transaksi dibuat (toleransi buffer 30s)
+          const isFresh = mCreatedAtMillis >= (txCreatedAtMillis - 30000);
+          
+          // Cek kecocokan nominal (Langsung atau dikali 1000 untuk shorthand bridge)
           const directMatch = Math.abs(mAmount - targetAmount) < 1;
           const thousandMatch = Math.abs((mAmount * 1000) - targetAmount) < 1;
           
-          return isSuccess && (directMatch || thousandMatch);
+          return isSuccess && isFresh && (directMatch || thousandMatch);
         });
 
         if (match) {
