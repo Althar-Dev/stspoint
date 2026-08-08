@@ -168,7 +168,7 @@ export default function SignUpPage() {
 
       await setDoc(userRef, userData);
 
-      // Inisialisasi Layanan
+      // Inisialisasi Layanan dengan Kuota 0 (Wajib beli plan)
       const providers = ['orderkuota', 'gomerchant', 'stspay', 'shopeepay', 'ovo'];
       for (const providerId of providers) {
         const providerRef = doc(db, 'users', user.uid, 'services', providerId);
@@ -179,7 +179,7 @@ export default function SignUpPage() {
           refreshToken: "",
           baseQr: "",
           balance: 0,
-          quota: (['stspay', 'shopeepay', 'ovo'].includes(providerId)) ? 999999 : 0,
+          quota: 0, // Reset ke 0 agar user harus upgrade plan
           autoWithdrawEnabled: false,
           minWithdrawAmount: 1000,
           withdrawInterval: 5,
