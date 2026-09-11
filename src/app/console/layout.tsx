@@ -1,26 +1,26 @@
 
 "use client";
 
-import { 
-  SidebarProvider, 
-  Sidebar, 
-  SidebarContent, 
-  SidebarGroup, 
-  SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem, 
-  SidebarHeader, 
-  SidebarFooter, 
-  SidebarInset, 
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarInset,
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
   useSidebar
 } from "@/components/ui/sidebar";
-import { 
-  LayoutDashboard, 
-  Key, 
-  CreditCard, 
+import {
+  LayoutDashboard,
+  Key,
+  CreditCard,
   ChevronDown,
   Package,
   Settings,
@@ -28,10 +28,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
 } from "@/components/ui/collapsible";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
@@ -60,7 +60,7 @@ const mainMenuItems = [
     icon: CreditCard,
     items: [
       { title: "STSPay", url: "/pay" },
-      { title: "OrderKuota", url: "/orkut" },
+      //{ title: "OrderKuota", url: "/orkut" },
       { title: "GoMerchant", url: "/gopay" },
       { title: "ShopeePay", url: "/shopeepay" },
       { title: "OVO", url: "/ovo" },
@@ -118,7 +118,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
       await fetch("/api/auth/session", { method: "DELETE" });
       await signOut(auth);
       toast({ title: "Logged out", description: "Successfully signed out." });
-      
+
       setTimeout(() => {
         window.location.href = "/signin";
       }, 500);
@@ -132,15 +132,14 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
       const isActive = pathname === group.url;
       return (
         <SidebarMenuItem key={group.title}>
-          <SidebarMenuButton 
+          <SidebarMenuButton
             asChild
             isActive={isActive}
             tooltip={group.title}
-            className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${
-              isActive 
-                ? "bg-accent text-accent-foreground font-bold" 
+            className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${isActive
+                ? "bg-accent text-accent-foreground font-bold"
                 : "hover:bg-accent hover:text-accent-foreground"
-            }`}
+              }`}
           >
             <Link href={group.url}>
               <group.icon className="w-4 h-4 shrink-0" />
@@ -152,22 +151,21 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
     }
 
     const isGroupActive = group.items?.some((item: any) => item.url === pathname);
-    
+
     return (
-      <Collapsible 
-        key={group.title} 
-        asChild 
+      <Collapsible
+        key={group.title}
+        asChild
         defaultOpen={isGroupActive}
         className="group/collapsible"
       >
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton 
+            <SidebarMenuButton
               tooltip={group.title}
               isActive={isGroupActive}
-              className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${
-                isGroupActive ? "text-accent-foreground font-bold" : ""
-              }`}
+              className={`h-10 transition-colors group-data-[collapsible=icon]:justify-center ${isGroupActive ? "text-accent-foreground font-bold" : ""
+                }`}
             >
               <group.icon className="w-4 h-4 shrink-0" />
               <span className="text-sm group-data-[collapsible=icon]:hidden">{group.title}</span>
@@ -178,14 +176,13 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
             <SidebarMenuSub>
               {group.items.map((subItem: any) => (
                 <SidebarMenuSubItem key={subItem.title}>
-                  <SidebarMenuSubButton 
-                    asChild 
+                  <SidebarMenuSubButton
+                    asChild
                     isActive={pathname === subItem.url}
-                    className={`rounded-lg transition-all duration-200 ${
-                      pathname === subItem.url 
-                        ? "bg-accent text-accent-foreground font-bold" 
+                    className={`rounded-lg transition-all duration-200 ${pathname === subItem.url
+                        ? "bg-accent text-accent-foreground font-bold"
                         : "text-muted-foreground hover:text-accent-foreground"
-                    }`}
+                      }`}
                   >
                     <Link href={subItem.url}>
                       <span>{subItem.title}</span>
@@ -212,8 +209,8 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
-      <Sidebar 
-        collapsible="icon" 
+      <Sidebar
+        collapsible="icon"
         className="border-r border-border bg-card shadow-sm z-40 transition-all duration-300 ease-in-out"
         onMouseEnter={() => !isMobile && setOpen(true)}
         onMouseLeave={() => !isMobile && setOpen(false)}
@@ -224,7 +221,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
             <span className="font-headline font-bold text-lg tracking-tighter text-foreground truncate group-data-[collapsible=icon]:hidden">Point</span>
           </Link>
         </SidebarHeader>
-        
+
         <SidebarContent className="px-2 group-data-[state=expanded]:px-3 group-data-[collapsible=icon]:px-0">
           <SidebarGroup>
             <SidebarMenu className="group-data-[collapsible=icon]:items-center">
@@ -237,7 +234,7 @@ function ConsoleLayoutInner({ children }: { children: ReactNode }) {
           <SidebarMenu className="group-data-[collapsible=icon]:items-center">
             {footerMenuItems.map((group) => renderMenuItem(group))}
             <SidebarMenuItem>
-              <SidebarMenuButton 
+              <SidebarMenuButton
                 onClick={handleLogout}
                 className="h-10 text-destructive hover:bg-destructive/5 hover:text-destructive transition-colors group-data-[collapsible=icon]:justify-center"
               >
