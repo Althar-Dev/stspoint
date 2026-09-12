@@ -94,6 +94,17 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`https://console.${rootDomain}${pathname}${search}`, request.url));
     }
 
+    // CROSS-SUBDOMAIN REDIRECTS: Jika path milik subdomain lain diakses di subdomain ini (misal /checkout di console.stspoint.id)
+    for (const key in mappings) {
+      const targetConfig = mappings[key];
+      if (targetConfig.subdomain !== sub) {
+        if (pathname === targetConfig.internal || pathname.startsWith(`${targetConfig.internal}/`)) {
+          const cleanPath = pathname.replace(targetConfig.internal, '') || '/';
+          return NextResponse.redirect(new URL(`https://${targetConfig.subdomain}.${rootDomain}${cleanPath}${search}`, request.url));
+        }
+      }
+    }
+
     if (isPublicPath || isApiRoute) {
       return NextResponse.next();
     }
