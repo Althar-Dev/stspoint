@@ -21,8 +21,17 @@ import { getXenditPaymentRequest } from '@/lib/xendit/payment-request';
  * Melakukan sinkronisasi live jika transaksi masih PENDING.
  */
 export async function POST(request: Request) {
+  let body: any;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch (err) {
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Invalid JSON format in request body. Please ensure your request body is valid JSON with double-quoted keys.' 
+    }, { status: 400 });
+  }
+
+  try {
     const { merchant_id, secret_key, external_id } = body;
 
     // 1. Validasi Input

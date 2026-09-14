@@ -31,8 +31,17 @@ function calculateFee(base: number, feeStr: string | undefined) {
  * URL: /payments/create (via api subdomain)
  */
 export async function POST(request: Request) {
+  let body: any;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch (err) {
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Invalid JSON format in request body. Please ensure your request body is valid JSON with double-quoted keys.' 
+    }, { status: 400 });
+  }
+
+  try {
     const { 
       merchant_id, 
       secret_key, 
