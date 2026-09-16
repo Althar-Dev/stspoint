@@ -49,11 +49,11 @@ export default function UserManagementPage() {
         ) : (
           users.map((user, i) => (
             <Card key={i} className="bg-card border-border rounded-md overflow-hidden hover:border-primary/20 transition-all group shadow-sm">
-              <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-14 h-14 border-2 border-muted rounded-md group-hover:scale-105 transition-transform">
+              <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+                <div className="flex items-center gap-3.5">
+                  <Avatar className="w-11 h-11 sm:w-12 sm:h-12 border border-muted rounded-md group-hover:scale-105 transition-transform shrink-0">
                     <AvatarImage src={user.photoURL} />
-                    <AvatarFallback className="bg-primary/5 text-primary font-bold rounded-md">
+                    <AvatarFallback className="bg-primary/5 text-primary font-bold rounded-md text-sm">
                       {user.name?.[0].toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

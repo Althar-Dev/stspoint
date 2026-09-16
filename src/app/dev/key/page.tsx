@@ -15,30 +15,30 @@ function KeyManagementContent() {
   const view = searchParams.get("view") || "client";
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-20">
-      <div className="grid grid-cols-1 gap-8">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {view === 'client' ? (
           <ClientKeyManagement />
         ) : view === 'application' ? (
           <AppKeyManagement />
         ) : (
           <Card className="border border-dashed border-border bg-muted/20">
-             <CardContent className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                   <Info className="w-8 h-8 text-muted-foreground/40" />
+             <CardContent className="py-12 sm:py-16 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                   <Info className="w-6 h-6 text-muted-foreground/40" />
                 </div>
-                <p className="text-sm font-medium text-muted-foreground">Select a category from the navigation to begin.</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Select a category from the navigation to begin.</p>
              </CardContent>
           </Card>
         )}
       </div>
 
-      <div className="p-8 rounded-[2.5rem] bg-primary/5 border border-primary/10 flex items-start gap-4">
+      <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3 sm:gap-4">
          <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
          <div className="space-y-1">
-            <h4 className="text-sm font-bold uppercase tracking-tight">Security Protocol</h4>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-               License keys are sensitive assets. Generating a new key will create a unique, one-time entry in the STS Global Registry. revoking or deleting keys might disrupt active registration flows.
+            <h4 className="text-xs sm:text-sm font-bold uppercase tracking-tight">Security Protocol</h4>
+            <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+               License keys are sensitive assets. Generating a new key will create a unique, one-time entry in the STS Global Registry. Revoking or deleting keys might disrupt active registration flows.
             </p>
          </div>
       </div>

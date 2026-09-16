@@ -82,26 +82,26 @@ export default function DevSignInPage() {
         </Button>
       </Link>
 
-      <div className="w-full max-w-md z-10 space-y-8 animate-in fade-in zoom-in-95 duration-500">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="p-4 rounded-3xl bg-zinc-900 border border-white/5 shadow-2xl">
-            <Logo className="w-16 h-16 grayscale brightness-200" />
+      <div className="w-full max-w-md z-10 space-y-6 sm:space-y-8 animate-in fade-in zoom-in-95 duration-500">
+        <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+          <div className="p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-zinc-900 border border-white/5 shadow-2xl">
+            <Logo className="w-12 h-12 sm:w-16 sm:h-16 grayscale brightness-200" />
           </div>
           <div className="text-center space-y-1">
-             <h1 className="text-white text-2xl font-headline font-bold tracking-tighter flex items-center gap-2 justify-center">
-               <Terminal className="w-5 h-5 text-primary" />
+             <h1 className="text-white text-xl sm:text-2xl font-headline font-bold tracking-tighter flex items-center gap-2 justify-center">
+               <Terminal className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                DEV_ROOT_AUTH
              </h1>
-             <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-[0.3em]">Secure Infrastructure Access</p>
+             <p className="text-zinc-500 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.3em]">Secure Infrastructure Access</p>
           </div>
         </div>
 
-        <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl shadow-black overflow-hidden">
-          <CardHeader className="pt-10 px-10 pb-6 text-center border-b border-white/5 bg-zinc-900/30">
-            <CardTitle className="text-white text-lg font-bold">Privileged Access</CardTitle>
-            <CardDescription className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Authorized Personnel Only</CardDescription>
+        <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-2xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-black overflow-hidden">
+          <CardHeader className="pt-6 sm:pt-8 px-6 pb-4 text-center border-b border-white/5 bg-zinc-900/30">
+            <CardTitle className="text-white text-base sm:text-lg font-bold">Privileged Access</CardTitle>
+            <CardDescription className="text-zinc-500 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest">Authorized Personnel Only</CardDescription>
           </CardHeader>
-          <CardContent className="p-10 space-y-6">
+          <CardContent className="p-5 sm:p-8 space-y-5">
             <form onSubmit={handleDevSignIn} className="space-y-5">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1">Root Email</Label>

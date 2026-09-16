@@ -92,9 +92,16 @@ export default function STSPayBalancesPage() {
     const processedList: any[] = [];
     const now = new Date();
 
-    const filteredTransactions = allTransactions.filter(tx => 
-      tx.provider !== 'GoMerchant' && tx.provider !== 'Orderkuota'
-    );
+    const nonStsPayKeywords = [
+      "gomerchant", "orderkuota", "shopeepay", "gopay", "ovo", 
+      "digiflazz", "shopee", "ppob", "otp", "smm"
+    ];
+
+    const filteredTransactions = allTransactions.filter(tx => {
+      const p = String(tx.provider || tx.service || tx.type || "").toLowerCase();
+      const name = String(tx.itemName || "").toLowerCase();
+      return !nonStsPayKeywords.some(kw => p.includes(kw) || name.includes(kw));
+    });
 
     filteredTransactions.forEach((tx) => {
       if (tx.type === 'payment' && ['PAID', 'SETTLED', 'SUCCEEDED'].includes(tx.status)) {

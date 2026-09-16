@@ -595,12 +595,12 @@ function ManagementContent() {
   const header = getViewHeader();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-          <div className="flex items-center gap-3 px-4 h-11 bg-card border border-border rounded-md shadow-sm">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2.5 px-3.5 h-10 sm:h-11 bg-card border border-border rounded-md shadow-sm">
              <header.icon className={`w-3.5 h-3.5 ${header.color}`} />
-             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/80">{header.title}</span>
+             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/80 truncate">{header.title}</span>
           </div>
 
           {view === 'channels' && (
@@ -608,13 +608,13 @@ function ManagementContent() {
               <DialogTrigger asChild>
                 <Button 
                   onClick={openAddChannel}
-                  className="w-full sm:w-auto h-11 bg-primary text-primary-foreground font-bold text-[10px] uppercase tracking-widest rounded-md px-6 gap-2"
+                  className="w-full sm:w-auto h-10 sm:h-11 bg-primary text-primary-foreground font-bold text-[10px] uppercase tracking-widest rounded-md px-5 gap-2"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add Payment
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[94%] sm:max-w-[425px] rounded-xl border-border p-6 overflow-y-auto max-h-[90vh]">
+              <DialogContent className="w-[94vw] max-w-[425px] rounded-xl border-border p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
                 <DialogHeader>
                   <DialogTitle className="font-headline font-bold">
                     {editingChannel ? "Edit Payment Channel" : "New Payment Channel"}

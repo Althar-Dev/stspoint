@@ -69,27 +69,27 @@ export default function PlatformSettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-headline font-bold tracking-tight">Platform <span className="text-primary">Settings</span></h1>
-        <p className="text-muted-foreground text-sm">Manage global website configuration and social links.</p>
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-10">
+      <div className="flex flex-col gap-0.5">
+        <h1 className="text-xl sm:text-2xl font-headline font-bold tracking-tight">Platform <span className="text-primary">Settings</span></h1>
+        <p className="text-muted-foreground text-xs sm:text-sm">Manage global website configuration and social links.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <Card className="border border-border shadow-sm rounded-[2rem] overflow-hidden bg-card">
-          <CardHeader className="bg-muted/30 p-8 border-b border-border">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
+        <Card className="border border-border shadow-sm rounded-xl sm:rounded-2xl overflow-hidden bg-card">
+          <CardHeader className="bg-muted/30 p-4 sm:p-6 border-b border-border">
             <div className="flex items-center justify-between">
-               <div className="space-y-1">
-                 <CardTitle className="text-lg font-bold flex items-center gap-2">
-                   <Globe className="w-5 h-5 text-primary" />
+               <div className="space-y-0.5">
+                 <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2">
+                   <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                    Social Media Links
                  </CardTitle>
-                 <CardDescription className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Global Footer Navigation</CardDescription>
+                 <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Global Footer Navigation</CardDescription>
                </div>
-               <ShieldCheck className="w-6 h-6 text-primary/20" />
+               <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary/20" />
             </div>
           </CardHeader>
-          <CardContent className="p-8 space-y-6">
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {loading ? (
               <div className="space-y-6 py-4">
                 {Array.from({ length: 4 }).map((_, i) => (

@@ -192,33 +192,33 @@ export default function OrderkuotaBridgePage() {
   const isLoading = authLoading || configLoading;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-headline font-bold tracking-tight">Orderkuota <span className="text-primary">Master Bridge</span></h1>
-          <p className="text-muted-foreground text-sm">Manage the platform's primary connection to Orderkuota distribution network.</p>
+          <h1 className="text-xl sm:text-2xl font-headline font-bold tracking-tight">Orderkuota <span className="text-primary">Master Bridge</span></h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Manage the platform's primary connection to Orderkuota distribution network.</p>
         </div>
         {isConnected && (
-           <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[10px] uppercase h-7 px-3 rounded-full flex items-center gap-2">
+           <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[9px] uppercase h-6 px-2.5 rounded-full flex items-center gap-1.5 self-start sm:self-auto">
              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
              Bridge Operational
            </Badge>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
         {/* Connection Card */}
-        <Card className="md:col-span-5 border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-           <CardHeader className="bg-muted/30 p-8 border-b border-border">
-              <div className="flex items-center justify-between mb-2">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <Card className="md:col-span-5 border border-border shadow-sm rounded-xl sm:rounded-2xl overflow-hidden bg-card">
+           <CardHeader className="bg-muted/30 p-4 sm:p-6 border-b border-border">
+              <div className="flex items-center justify-between mb-1">
+                <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                    <Globe className="w-4 h-4 text-primary" />
                    Upstream Authentication
                 </CardTitle>
               </div>
               <CardDescription className="text-xs">Secure the master node connection for top-ups and bridge operations.</CardDescription>
            </CardHeader>
-           <CardContent className="p-8 space-y-6">
+           <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {isLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-12 w-full rounded-xl" />
@@ -301,15 +301,15 @@ export default function OrderkuotaBridgePage() {
         </Card>
 
         {/* Global Settings Card */}
-        <div className="md:col-span-7 space-y-6">
-          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-            <CardHeader className="bg-muted/30 p-8 border-b border-border">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <div className="md:col-span-7 space-y-4 sm:space-y-6">
+          <Card className="border border-border shadow-sm rounded-xl sm:rounded-2xl overflow-hidden bg-card">
+            <CardHeader className="bg-muted/30 p-4 sm:p-6 border-b border-border">
+                <CardTitle className="text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <SettingsIcon className="w-4 h-4 text-primary" />
                   Global Distribution Settings
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Platform Base QRIS</Label>
                   <Textarea 
@@ -337,14 +337,14 @@ export default function OrderkuotaBridgePage() {
             </CardContent>
           </Card>
 
-          <Card className="border border-border shadow-sm rounded-3xl overflow-hidden bg-card">
-            <CardHeader className="bg-muted/30 p-8 border-b border-border">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+          <Card className="border border-border shadow-sm rounded-xl sm:rounded-2xl overflow-hidden bg-card">
+            <CardHeader className="bg-muted/30 p-4 sm:p-6 border-b border-border">
+                <CardTitle className="text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <Key className="w-4 h-4 text-primary" />
                   H2H OkeConnect Credentials
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2 sm:col-span-2">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Member ID (OKxxxxx)</Label>

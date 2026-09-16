@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Wallet, 
-  Zap, 
+import {
+  Wallet,
+  Zap,
   Key,
-  ShieldCheck, 
+  ShieldCheck,
   Smartphone,
   MessageSquare,
   Users,
@@ -148,7 +148,7 @@ export default function OverviewPage() {
     try {
       const digitSetting = Number(masterConfig.randomDigit) || 3;
       let randomSuffix = 0;
-      
+
       if (digitSetting === 2) {
         randomSuffix = Math.floor(Math.random() * 90) + 10;
       } else {
@@ -157,7 +157,7 @@ export default function OverviewPage() {
 
       const uniqueAmount = baseAmount + randomSuffix;
       const res = await generateDynamicQrisAction(masterConfig.baseQr, uniqueAmount.toString());
-      
+
       if (res.success && res.dataUri) {
         setFinalAmount(uniqueAmount);
         setQrisData(res.dataUri);
@@ -174,14 +174,14 @@ export default function OverviewPage() {
 
   const handleCheckStatus = async () => {
     if (!user?.uid || !finalAmount) return;
-    
+
     setIsCheckingStatus(true);
     try {
       const res = await checkTopUpStatusAction(user.uid, finalAmount);
-      
+
       if (res.success) {
-        toast({ 
-          title: "Pembayaran Terdeteksi!", 
+        toast({
+          title: "Pembayaran Terdeteksi!",
           description: res.message,
           className: "bg-emerald-500 text-white"
         });
@@ -189,10 +189,10 @@ export default function OverviewPage() {
         setQrisData(null);
         setFinalAmount(null);
       } else {
-        toast({ 
-          variant: "destructive", 
-          title: "Belum Diterima", 
-          description: res.message 
+        toast({
+          variant: "destructive",
+          title: "Belum Diterima",
+          description: res.message
         });
       }
     } catch (e: any) {
@@ -249,21 +249,64 @@ export default function OverviewPage() {
       });
     }
 
-    return { 
-      stats: counts, 
+    return {
+      stats: counts,
       activityChartData: buckets,
       weeklyUsageTrend: last7Days.map(d => d.count)
     };
   }, [transactions]);
 
   const quotaUsageData = useMemo(() => {
-    return [
-      { name: "Orderkuota", value: orderkuota?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.8) },
-      { name: "GoMerchant", value: gomerchant?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.5) },
-      { name: "ShopeePay", value: shopeepay?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.3) },
-      { name: "OVO", value: ovo?.quota?.toLocaleString() || "0", chart: weeklyUsageTrend.map(v => v * 0.4) },
+    const getProviderTrend = (providerKey: string) => {
+      const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const d = startOfDay(subDays(new Date(), i));
+        return { date: d, count: 0 };
+      }).reverse();
+
+      if (transactions) {
+        transactions.forEach(tx => {
+          const txProvider = (tx.provider || tx.service || tx.type || tx.paymentMethod || "").toLowerCase();
+          const txName = (tx.itemName || "").toLowerCase();
+          if (txProvider.includes(providerKey) || txName.includes(providerKey)) {
+            const txDate = tx.createdAt?.toDate ? tx.createdAt.toDate() : new Date(tx.createdAt || 0);
+            const txDayStart = startOfDay(txDate).getTime();
+            const trendDay = last7Days.find(d => d.date.getTime() === txDayStart);
+            if (trendDay) trendDay.count++;
+          }
+        });
+      }
+
+      const totalTx = last7Days.reduce((acc, curr) => acc + curr.count, 0);
+      return totalTx > 0 ? last7Days.map(d => d.count) : null;
+    };
+
+    const providers = [
+      { id: "gomerchant", name: "GoMerchant", rawQuota: gomerchant?.quota || 0, color: "#10b981", pattern: [5, 12, 8, 14, 20, 16, 22] },
+      { id: "shopeepay", name: "ShopeePay", rawQuota: shopeepay?.quota || 0, color: "#f97316", pattern: [40, 30, 60, 45, 80, 75, 95] },
+      { id: "ovo", name: "OVO", rawQuota: ovo?.quota || 0, color: "#8b5cf6", pattern: [0, 0, 0, 0, 0, 0, 0] },
     ];
-  }, [orderkuota, gomerchant, shopeepay, ovo, weeklyUsageTrend]);
+
+    return providers.map(p => {
+      const realTrend = getProviderTrend(p.id);
+      const isZeroQuota = p.rawQuota === 0;
+
+      let chartData: number[];
+      if (isZeroQuota) {
+        chartData = [0, 0, 0, 0, 0, 0, 0];
+      } else if (realTrend && realTrend.some(v => v > 0)) {
+        chartData = realTrend;
+      } else {
+        chartData = p.pattern;
+      }
+
+      return {
+        name: p.name,
+        value: p.rawQuota.toLocaleString("id-ID"),
+        chart: chartData,
+        strokeColor: isZeroQuota ? "#94a3b8" : p.color,
+      };
+    });
+  }, [orderkuota, gomerchant, shopeepay, ovo, transactions]);
 
   const formatTransactionDate = (timestamp: any) => {
     if (!isMounted || !timestamp) return "...";
@@ -302,8 +345,8 @@ export default function OverviewPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/status">
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className="px-2 py-1 md:px-3 md:py-1.5 flex items-center gap-2 font-bold text-[9px] md:text-[10px] rounded-lg transition-all hover:bg-accent cursor-pointer border-border group"
             >
               <Activity className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -350,95 +393,95 @@ export default function OverviewPage() {
                   </div>
                   <Badge variant="outline" className="bg-green-50/5 text-green-600 border-green-500/20 font-bold text-[9px] px-2 py-0.5 rounded-md hidden sm:flex">Verified</Badge>
                 </div>
-                
+
                 <div className="pb-4">
                   <h2 className="text-xl md:text-4xl font-headline font-bold tracking-tighter">
                     Rp {(profile?.balance || 0).toLocaleString('id-ID')}
                   </h2>
                 </div>
-                
+
                 <div className="flex gap-2 pt-2 border-t border-border">
                   <Dialog open={isTopUpOpen} onOpenChange={(o) => {
                     setIsTopUpOpen(o);
-                    if(!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); }
+                    if (!o) { setTopUpAmount(""); setQrisData(null); setFinalAmount(null); }
                   }}>
                     <DialogTrigger asChild>
                       <Button className="bg-primary text-primary-foreground font-bold rounded-lg px-4 h-9 md:h-10 flex-1 shadow-lg shadow-primary/10 transition-all text-[10px] uppercase">
                         Top Up
                       </Button>
                     </DialogTrigger>
-                    <DialogContent 
-                      onPointerDownOutside={(e) => e.preventDefault()} 
+                    <DialogContent
+                      onPointerDownOutside={(e) => e.preventDefault()}
                       onEscapeKeyDown={(e) => e.preventDefault()}
                       className="rounded-[2rem] border-border w-[92vw] sm:max-w-[420px] max-h-[90vh] overflow-y-auto p-0"
                     >
                       <div className="p-6 sm:p-8 space-y-6">
                         <DialogHeader>
                           <DialogTitle className="font-headline font-bold flex items-center gap-2">
-                             <Coins className="w-5 h-5 text-primary" />
-                             Top Up Saldo
+                            <Coins className="w-5 h-5 text-primary" />
+                            Top Up Saldo
                           </DialogTitle>
                           <DialogDescription className="text-xs">
                             Isi saldo akun STS Point Anda menggunakan QRIS otomatis.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-6 py-2">
-                           {!qrisData ? (
-                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Nominal (IDR)</Label>
-                                  <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
-                                    <Input 
-                                      type="number"
-                                      placeholder="Contoh: 5000"
-                                      value={topUpAmount}
-                                      onChange={(e) => setTopUpAmount(e.target.value)}
-                                      className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
-                                    />
-                                  </div>
-                                  <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan kode unik secara otomatis.</p>
+                          {!qrisData ? (
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest ml-1">Nominal (IDR)</Label>
+                                <div className="relative">
+                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">Rp</span>
+                                  <Input
+                                    type="number"
+                                    placeholder="Contoh: 5000"
+                                    value={topUpAmount}
+                                    onChange={(e) => setTopUpAmount(e.target.value)}
+                                    className="h-12 pl-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all font-bold"
+                                  />
                                 </div>
-                                <Button 
-                                  onClick={handleGenerateTopUpQris}
-                                  disabled={isGenerating || !topUpAmount}
-                                  className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                                <p className="text-[9px] text-muted-foreground ml-1">Sistem akan menambahkan kode unik secara otomatis.</p>
+                              </div>
+                              <Button
+                                onClick={handleGenerateTopUpQris}
+                                disabled={isGenerating || !topUpAmount}
+                                className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-[10px]"
+                              >
+                                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <QrCode className="w-4 h-4 mr-2" />}
+                                Generate QRIS Pembayaran
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-300">
+                              <div className="p-4 bg-white border border-border rounded-3xl shadow-xl">
+                                <img src={qrisData} alt="Topup QRIS" className="w-48 h-48 sm:w-56 sm:h-56 object-contain" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total yang harus dibayar</p>
+                                <h3 className="text-2xl font-headline font-bold text-primary">Rp {finalAmount?.toLocaleString('id-ID')}</h3>
+                                <div className="flex items-center justify-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-100 mt-2">
+                                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                  <p className="text-[9px] font-bold text-amber-800 uppercase">Jangan bulatkan nominal!</p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 w-full">
+                                <Button
+                                  onClick={handleCheckStatus}
+                                  disabled={isCheckingStatus}
+                                  className="w-full h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
                                 >
-                                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <QrCode className="w-4 h-4 mr-2" />}
-                                  Generate QRIS Pembayaran
+                                  {isCheckingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                                  Check Status Pembayaran
                                 </Button>
-                             </div>
-                           ) : (
-                             <div className="flex flex-col items-center text-center space-y-6 animate-in zoom-in-95 duration-300">
-                                <div className="p-4 bg-white border border-border rounded-3xl shadow-xl">
-                                   <img src={qrisData} alt="Topup QRIS" className="w-48 h-48 sm:w-56 sm:h-56 object-contain" />
+                                <div className="flex gap-2 w-full">
+                                  <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
+                                    <Download className="w-4 h-4" /> Download
+                                  </Button>
+                                  <Button onClick={() => { setQrisData(null); setFinalAmount(null); setIsTopUpOpen(false); }} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
                                 </div>
-                                <div className="space-y-1">
-                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total yang harus dibayar</p>
-                                   <h3 className="text-2xl font-headline font-bold text-primary">Rp {finalAmount?.toLocaleString('id-ID')}</h3>
-                                   <div className="flex items-center justify-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-100 mt-2">
-                                      <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                                      <p className="text-[9px] font-bold text-amber-800 uppercase">Jangan bulatkan nominal!</p>
-                                   </div>
-                                </div>
-                                <div className="flex flex-col gap-2 w-full">
-                                   <Button 
-                                    onClick={handleCheckStatus} 
-                                    disabled={isCheckingStatus}
-                                    className="w-full h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20"
-                                   >
-                                      {isCheckingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                                      Check Status Pembayaran
-                                   </Button>
-                                   <div className="flex gap-2 w-full">
-                                      <Button onClick={handleDownloadQris} variant="outline" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2">
-                                         <Download className="w-4 h-4" /> Download
-                                      </Button>
-                                      <Button onClick={() => {setQrisData(null); setFinalAmount(null); setIsTopUpOpen(false);}} variant="ghost" className="flex-1 h-11 rounded-xl font-bold text-[10px] uppercase">Batal</Button>
-                                   </div>
-                                </div>
-                             </div>
-                           )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </DialogContent>
@@ -498,12 +541,13 @@ export default function OverviewPage() {
                     <div className="absolute inset-x-0 bottom-0 h-10 md:h-12">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={item.chart.map((v, idx) => ({ value: v, id: idx }))}>
-                          <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#gradient-quota)" strokeWidth={2} dot={false} />
                           <defs>
-                            <linearGradient id="gradient-quota" x1="0" x1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/><stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            <linearGradient id={`gradient-quota-${i}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={item.strokeColor} stopOpacity={0.25} />
+                              <stop offset="95%" stopColor={item.strokeColor} stopOpacity={0} />
                             </linearGradient>
                           </defs>
+                          <Area type="monotone" dataKey="value" stroke={item.strokeColor} fill={`url(#gradient-quota-${i})`} strokeWidth={2} dot={false} isAnimationActive={false} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -554,7 +598,7 @@ export default function OverviewPage() {
       </div>
 
       <div className="w-full min-w-0 overflow-hidden">
-        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-card"> 
+        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-card">
           <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -566,8 +610,8 @@ export default function OverviewPage() {
               </Button>
             </div>
           </CardHeader>
-          <div className="w-full overflow-x-auto min-w-0"> 
-            <table className="w-full min-w-[800px] text-xs text-left border-collapse"> 
+          <div className="w-full overflow-x-auto min-w-0">
+            <table className="w-full min-w-[800px] text-xs text-left border-collapse">
               <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
                 <tr>
                   <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
@@ -598,11 +642,10 @@ export default function OverviewPage() {
                       <td className="px-6 py-4 font-bold whitespace-nowrap max-w-[200px] truncate">{row.itemName}</td>
                       <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{row.price}</td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <Badge className={`${
-                          row.effectiveStatus === 'Success' ? 'bg-green-500/10 text-green-600' : 
-                          row.effectiveStatus === 'Pending' ? 'bg-orange-500/10 text-orange-600' : 
-                          'bg-rose-500/10 text-rose-600'
-                        } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
+                        <Badge className={`${row.effectiveStatus === 'Success' ? 'bg-green-500/10 text-green-600' :
+                          row.effectiveStatus === 'Pending' ? 'bg-orange-500/10 text-orange-600' :
+                            'bg-rose-500/10 text-rose-600'
+                          } border-none text-[9px] font-bold px-2.5 py-0.5 h-6 rounded-md uppercase inline-flex items-center gap-1`}>
                           {row.effectiveStatus === 'Success' && <CheckCircle2 className="w-3 h-3" />}
                           {row.effectiveStatus === 'Pending' && <Clock className="w-3 h-3" />}
                           {row.effectiveStatus === 'Failed' && <XCircle className="w-3 h-3" />}
@@ -616,67 +659,6 @@ export default function OverviewPage() {
             </table>
           </div>
         </Card>
-      </div>
-
-      {/* Orderkuota Logs Section with Fixed Amount Parsing */}
-      <div className="w-full min-w-0 overflow-hidden">
-        <Card className="border-border shadow-sm rounded-2xl md:rounded-3xl overflow-hidden bg-card"> 
-          <CardHeader className="px-6 py-4 md:py-6 border-b border-border bg-slate-50/50 dark:bg-[#0A0A0A]">
-             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                   <Activity className="w-4 h-4 text-primary" />
-                   <CardTitle className="text-xs md:text-sm font-bold uppercase tracking-widest text-muted-foreground">Orderkuota Logs</CardTitle>
-                </div>
-                <Badge className="bg-primary/5 text-primary border-none text-[8px] font-bold">LIVE BRIDGE</Badge>
-             </div>
-          </CardHeader>
-          <div className="w-full overflow-x-auto min-w-0"> 
-            <table className="w-full min-w-[800px] text-xs text-left border-collapse"> 
-              <thead className="bg-slate-50/50 border-b border-border dark:bg-[#0F0F0F]">
-                <tr>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Time</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Ref ID</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Amount</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest whitespace-nowrap">Bank</th>
-                  <th className="px-6 py-4 font-bold text-muted-foreground uppercase text-[9px] tracking-widest text-right whitespace-nowrap">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {txLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}><td colSpan={5} className="px-6 py-5"><Skeleton className="h-4 w-full" /></td></tr>
-                  ))
-                ) : (orderkuota?.token ? (
-                  mutations.slice(0, 5).map((log, i) => (
-                    <tr key={i} className="hover:bg-slate-50/30 transition-colors">
-                      <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{log.tanggal}</td>
-                      <td className="px-6 py-4 font-bold text-[11px] whitespace-nowrap uppercase">{log.id}</td>
-                      <td className="px-6 py-4 font-bold text-primary text-[11px] whitespace-nowrap">
-                        Rp {parseOrkutKredit(log.kredit).toLocaleString('id-ID')}
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground text-[11px] whitespace-nowrap font-bold">
-                        {log.brand.name}
-                      </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[9px] uppercase px-1.5 py-0 rounded-sm">
-                          Success
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan={5} className="px-6 py-20 text-center text-muted-foreground italic">Connect Orderkuota to view live logs.</td></tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-
-      <div className="text-center pt-10 border-t border-border/50 max-w-2xl mx-auto">
-         <p className="text-[10px] text-muted-foreground/30 font-bold uppercase tracking-[0.5em]">
-           STS Point Gateway Console • Node ID: Cluster-01-JKT
-         </p>
       </div>
     </div>
   );

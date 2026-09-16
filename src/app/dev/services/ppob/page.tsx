@@ -516,11 +516,11 @@ export default function PPOBManagementPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-headline font-bold tracking-tight">PPOB <span className="text-primary">Management</span></h1>
-          <p className="text-muted-foreground text-sm">Kelola katalog produk, sinkronisasi provider, dan kontrol harga jual.</p>
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <h1 className="text-xl sm:text-2xl font-headline font-bold tracking-tight">PPOB <span className="text-primary">Management</span></h1>
+          <p className="text-muted-foreground text-xs sm:text-sm">Kelola katalog produk, sinkronisasi provider, dan kontrol harga jual.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
            

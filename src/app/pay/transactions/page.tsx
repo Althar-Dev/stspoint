@@ -59,10 +59,17 @@ export default function STSPayTransactionsPage() {
   };
 
   const transactions = useMemo(() => {
-    // FOKUS: Filter hanya transaksi STSPay (Keluarkan GoMerchant dan Orderkuota)
-    const filtered = rawTransactions.filter(tx => 
-      tx.provider !== 'GoMerchant' && tx.provider !== 'Orderkuota'
-    );
+    // Filter khusus transaksi STSPay (Keluarkan GoPay, ShopeePay, OVO, GoMerchant, Orderkuota, PPOB, dll)
+    const nonStsPayKeywords = [
+      "gomerchant", "orderkuota", "shopeepay", "gopay", "ovo", 
+      "digiflazz", "shopee", "ppob", "otp", "smm"
+    ];
+
+    const filtered = rawTransactions.filter(tx => {
+      const p = String(tx.provider || tx.service || tx.type || "").toLowerCase();
+      const name = String(tx.itemName || "").toLowerCase();
+      return !nonStsPayKeywords.some(kw => p.includes(kw) || name.includes(kw));
+    });
 
     const processed = filtered.map(tx => ({
       ...tx,

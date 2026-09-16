@@ -298,8 +298,8 @@ function DevLayoutInner({ children }: { children: ReactNode }) {
       </Sidebar>
 
       <SidebarInset className="flex flex-col flex-1 bg-transparent min-w-0 overflow-hidden">
-        <MainHeader showSidebarTrigger={false} />
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <MainHeader showSidebarTrigger={true} />
+        <main className="flex-1 p-3 sm:p-5 md:p-6 overflow-y-auto min-w-0">
           {children}
         </main>
       </SidebarInset>
