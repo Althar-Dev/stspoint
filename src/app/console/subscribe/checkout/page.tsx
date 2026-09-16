@@ -39,10 +39,6 @@ const PLAN_DETAILS: Record<string, Record<string, any>> = {
     pro: { name: "GoMerchant Pro", price: 25000, desc: "Rate Limit 60 RPM & 7-Day History", quota: 5000 },
     premium: { name: "GoMerchant Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support", quota: 15000 },
   },
-  orderkuota: {
-    pro: { name: "Orderkuota Pro", price: 15000, desc: "Rate Limit 100 RPM & 3.000 API Quota", quota: 3000 },
-    premium: { name: "Orderkuota Premium", price: 30000, desc: "Rate Limit 300 RPM & 10.000 API Quota", quota: 10000 },
-  },
   shopeepay: {
     pro: { name: "ShopeePay Pro", price: 25000, desc: "Rate Limit 60 RPM & 7-Day History", quota: 5000 },
     premium: { name: "ShopeePay Premium", price: 50000, desc: "Rate Limit 180 RPM & Priority Support", quota: 15000 },
@@ -288,78 +284,78 @@ function CheckoutContent() {
   const paymentData = transaction?.payment_info;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 px-4">
-      <div className="flex items-center gap-3 md:gap-4">
+    <div className="max-w-xl mx-auto space-y-4 sm:space-y-6 animate-in fade-in duration-500 px-3 sm:px-6">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={() => router.push("/console/subscribe")}
-          className="rounded-xl px-3 hover:bg-accent font-bold text-xs"
+          className="rounded-lg px-2.5 h-8 hover:bg-accent font-bold text-xs"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back
         </Button>
-        <div className="h-4 w-px bg-border"></div>
-        <h1 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Payment Checkout</h1>
+        <div className="h-3.5 w-px bg-border"></div>
+        <h1 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment Checkout</h1>
       </div>
 
-      <Card className="border-border shadow-2xl rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-card">
-        <CardHeader className="p-6 md:p-8 border-b border-border bg-muted/30">
+      <Card className="border-border shadow-lg rounded-xl sm:rounded-2xl overflow-hidden bg-card">
+        <CardHeader className="p-4 sm:p-6 border-b border-border bg-muted/30">
            <div className="flex items-center justify-between">
-              <Badge className="bg-primary text-primary-foreground border-none text-[8px] md:text-[9px] font-bold uppercase px-2 md:px-3 py-1 rounded-md">Account Upgrade</Badge>
-              <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+              <Badge className="bg-primary text-primary-foreground border-none text-[8px] sm:text-[9px] font-bold uppercase px-2 py-0.5 rounded-md">Account Upgrade</Badge>
+              <ShieldCheck className="w-4 h-4 text-primary" />
            </div>
-           <div className="pt-4 md:pt-6 space-y-1 md:space-y-2 text-center">
-              <CardTitle className="text-xl md:text-3xl font-headline font-bold tracking-tight">{plan.name}</CardTitle>
-              <CardDescription className="text-[10px] md:text-xs font-medium uppercase tracking-widest text-muted-foreground">{plan.desc}</CardDescription>
+           <div className="pt-3 sm:pt-4 space-y-1 text-center">
+              <CardTitle className="text-lg sm:text-2xl font-headline font-bold tracking-tight">{plan.name}</CardTitle>
+              <CardDescription className="text-[10px] sm:text-xs font-medium uppercase tracking-widest text-muted-foreground">{plan.desc}</CardDescription>
            </div>
         </CardHeader>
-        <CardContent className="p-6 md:p-8">
+        <CardContent className="p-4 sm:p-6">
            {txLoading ? (
-             <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-6 h-6 md:w-8 md:h-8 animate-spin text-primary/20" />
+             <div className="py-12 flex flex-col items-center justify-center space-y-3">
+                <Loader2 className="w-6 h-6 animate-spin text-primary/30" />
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Syncing...</p>
              </div>
            ) : paymentData ? (
-             <div className="space-y-8 md:space-y-10 w-full animate-in zoom-in-95 duration-500 flex flex-col items-center text-center">
-                <div className="space-y-4">
-                   <div className="p-4 md:p-5 bg-white border border-border rounded-[1.5rem] md:rounded-[2rem] shadow-xl inline-block relative">
+             <div className="space-y-6 sm:space-y-8 w-full animate-in zoom-in-95 duration-500 flex flex-col items-center text-center">
+                <div className="space-y-3">
+                   <div className="p-3 sm:p-4 bg-white border border-border rounded-xl sm:rounded-2xl shadow-md inline-block relative">
                       <img 
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(paymentData.qr_string)}`} 
                         alt="QRIS Payment"
-                        className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 object-contain"
+                        className="w-44 h-44 sm:w-56 sm:h-56 object-contain"
                       />
-                      <div className="absolute inset-x-0 -bottom-3 flex justify-center">
-                         <Badge className="bg-primary text-primary-foreground border-none px-3 md:px-4 py-1 rounded-full font-bold text-[8px] md:text-[9px] uppercase tracking-widest shadow-lg">Official QRIS</Badge>
+                      <div className="absolute inset-x-0 -bottom-2.5 flex justify-center">
+                         <Badge className="bg-primary text-primary-foreground border-none px-3 py-0.5 rounded-full font-bold text-[8px] uppercase tracking-widest shadow-md">Official QRIS</Badge>
                       </div>
                    </div>
                 </div>
 
-                <div className="space-y-4 md:space-y-6 w-full">
-                   <div className="p-4 md:p-5 rounded-xl md:rounded-2xl bg-primary/5 border border-primary/10 space-y-1 md:space-y-2">
-                      <p className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+                <div className="space-y-4 w-full">
+                   <div className="p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-1">
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-1.5">
                          <Clock className="w-3 h-3" /> Deadline
                       </p>
-                      <p className="text-2xl md:text-3xl font-headline font-bold text-primary">{timeLeft}</p>
+                      <p className="text-xl sm:text-2xl font-headline font-bold text-primary">{timeLeft}</p>
                    </div>
                    
-                   <div className="flex flex-col gap-3">
-                      <div className="flex justify-between items-center text-sm border-t border-dashed border-border pt-4 px-1">
-                        <span className="text-muted-foreground font-medium uppercase text-[9px] md:text-[10px] tracking-widest">Total Bill</span>
-                        <span className="font-bold text-lg md:text-xl text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
+                   <div className="flex flex-col gap-2.5">
+                      <div className="flex justify-between items-center text-xs sm:text-sm border-t border-dashed border-border pt-3 px-1">
+                        <span className="text-muted-foreground font-medium uppercase text-[9px] sm:text-[10px] tracking-widest">Total Bill</span>
+                        <span className="font-bold text-base sm:text-lg text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-1">
                         <Button 
                           onClick={handleDownloadQR}
                           variant="outline" 
-                          className="flex-1 h-11 md:h-12 rounded-xl font-bold uppercase text-[9px] md:text-[10px] tracking-widest border-border gap-2"
+                          className="flex-1 h-9 sm:h-10 rounded-lg sm:rounded-xl font-bold uppercase text-[9px] sm:text-[10px] tracking-wider border-border gap-1.5"
                         >
                           <Download className="w-3.5 h-3.5" /> Download
                         </Button>
                         <Button 
                           variant="ghost" 
-                          className="flex-1 h-11 md:h-12 rounded-xl font-bold text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors" 
+                          className="flex-1 h-9 sm:h-10 rounded-lg sm:rounded-xl font-bold text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors" 
                           onClick={handleCancelPayment}
                           disabled={isCanceling}
                         >
@@ -371,28 +367,28 @@ function CheckoutContent() {
                 </div>
              </div>
            ) : (
-             <div className="space-y-6 md:space-y-8">
-               <div className="space-y-3 md:space-y-4">
-                  <div className="flex justify-between items-center text-xs md:text-sm">
+             <div className="space-y-5 sm:space-y-6">
+               <div className="space-y-2.5 sm:space-y-3">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <span className="text-muted-foreground font-medium">Plan Price</span>
                     <span className={isDev ? "text-muted-foreground line-through" : "font-bold"}>
                       Rp {PLAN_DETAILS[serviceId]?.[planId]?.price?.toLocaleString('id-ID') || 0}
                     </span>
                   </div>
                   {isDev && (
-                    <div className="flex justify-between items-center text-xs md:text-sm">
-                      <span className="text-emerald-600 font-bold text-[9px] md:text-[10px] uppercase tracking-widest">Dev Pricing</span>
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                      <span className="text-emerald-600 font-bold text-[9px] sm:text-[10px] uppercase tracking-widest">Dev Pricing</span>
                       <span className="font-bold text-emerald-600">Rp 1</span>
                     </div>
                   )}
-                  <div className="flex justify-between items-center text-xs md:text-sm">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <span className="text-muted-foreground font-medium">Service Fee</span>
                     <span className="font-bold text-primary italic">Free</span>
                   </div>
-                  <div className="pt-4 md:pt-6 border-t border-dashed border-border flex justify-between items-end">
+                  <div className="pt-3 sm:pt-4 border-t border-dashed border-border flex justify-between items-end">
                     <div className="space-y-0.5">
-                       <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Total Bill</span>
-                       <span className="text-2xl md:text-3xl font-headline font-bold text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
+                       <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-muted-foreground block">Total Bill</span>
+                       <span className="text-xl sm:text-2xl font-headline font-bold text-primary">Rp {plan.price.toLocaleString('id-ID')}</span>
                     </div>
                   </div>
                </div>
@@ -400,19 +396,19 @@ function CheckoutContent() {
                <Button 
                 onClick={handleGenerateQRIS}
                 disabled={isGenerating}
-                className="w-full h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[10px] md:text-[11px] shadow-xl shadow-primary/10 gap-3 transition-all active:scale-95"
+                className="w-full h-10 sm:h-12 rounded-lg sm:rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-wider text-[10px] sm:text-xs shadow-lg shadow-primary/10 gap-2 transition-all active:scale-95"
                >
-                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4 md:w-5 md:h-5" />}
+                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
                  Generate Payment
                </Button>
 
-               <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-xl md:rounded-2xl bg-muted/50 border border-border">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-background flex items-center justify-center shrink-0 border border-border">
-                     <Info className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+               <div className="flex items-start gap-2.5 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-muted/50 border border-border">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-background flex items-center justify-center shrink-0 border border-border">
+                     <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                   </div>
-                  <div className="space-y-0.5 md:space-y-1">
-                    <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-tight">Information</p>
-                    <p className="text-[9px] md:text-[10px] leading-relaxed text-muted-foreground">
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight">Information</p>
+                    <p className="text-[9px] sm:text-[10px] leading-relaxed text-muted-foreground">
                       The plan will activate automatically after the system detects a successful payment.
                     </p>
                   </div>
@@ -422,8 +418,8 @@ function CheckoutContent() {
         </CardContent>
       </Card>
       
-      <div className="text-center pt-6 md:pt-8 opacity-20">
-         <p className="text-[8px] md:text-[9px] text-muted-foreground font-bold uppercase tracking-[0.4em]">STSPay Secure Checkout Engine v1.0.2</p>
+      <div className="text-center pt-4 opacity-30">
+         <p className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase tracking-widest">STSPay Secure Checkout Engine v1.0.2</p>
       </div>
     </div>
   );
