@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Panduan dan ketentuan resmi penggunaan layanan & API STSPoint.',
     url: 'https://stspoint.id/terms-of-service',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

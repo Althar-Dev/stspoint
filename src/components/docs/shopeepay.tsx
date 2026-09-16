@@ -20,27 +20,27 @@ import { CodeBlock } from "./shared/code-block";
 
 export function DocsShopeePay() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
+    <div className="space-y-8 sm:space-y-12 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
       {/* Intro Section */}
-      <section className="space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EE4D2D]/5 border border-[#EE4D2D]/10 text-[10px] font-bold uppercase tracking-widest text-[#EE4D2D]">
           <ShoppingBag className="w-3 h-3" />
           ShopeePay Merchant Bridge
         </div>
-        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">ShopeePay API</h1>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">ShopeePay API</h1>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
           Integrasi ShopeePay memungkinkan Anda untuk menghasilkan pembayaran QRIS dinamis secara instan dan melakukan rekonsiliasi otomatis dengan memantau mutasi saldo akun ShopeePay Merchant Anda secara real-time.
         </p>
       </section>
 
       {/* Create Transaction */}
-      <section id="create-shopee" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
-        <div className="space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
-            <Plus className="w-6 h-6 text-[#EE4D2D]" />
+      <section id="create-shopee" className="space-y-6 sm:space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2.5 text-foreground">
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-[#EE4D2D]" />
             Create ShopeePay Payment
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             Inisialisasi transaksi baru untuk mendapatkan payload QRIS dinamis. Sistem akan secara otomatis menambahkan kode unik jika dikonfigurasi di dashboard.
           </p>
           <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">

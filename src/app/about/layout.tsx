@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: 'Solusi infrastruktur digital terintegrasi skala korporasi oleh StarVale & AltharDev.',
     url: 'https://stspoint.id/about',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

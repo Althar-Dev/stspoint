@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: 'Dukungan teknis dan customer service 24/7 dari StarVale Technology Solution.',
     url: 'https://stspoint.id/support',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

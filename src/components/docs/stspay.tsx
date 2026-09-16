@@ -9,108 +9,108 @@ import { CodeBlock } from "./shared/code-block";
 
 export function DocsStsPay() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
-      <section className="space-y-6">
+    <div className="space-y-8 sm:space-y-12 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
+      <section className="space-y-4 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
           <Zap className="w-3 h-3" />
           Unified Gateway
         </div>
-        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">STSPay</h1>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">STSPay</h1>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
           STSPay is our core payment orchestration layer. It supports two main creation modes: hosting a checkout page for your customers or retrieving a raw QRIS payload for custom frontend implementations.
         </p>
       </section>
 
-      <section id="create-payment" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
-        <div className="space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
-            <Plus className="w-6 h-6 text-primary" />
+      <section id="create-payment" className="space-y-6 sm:space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2.5">
+            <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             Create Payment
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             Initialize a transaction. Use the <code className="font-bold text-foreground">type</code> parameter to switch between a hosted link or a direct QRIS string.
           </p>
-          <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
-            <span className="text-primary">/payments/create</span>
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px] sm:text-[10px]">POST</UiBadge>
+            <span className="text-primary text-xs">/payments/create</span>
           </div>
         </div>
 
-        <div className="space-y-6 w-full min-w-0">
+        <div className="space-y-4 w-full min-w-0">
            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Braces className="w-3.5 h-3.5" />
              Request Parameters
            </h4>
-           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
-              <table className="w-full text-left text-xs border-collapse min-w-[600px]">
+           <div className="rounded-xl sm:rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
+              <table className="w-full text-left text-xs border-collapse min-w-[500px]">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Type</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Default</th>
-                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Description</th>
+                       <th className="px-3 sm:px-4 py-2.5 sm:py-3 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
+                       <th className="px-3 sm:px-4 py-2.5 sm:py-3 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Type</th>
+                       <th className="px-3 sm:px-4 py-2.5 sm:py-3 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Default</th>
+                       <th className="px-3 sm:px-4 py-2.5 sm:py-3 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Description</th>
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-border">
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">merchant_id</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your unique STS Merchant ID. Found in Console dashboard.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">merchant_id</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">String</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] text-muted-foreground/50 italic whitespace-nowrap">Required</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Your unique STS Merchant ID. Found in Console dashboard.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">secret_key</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Your private API Secret Key. Used for authentication.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">secret_key</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">String</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] text-muted-foreground/50 italic whitespace-nowrap">Required</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Your private API Secret Key. Used for authentication.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">type</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Enum</td>
-                       <td className="px-6 py-4 font-mono text-[9px] whitespace-nowrap">payment_link</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Creation mode. Options: <code className="text-primary font-bold">payment_link</code> or <code className="text-primary font-bold">qris</code>.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">type</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">Enum</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono text-[9px] whitespace-nowrap">payment_link</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Creation mode. Options: <code className="text-primary font-bold">payment_link</code> or <code className="text-primary font-bold">qris</code>.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">amount</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Number</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Total transaction amount in IDR. Min: 100.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">amount</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">Number</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] text-muted-foreground/50 italic whitespace-nowrap">Required</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Total transaction amount in IDR. Min: 100.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">payer_email</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Required</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Customer email address for identification.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">payer_email</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">String</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] text-muted-foreground/50 italic whitespace-nowrap">Required</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Customer email address for identification.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">external_id</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Custom unique ID for this transaction. Generated automatically if not provided.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">external_id</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">String</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] text-muted-foreground/50 italic whitespace-nowrap">Optional</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Custom unique ID for this transaction. Generated automatically if not provided.</td>
                     </tr>
                     <tr>
-                       <td className="px-6 py-4 font-mono font-bold text-amber-600 whitespace-nowrap">success_url</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">String (URL)</td>
-                       <td className="px-6 py-4 text-[10px] text-muted-foreground/30 italic whitespace-nowrap">Optional</td>
-                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">Redirect target after successful payment on checkout page.</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono font-bold text-amber-600 whitespace-nowrap text-xs">success_url</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground whitespace-nowrap text-xs">String (URL)</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-[10px] text-muted-foreground/50 italic whitespace-nowrap">Optional</td>
+                       <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-muted-foreground text-xs">Redirect target after successful payment on checkout page.</td>
                     </tr>
                  </tbody>
               </table>
            </div>
         </div>
 
-        <div className="space-y-4 w-full min-w-0 overflow-hidden">
+        <div className="space-y-3 w-full min-w-0 overflow-hidden">
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Code2 className="w-3.5 h-3.5" />
              Implementation Examples
           </h4>
           <Tabs defaultValue="curl" className="w-full">
             <div className="w-full overflow-x-auto no-scrollbar mb-2 block">
-              <TabsList className="bg-muted p-1 rounded-xl h-11 w-fit min-w-0 justify-start flex">
-                <TabsTrigger value="curl" className="rounded-lg px-4 text-xs font-bold uppercase">cURL</TabsTrigger>
-                <TabsTrigger value="node" className="rounded-lg px-4 text-xs font-bold uppercase">NodeJS</TabsTrigger>
-                <TabsTrigger value="python" className="rounded-lg px-4 text-xs font-bold uppercase">Python</TabsTrigger>
-                <TabsTrigger value="php" className="rounded-lg px-4 text-xs font-bold uppercase">PHP</TabsTrigger>
+              <TabsList className="bg-muted p-1 rounded-xl h-9 sm:h-10 w-fit min-w-0 justify-start flex">
+                <TabsTrigger value="curl" className="rounded-lg px-3 sm:px-4 text-[11px] sm:text-xs font-bold uppercase">cURL</TabsTrigger>
+                <TabsTrigger value="node" className="rounded-lg px-3 sm:px-4 text-[11px] sm:text-xs font-bold uppercase">NodeJS</TabsTrigger>
+                <TabsTrigger value="python" className="rounded-lg px-3 sm:px-4 text-[11px] sm:text-xs font-bold uppercase">Python</TabsTrigger>
+                <TabsTrigger value="php" className="rounded-lg px-3 sm:px-4 text-[11px] sm:text-xs font-bold uppercase">PHP</TabsTrigger>
               </TabsList>
             </div>
             <TabsContent value="curl" className="w-full outline-none">
@@ -222,8 +222,8 @@ echo $response;
           </Tabs>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full min-w-0">
-           <div className="space-y-4 min-w-0 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full min-w-0">
+           <div className="space-y-2.5 min-w-0 overflow-hidden">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Mode: Payment Link</p>
               <CodeBlock 
                 title="Hosted Checkout Response"
@@ -239,7 +239,7 @@ echo $response;
 }`}
               />
            </div>
-           <div className="space-y-4 min-w-0 overflow-hidden">
+           <div className="space-y-2.5 min-w-0 overflow-hidden">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Mode: QRIS</p>
               <CodeBlock 
                 title="Direct QRIS Payload"
@@ -258,18 +258,18 @@ echo $response;
         </div>
       </section>
 
-      <section id="check-status" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
-        <div className="space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
-            <RefreshCcw className="w-6 h-6 text-primary" />
+      <section id="check-status" className="space-y-6 sm:space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2.5 text-foreground">
+            <RefreshCcw className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             Status Verification
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             Poll the current state of a transaction using the <code className="font-bold text-foreground">external_id</code>.
           </p>
-          <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[10px]">POST</UiBadge>
-            <span className="text-primary">/payments/status</span>
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
+            <UiBadge className="bg-emerald-500 text-white border-none uppercase font-bold text-[9px] sm:text-[10px]">POST</UiBadge>
+            <span className="text-primary text-xs">/payments/status</span>
           </div>
         </div>
 
@@ -289,17 +289,17 @@ echo $response;
 }`}
         />
 
-        <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 flex items-start gap-4">
+        <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-primary/5 border border-primary/20 flex items-start gap-3 sm:gap-4">
           <Activity className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="space-y-2">
-            <p className="text-sm font-bold text-foreground">Transaction States</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="text-xs sm:text-sm font-bold text-foreground">Transaction States</p>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
                <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold">PENDING</UiBadge>
                <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold text-emerald-600">PAID</UiBadge>
                <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold text-rose-600">EXPIRED</UiBadge>
                <UiBadge variant="outline" className="bg-background text-[9px] uppercase font-bold text-amber-600">FAILED</UiBadge>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed mt-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed mt-1.5">
               For better efficiency, we highly recommend using dynamic **Webhooks** via the `X-Callback-URL` header.
             </p>
           </div>

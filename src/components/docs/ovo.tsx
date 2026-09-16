@@ -24,24 +24,24 @@ import { CodeBlock } from "./shared/code-block";
 
 export function DocsOvo() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
+    <div className="space-y-8 sm:space-y-12 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
       {/* Intro Section */}
-      <section className="space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[10px] font-bold uppercase tracking-widest text-purple-600">
           <Smartphone className="w-3 h-3" />
           Native Wallet Bridge
         </div>
-        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">OVO API</h1>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">OVO API</h1>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
           Integrasi OVO memungkinkan sistem Anda untuk memantau mutasi secara real-time, melakukan verifikasi akun tujuan, serta mengeksekusi transfer dana ke sesama OVO maupun ke rekening bank melalui saldo akun OVO Anda yang terhubung secara otomatis.
         </p>
       </section>
 
       {/* Transactions Section */}
-      <section id="ovo-transactions" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
-        <div className="space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
-            <History className="w-6 h-6 text-purple-600" />
+      <section id="ovo-transactions" className="space-y-6 sm:space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2.5 text-foreground">
+            <History className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
             Riwayat Mutasi
           </h2>
           <p className="text-sm md:text-base text-muted-foreground leading-relaxed">

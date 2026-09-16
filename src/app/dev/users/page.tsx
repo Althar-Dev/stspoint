@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, limit, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { Mail, Calendar, Key, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -17,7 +17,7 @@ export default function UserManagementPage() {
 
   const usersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, "users");
+    return query(collection(db, "users"), limit(100));
   }, [db]);
 
   const { data: users, loading } = useCollection(usersQuery);

@@ -63,8 +63,8 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
           {title}
         </span>
       </div>
-      <div className="rounded-2xl overflow-hidden border border-border shadow-xl bg-[#0D0D0D] w-full max-w-full">
-        <div className="bg-white/5 px-4 h-10 flex items-center justify-between border-b border-white/5">
+      <div className="rounded-xl sm:rounded-2xl overflow-hidden border border-border shadow-xl bg-[#0D0D0D] w-full max-w-full">
+        <div className="bg-white/5 px-4 h-9 sm:h-10 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/40"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40"></div>
@@ -77,8 +77,8 @@ export function CodeBlock({ title, code, type }: CodeBlockProps) {
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="py-8 md:py-10 font-mono text-[11px] md:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar w-full">
-          <pre className="w-fit min-w-full px-10 md:px-16" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
+        <div className="py-4 sm:py-6 font-mono text-[10px] sm:text-[12px] leading-relaxed text-zinc-300 overflow-x-auto custom-scrollbar w-full">
+          <pre className="w-fit min-w-full px-4 sm:px-6" dangerouslySetInnerHTML={{ __html: highlight(code) }} />
         </div>
       </div>
     </div>

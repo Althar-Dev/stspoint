@@ -8,30 +8,30 @@ import { Badge as UiBadge } from "@/components/ui/badge";
 
 export function DocsWebhooks() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
-       <section className="space-y-12">
-        <div className="space-y-4">
+    <div className="space-y-8 sm:space-y-12 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
+       <section className="space-y-6 sm:space-y-8">
+        <div className="space-y-3 sm:space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
             <Webhook className="w-3 h-3" />
             Real-time Event Notifications
           </div>
-          <h1 className="text-3xl md:text-4xl font-headline font-bold text-foreground">Webhooks Integration</h1>
-          <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Webhooks Integration</h1>
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
             Webhooks (Callbacks) allow STSPoint to push asynchronous notifications to your server the moment a transaction status changes. This eliminates the need for constant status polling and ensures your application reacts instantly to user payments and product fulfillment.
           </p>
         </div>
 
-        <div className="p-8 rounded-[2rem] bg-muted/50 border border-border space-y-8 relative overflow-hidden">
+        <div className="p-4 sm:p-6 rounded-xl sm:rounded-[2rem] bg-muted/50 border border-border space-y-6 sm:space-y-8 relative overflow-hidden">
            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -mr-32 -mt-32"></div>
-           <div className="flex items-center gap-3 relative z-10">
+           <div className="flex items-center gap-2.5 relative z-10">
               <HelpCircle className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-base">How it works</h3>
+              <h3 className="font-bold text-sm sm:text-base">How it works</h3>
            </div>
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-              <div className="space-y-3 text-center md:text-left">
-                 <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold mx-auto md:mx-0 shadow-lg shadow-primary/20">1</div>
-                 <h4 className="font-bold text-sm">Register Endpoint</h4>
-                 <p className="text-xs text-muted-foreground leading-relaxed">Provide your URL in the <code className="bg-primary/10 text-primary px-1.5 rounded font-bold text-[10px]">X-Callback-URL</code> header or the Dashboard Settings.</p>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative z-10">
+              <div className="space-y-2.5 text-center md:text-left">
+                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold mx-auto md:mx-0 shadow-lg shadow-primary/20 text-xs sm:text-sm">1</div>
+                 <h4 className="font-bold text-xs sm:text-sm">Register Endpoint</h4>
+                 <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">Provide your URL in the <code className="bg-primary/10 text-primary px-1.5 rounded font-bold text-[10px]">X-Callback-URL</code> header or the Dashboard Settings.</p>
               </div>
               <div className="space-y-3 text-center md:text-left">
                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold mx-auto md:mx-0 shadow-lg shadow-primary/20">2</div>

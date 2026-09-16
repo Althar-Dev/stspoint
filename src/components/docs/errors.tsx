@@ -6,33 +6,33 @@ import { CodeBlock } from "./shared/code-block";
 
 export function DocsErrors() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
+    <div className="space-y-8 sm:space-y-12 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
       {/* Intro Section */}
-      <section className="space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/5 border border-rose-500/10 text-[10px] font-bold uppercase tracking-widest text-rose-600">
           <X className="w-3 h-3" />
           Reliability & Stability
         </div>
-        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">Error Codes</h1>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">Error Codes</h1>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
           The STSPoint API uses standard HTTP response codes to indicate the success or failure of an API request. In general, codes in the <code className="text-primary font-bold">2xx</code> range indicate success, codes in the <code className="text-primary font-bold">4xx</code> range indicate an error from the client-side, and codes in the <code className="text-primary font-bold">5xx</code> range indicate an error with our servers.
         </p>
       </section>
 
       {/* Error Table */}
-      <section id="common-errors" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
-        <div className="space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
-            <Activity className="w-6 h-6 text-rose-500" />
+      <section id="common-errors" className="space-y-6 sm:space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2.5 text-foreground">
+            <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
             Common Status Codes
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             Below is a summary of the most common error codes you might encounter while integrating with our infrastructure.
           </p>
         </div>
         
-        <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
-          <table className="w-full text-left text-xs border-collapse min-w-[650px]">
+        <div className="rounded-xl sm:rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
+          <table className="w-full text-left text-xs border-collapse min-w-[500px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Status</th>

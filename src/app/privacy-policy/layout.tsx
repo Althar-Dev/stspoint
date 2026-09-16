@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description: 'Komitmen keamanan data dan perlindungan privasi pengguna STSPoint.',
     url: 'https://stspoint.id/privacy-policy',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

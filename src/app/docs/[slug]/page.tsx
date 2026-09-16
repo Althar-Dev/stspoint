@@ -3,7 +3,6 @@
 import React, { use, useEffect } from "react";
 import { DocsStsPay } from "@/components/docs/stspay";
 import { DocsPpob } from "@/components/docs/ppob";
-import { DocsOrderkuota } from "@/components/docs/orderkuota";
 import { DocsGoMerchant } from "@/components/docs/gomerchant";
 import { DocsWebhooks } from "@/components/docs/webhooks";
 import { DocsErrors } from "@/components/docs/errors";
@@ -41,8 +40,6 @@ export default function DocsSlugPage({ params }: DocsSlugPageProps) {
         return <DocsStsPay />;
       case "ppob":
         return <DocsPpob />;
-      case "orderkuota":
-        return <DocsOrderkuota />;
       case "gopay":
       case "gopay-merchant":
         return <DocsGoMerchant />;

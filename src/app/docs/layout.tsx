@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { DocsLayoutClient } from './docs-layout-client';
 
 export const metadata: Metadata = {
-  title: 'Dokumentasi API & Integrasi H2H',
+  title: 'Documentation',
   description: 'Panduan lengkap dan dokumentasi integrasi API STSPoint untuk transaksi PPOB, STSPay payment bridge, OTP Center, dan webhook real-time.',
   keywords: [
     'Dokumentasi API STSPoint',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     description: 'Integrasi API transaksi PPOB, STSPay, dan OTP Center dengan latensi rendah dan kepastian sukses tinggi.',
     url: 'https://stspoint.id/docs',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

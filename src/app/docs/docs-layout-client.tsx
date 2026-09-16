@@ -42,7 +42,6 @@ const DOCS_NAV = [
     title: "Services",
     items: [
       { id: "ppob", title: "PPOB", icon: Smartphone, href: "/docs/ppob" },
-      { id: "orderkuota", title: "Orderkuota", icon: Code2, href: "/docs/orderkuota" },
       { id: "gopay", title: "GoMerchant", icon: Globe, href: "/docs/gopay-merchant" },
       { id: "shopeepay", title: "ShopeePay", icon: ShoppingBag, href: "/docs/shopee" },
       { id: "ovo", title: "OVO", icon: Wallet, href: "/docs/ovo-api" },
@@ -187,7 +186,7 @@ function DocsLayoutInner({ children }: { children: ReactNode }) {
         <div className="h-16 shrink-0" />
 
         <main className="flex-1 min-w-0">
-          <div className="max-w-5xl mx-auto px-6 lg:px-10 py-10 w-full overflow-hidden">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 w-full overflow-hidden">
             {children}
           </div>
         </main>

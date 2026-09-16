@@ -26,28 +26,33 @@ export function Footer() {
             </p>
           </div>
           <div>
-            <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Services</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/docs" className="hover:text-primary transition-colors">API Documentation</Link></li>
-              <li><Link href="/console" className="hover:text-primary transition-colors">H2H Dashboard</Link></li>
-              <li><Link href="/support" className="hover:text-primary transition-colors">Help Center</Link></li>
-            </ul>
+            <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Platform & Support</h4>
+            <nav aria-label="Platform Links">
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/signup" className="hover:text-primary transition-colors">Get Started / Login</Link></li>
+                <li><Link href="/docs" className="hover:text-primary transition-colors">Documentation</Link></li>
+                <li><Link href="/support" className="hover:text-primary transition-colors">Support</Link></li>
+                <li><Link href="/status" className="hover:text-primary transition-colors">System Status</Link></li>
+              </ul>
+            </nav>
           </div>
           <div>
             <h4 className="font-bold text-sm uppercase tracking-widest mb-4">Company</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/about" className="hover:text-primary transition-colors">About StarVale</Link></li>
-              <li><Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link></li>
-              <li><Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-            </ul>
+            <nav aria-label="Company Links">
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/about" className="hover:text-primary transition-colors">About</Link></li>
+                <li><Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+              </ul>
+            </nav>
           </div>
         </div>
         <div className="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground text-[10px] md:text-xs">© 2026 <strong>StarVale Technology Solution</strong>. Founded by <strong>Alhadi Adriano</strong>.</p>
+          <p className="text-muted-foreground text-[10px] md:text-xs">© 2026 <strong>STSPoint</strong>. All Rights Reserved.</p>
           <div className="flex gap-4">
             {socials.map((social) => (
-              <a 
-                key={social.key} 
+              <a
+                key={social.key}
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"

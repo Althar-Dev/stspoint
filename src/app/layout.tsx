@@ -64,10 +64,10 @@ export const metadata: Metadata = {
     siteName: 'STSPoint',
     images: [
       {
-        url: '/assets/img/logo.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'STSPoint Infrastructure by StarVale Technology Solution',
+        url: '/assets/img/logo.png',
+        width: 512,
+        height: 512,
+        alt: 'STSPoint Infrastructure Logo',
       },
     ],
     locale: 'id_ID',
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     title: 'STSPoint | Digital Infrastructure',
     description: 'High-speed APIs for payments and digital goods by StarVale Technology Solution.',
     creator: '@StarValeID',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
   robots: {
     index: true,
@@ -92,9 +92,21 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/assets/img/logo.jpg',
-    shortcut: '/assets/img/logo.jpg',
-    apple: '/assets/img/logo.jpg',
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/assets/img/logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '512x512',
+        url: '/assets/img/logo.png',
+      },
+    ],
   },
   manifest: '/manifest.json',
   verification: {
@@ -126,8 +138,90 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'STSPoint',
+    alternateName: ['STS Point', 'STSPoint Platform', 'StarVale STSPoint'],
+    url: 'https://stspoint.id',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://stspoint.id/docs?q={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'STSPoint',
+    legalName: 'StarVale Technology Solution',
+    url: 'https://stspoint.id',
+    logo: 'https://stspoint.id/assets/img/logo.png',
+    sameAs: [
+      'https://github.com/althardev',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
+      url: 'https://stspoint.id/support',
+    },
+  };
+
+  const siteNavigationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: [
+      {
+        '@type': 'SiteNavigationElement',
+        position: 1,
+        name: 'Get Started / Login',
+        description: 'Daftar dan masuk ke platform dashboard STSPoint.',
+        url: 'https://stspoint.id/signup',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        position: 2,
+        name: 'About',
+        description: 'Tentang platform dan infrastruktur digital StarVale Technology Solution.',
+        url: 'https://stspoint.id/about',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        position: 3,
+        name: 'Documentation',
+        description: 'Dokumentasi API lengkap untuk STSPay, PPOB, GoMerchant, dan Webhook.',
+        url: 'https://stspoint.id/docs',
+      },
+      {
+        '@type': 'SiteNavigationElement',
+        position: 4,
+        name: 'Support',
+        description: 'Bantuan teknis dan layanan customer service 24/7.',
+        url: 'https://stspoint.id/support',
+      },
+    ],
+  };
+
   return (
     <html lang="id-ID" className={`${inter.variable} ${spaceGrotesk.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteNavigationJsonLd) }}
+        />
+      </head>
       <body className="font-body antialiased selection:bg-primary/10 selection:text-primary min-h-screen">
         <FirebaseClientProvider>
           <DevToolsGuard />

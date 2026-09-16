@@ -145,6 +145,8 @@ export default function STSPayBalancesPage() {
   const availableBalance = stspaySvc?.balance || 0;
 
   const handleWithdraw = async () => {
+    if (!db || !user) return;
+
     const amount = parseInt(withdrawAmount);
     if (isNaN(amount) || amount < 1000) {
       toast({ variant: "destructive", title: "Nominal Salah", description: "Minimal penarikan adalah Rp 1.000." });

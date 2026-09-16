@@ -2,114 +2,29 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Activity,
   CreditCard,
   Users,
-  ShieldCheck,
-  Lock,
-  ChevronRight,
   TrendingUp,
   Wallet,
-  Zap,
-  Server,
-  Globe
+  Search,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Crown,
+  Sparkles
 } from "lucide-react";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection } from "firebase/firestore";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid
-} from "recharts";
-
-interface ApiRequestPoint {
-  time: string;
-  ppob: number;
-  stspay: number;
-  otp: number;
-  smm: number;
-  total: number;
-}
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-popover/95 backdrop-blur-md border border-border p-3 rounded-lg shadow-xl text-xs font-mono space-y-1">
-        <p className="text-[10px] text-muted-foreground font-bold border-b border-border pb-1 mb-1">{label} — API Throughput</p>
-        {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5" style={{ color: entry.color }}>
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
-              {entry.name}:
-            </span>
-            <span className="font-bold text-foreground">{entry.value} req/s</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+import { collection, query, limit } from "firebase/firestore";
+import { format } from "date-fns";
 
 export default function DevRootPage() {
   const db = useFirestore();
-  const [mounted, setMounted] = useState(false);
-  const [currentRps, setCurrentRps] = useState(48);
-  const [avgLatency, setAvgLatency] = useState(38);
-  const [chartData, setChartData] = useState<ApiRequestPoint[]>([]);
-
-  useEffect(() => {
-    setMounted(true);
-
-    // Initial mock timeline (past 12 points)
-    const initialPoints: ApiRequestPoint[] = [];
-    const now = new Date();
-    for (let i = 12; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 3000);
-      const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const ppob = Math.floor(Math.random() * 25) + 15;
-      const stspay = Math.floor(Math.random() * 20) + 10;
-      const otp = Math.floor(Math.random() * 12) + 5;
-      const smm = Math.floor(Math.random() * 8) + 2;
-      initialPoints.push({
-        time: timeStr,
-        ppob,
-        stspay,
-        otp,
-        smm,
-        total: ppob + stspay + otp + smm
-      });
-    }
-    setChartData(initialPoints);
-
-    // Live update interval
-    const interval = setInterval(() => {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-      const ppob = Math.floor(Math.random() * 28) + 12;
-      const stspay = Math.floor(Math.random() * 22) + 8;
-      const otp = Math.floor(Math.random() * 15) + 4;
-      const smm = Math.floor(Math.random() * 10) + 2;
-      const total = ppob + stspay + otp + smm;
-
-      setCurrentRps(total);
-      setAvgLatency(Math.floor(Math.random() * 15) + 32);
-
-      setChartData(prev => {
-        const next = prev.slice(1);
-        return [...next, { time: timeStr, ppob, stspay, otp, smm, total }];
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const usersQuery = useMemoFirebase(() => {
     if (!db) return null;
@@ -118,11 +33,70 @@ export default function DevRootPage() {
 
   const txsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, "transactions");
+    return query(collection(db, "transactions"), limit(100));
+  }, [db]);
+
+  const stsTxsQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "stspay_transactions"), limit(100));
   }, [db]);
 
   const { data: users, loading: usersLoading } = useCollection(usersQuery);
   const { data: txs, loading: txLoading } = useCollection(txsQuery);
+  const { data: stsTxs, loading: stsLoading } = useCollection(stsTxsQuery);
+
+  // Filter subscription transactions
+  const subscriptionTxs = useMemo(() => {
+    const all = [...stsTxs, ...txs];
+    // Deduplicate by ID
+    const uniqueMap = new Map();
+    all.forEach(t => {
+      const isSub = t.type === 'subscription' || 
+                    t.itemName?.toLowerCase().includes('pro') || 
+                    t.itemName?.toLowerCase().includes('premium') ||
+                    t.itemName?.toLowerCase().includes('subscribe') ||
+                    t.metadata?.serviceId ||
+                    t.metadata?.planId;
+      if (isSub && !uniqueMap.has(t.id)) {
+        uniqueMap.set(t.id, t);
+      }
+    });
+
+    return Array.from(uniqueMap.values()).sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }, [stsTxs, txs]);
+
+  const filteredSubTxs = useMemo(() => {
+    const s = search.toLowerCase().trim();
+    return subscriptionTxs.filter(t => {
+      const matchesSearch = !s || 
+        t.id?.toLowerCase().includes(s) ||
+        t.userName?.toLowerCase().includes(s) ||
+        t.userEmail?.toLowerCase().includes(s) ||
+        t.itemName?.toLowerCase().includes(s);
+
+      const status = (t.status || "").toUpperCase();
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'PAID' && (status === 'PAID' || status === 'SUCCESS')) ||
+        (statusFilter === 'PENDING' && status === 'PENDING') ||
+        (statusFilter === 'FAILED' && (status === 'EXPIRED' || status === 'FAILED' || status === 'CANCELLED'));
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [subscriptionTxs, search, statusFilter]);
+
+  const subRevenue = useMemo(() => {
+    return subscriptionTxs
+      .filter(t => t.status === 'PAID' || t.status === 'Success')
+      .reduce((acc, t) => acc + (t.amount || t.totalAmount || 0), 0);
+  }, [subscriptionTxs]);
+
+  const paidCount = useMemo(() => {
+    return subscriptionTxs.filter(t => t.status === 'PAID' || t.status === 'Success').length;
+  }, [subscriptionTxs]);
 
   const stats = useMemo(() => {
     const totalUsers = users.length;
@@ -138,6 +112,29 @@ export default function DevRootPage() {
       { label: "Success Rate", value: txLoading ? "..." : `${successRate}%`, icon: TrendingUp, color: "text-emerald-500" },
     ];
   }, [users, txs, usersLoading, txLoading]);
+
+  const getStatusBadge = (status: string) => {
+    const upper = (status || "").toUpperCase();
+    if (upper === 'PAID' || upper === 'SUCCESS') {
+      return (
+        <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[8px] sm:text-[9px] uppercase px-2 py-0.5 rounded-sm flex items-center gap-1 w-fit">
+          <CheckCircle2 className="w-3 h-3" /> PAID
+        </Badge>
+      );
+    }
+    if (upper === 'PENDING') {
+      return (
+        <Badge className="bg-amber-500/10 text-amber-600 border-none font-bold text-[8px] sm:text-[9px] uppercase px-2 py-0.5 rounded-sm flex items-center gap-1 w-fit">
+          <Clock className="w-3 h-3 animate-spin" /> PENDING
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-destructive/10 text-destructive border-none font-bold text-[8px] sm:text-[9px] uppercase px-2 py-0.5 rounded-sm flex items-center gap-1 w-fit">
+        <XCircle className="w-3 h-3" /> {upper || 'FAILED'}
+      </Badge>
+    );
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500">
@@ -160,101 +157,159 @@ export default function DevRootPage() {
         ))}
       </div>
 
-      <div className="w-full">
-        {/* 📈 Realtime API Request Chart Card */}
-        <Card className="w-full border-border rounded-md overflow-hidden shadow-sm bg-card flex flex-col">
-          <CardHeader className="border-b border-border bg-muted/30 dark:bg-[#0A0A0A] px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      {/* 💳 Subscription Transactions History Section */}
+      <Card className="w-full border-border rounded-md overflow-hidden shadow-sm bg-card">
+        <CardHeader className="border-b border-border bg-muted/30 dark:bg-[#0A0A0A] px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Crown className="w-5 h-5" />
+            </div>
+            <div>
+              <CardTitle className="text-sm sm:text-base font-headline font-bold flex items-center gap-2">
+                Subscription Purchase History
+                <Badge className="bg-primary/10 text-primary border-none text-[9px] uppercase font-bold px-2 py-0.5">
+                  {subscriptionTxs.length} Total
+                </Badge>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">Historical records of merchant & partner package subscriptions.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 font-mono text-[10px] text-muted-foreground bg-background px-3 py-1.5 rounded-lg border border-border">
+            <span>Revenue: <strong className="text-emerald-500 font-bold">Rp {subRevenue.toLocaleString('id-ID')}</strong></span>
+            <span className="border-l border-border pl-3">Active: <strong className="text-primary font-bold">{paidCount} Paid</strong></span>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 sm:p-6 space-y-4">
+          {/* Controls Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by User, Email, Plan, or TRX ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-10 bg-muted/30 border-border text-xs rounded-md"
+              />
+            </div>
+
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
-              <div>
-                <CardTitle className="text-xs sm:text-sm font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
-                  Realtime API Requests
-                  <Badge className="bg-emerald-500/10 text-emerald-600 border-none font-mono text-[9px] uppercase px-1.5 py-0.5">LIVE</Badge>
-                </CardTitle>
-              </div>
+              <Button
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('all')}
+                className="h-9 text-[10px] uppercase font-bold rounded-md px-3"
+              >
+                All ({subscriptionTxs.length})
+              </Button>
+              <Button
+                variant={statusFilter === 'PAID' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('PAID')}
+                className="h-9 text-[10px] uppercase font-bold rounded-md px-3 text-emerald-500"
+              >
+                Paid
+              </Button>
+              <Button
+                variant={statusFilter === 'PENDING' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('PENDING')}
+                className="h-9 text-[10px] uppercase font-bold rounded-md px-3 text-amber-500"
+              >
+                Pending
+              </Button>
+              <Button
+                variant={statusFilter === 'FAILED' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('FAILED')}
+                className="h-9 text-[10px] uppercase font-bold rounded-md px-3 text-destructive"
+              >
+                Expired
+              </Button>
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <strong className="text-foreground">{currentRps}</strong> RPS
-              </span>
-              <span className="border-l border-border pl-3">
-                Avg Latency: <strong className="text-primary">{avgLatency}ms</strong>
-              </span>
-              <span className="border-l border-border pl-3 hidden sm:inline text-emerald-500 font-bold">
-                99.9% OK
-              </span>
-            </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
-            {/* Legend & Indicators */}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-wider">
-              <div className="flex flex-wrap items-center gap-3 sm:gap-5">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                  <span className="text-muted-foreground">PPOB (DigiFlazz)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                  <span className="text-muted-foreground">STSPay Gateway</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                  <span className="text-muted-foreground">OTP & Auth</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div>
-                  <span className="text-muted-foreground">SMM Panel</span>
-                </div>
-              </div>
-            </div>
+          {/* Table Container */}
+          <div className="w-full overflow-x-auto border border-border rounded-md">
+            <table className="w-full min-w-full text-[10px] sm:text-xs text-left">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Transaction ID</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Customer / Merchant</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Package Plan</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Amount</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Payment</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap text-center">Date</th>
+                  <th className="px-4 py-3 font-bold uppercase tracking-widest text-muted-foreground text-right whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {stsLoading || txLoading ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground italic animate-pulse">
+                      Synchronizing subscription ledger...
+                    </td>
+                  </tr>
+                ) : filteredSubTxs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground italic">
+                      No subscription transactions found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSubTxs.map((t, idx) => {
+                    const amount = t.amount || t.totalAmount || 0;
+                    const dateObj = t.createdAt?.toDate ? t.createdAt.toDate() : new Date(t.createdAt || 0);
+                    const formattedDate = t.createdAt ? format(dateObj, "dd MMM yyyy HH:mm") : "---";
+                    const planName = t.itemName || t.metadata?.planId || "Subscription";
+                    const userName = t.userName || t.userEmail || "Merchant";
+                    const method = t.paymentMethod || t.payment_info?.payment_channel || "QRIS";
 
-            {/* Area Chart Container */}
-            <div className="w-full h-[260px] sm:h-[300px]">
-              {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradientPpob" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradientStspay" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradientOtp" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradientSmm" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#888888' }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 9, fill: '#888888' }} tickLine={false} axisLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="ppob" name="PPOB DigiFlazz" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#gradientPpob)" />
-                    <Area type="monotone" dataKey="stspay" name="STSPay Gateway" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#gradientStspay)" />
-                    <Area type="monotone" dataKey="otp" name="OTP & Auth" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#gradientOtp)" />
-                    <Area type="monotone" dataKey="smm" name="SMM Panel" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#gradientSmm)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs italic animate-pulse">
-                  Initializing Live Traffic Stream...
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                    return (
+                      <tr key={t.id || idx} className="hover:bg-muted/10 transition-colors group">
+                        <td className="px-4 py-3.5 whitespace-nowrap font-mono font-bold text-primary">
+                          {t.id || `SUB-${idx + 1}`}
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground text-xs">{userName}</span>
+                            <span className="text-[9px] text-muted-foreground font-mono truncate max-w-[180px]">
+                              {t.userEmail || t.userId || "---"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <Badge variant="outline" className="border-primary/20 text-primary font-bold text-[9px] uppercase px-2 py-0.5 rounded-sm">
+                            <Sparkles className="w-2.5 h-2.5 mr-1" />
+                            {planName}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap font-mono font-bold text-foreground">
+                          Rp {amount.toLocaleString('id-ID')}
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-center">
+                          <Badge variant="outline" className="border-border text-muted-foreground text-[8px] uppercase font-bold">
+                            {method}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-center text-[9px] font-mono text-muted-foreground">
+                          {formattedDate}
+                        </td>
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                          <div className="flex justify-end">
+                            {getStatusBadge(t.status)}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

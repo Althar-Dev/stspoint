@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description: 'Dekode string QRIS standar EMVCo secara cepat & tepat dari gambar QR Code.',
     url: 'https://stspoint.id/qris-string',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

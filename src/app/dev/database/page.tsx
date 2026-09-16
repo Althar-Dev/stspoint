@@ -4,7 +4,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, updateDoc, addDoc, increment } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, limit, updateDoc, addDoc, increment } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { 
@@ -246,12 +246,12 @@ function ManagementContent() {
 
   const txsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return collection(db, "transactions");
+    return query(collection(db, "transactions"), limit(100));
   }, [db]);
 
   const stspayTxsQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collection(db, "stspay_transactions"), where("type", "==", "payout"));
+    return query(collection(db, "stspay_transactions"), where("type", "==", "payout"), limit(100));
   }, [db]);
 
   const channelsQuery = useMemoFirebase(() => {

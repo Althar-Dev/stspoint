@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: 'Monitoring real-time kestabilan server dan latensi endpoint API STSPoint.',
     url: 'https://stspoint.id/status',
     type: 'website',
-    images: ['/assets/img/logo.jpg'],
+    images: ['/assets/img/logo.png'],
   },
 };
 

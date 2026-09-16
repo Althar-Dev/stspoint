@@ -22,42 +22,42 @@ import { CodeBlock } from "./shared/code-block";
 
 export function DocsPpob() {
   return (
-    <div className="space-y-16 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
+    <div className="space-y-8 sm:space-y-12 animate-in slide-in-from-bottom-2 w-full max-w-full overflow-hidden">
       {/* Intro */}
-      <section className="space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold uppercase tracking-widest text-blue-500">
           <Smartphone className="w-3 h-3" />
           H2H Distribution Bridge
         </div>
-        <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">PPOB Service</h1>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-3xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold tracking-tight text-foreground">PPOB Service</h1>
+        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
           The PPOB (Payment Point Online Bank) service allows you to automatically process digital product transactions such as credit, data packages, PLN tokens, and postpaid bills through a single unified API connection.
         </p>
       </section>
 
       {/* Product List */}
-      <section id="product-list" className="space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
-        <div className="space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-foreground">
-            <Package className="w-6 h-6 text-blue-500" />
+      <section id="product-list" className="space-y-6 sm:space-y-8 scroll-mt-24 pt-4 border-t border-border w-full">
+        <div className="space-y-3">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2.5 text-foreground">
+            <Package className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
             Get Product List
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
             Retrieve the list of available products, base prices, and real-time status from all providers connected to the STSPoint ecosystem.
           </p>
-          <div className="flex items-center gap-3 px-4 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
-            <UiBadge className="bg-blue-500 text-white border-none uppercase font-bold text-[10px]">GET</UiBadge>
-            <span className="text-primary">/ppob/order</span>
+          <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-border w-fit font-mono text-xs font-bold">
+            <UiBadge className="bg-blue-500 text-white border-none uppercase font-bold text-[9px] sm:text-[10px]">GET</UiBadge>
+            <span className="text-primary text-xs">/ppob/order</span>
           </div>
         </div>
 
-        <div className="space-y-4 w-full min-w-0">
+        <div className="space-y-3 w-full min-w-0">
            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2 px-1">
              <Layers className="w-3.5 h-3.5" />
              Query Parameters
            </h4>
-           <div className="rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
-              <table className="w-full text-left text-xs border-collapse min-w-[650px]">
+           <div className="rounded-xl sm:rounded-2xl border border-border overflow-x-auto bg-card shadow-sm w-full block">
+              <table className="w-full text-left text-xs border-collapse min-w-[500px]">
                  <thead className="bg-muted/50 border-b border-border">
                     <tr>
                        <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Parameter</th>
