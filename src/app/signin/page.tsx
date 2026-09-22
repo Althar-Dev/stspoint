@@ -140,128 +140,125 @@ export default function SignInPage() {
         {/* Header */}
         <div className="flex flex-col items-center text-center space-y-2">
           <h1 className="text-3xl font-headline font-bold tracking-tight text-foreground">
-            Welcome back
+            Login
           </h1>
           <p className="text-muted-foreground text-sm max-w-xs">
-            Sign in to access your portal and manage your account
+            Login to access your dashboard
           </p>
         </div>
 
-          {/* Role Switcher Toggle (Smooth Sliding Indicator) */}
-          <div className="relative grid grid-cols-2 h-11 w-full rounded-xl border border-border bg-muted/30 p-1 select-none overflow-hidden">
-            {/* Smooth Sliding Active Pill */}
-            <div
-              className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-primary rounded-lg transition-transform duration-300 ease-in-out ${
-                role === "merchant" ? "translate-x-0" : "translate-x-full"
+        {/* Role Switcher Toggle (Smooth Sliding Indicator) */}
+        <div className="relative grid grid-cols-2 h-11 w-full rounded-xl border border-border bg-muted/30 p-1 select-none overflow-hidden">
+          {/* Smooth Sliding Active Pill */}
+          <div
+            className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-primary rounded-lg transition-transform duration-300 ease-in-out ${role === "merchant" ? "translate-x-0" : "translate-x-full"
               }`}
-            />
+          />
 
-            <button
-              type="button"
-              onClick={() => handleRoleSwitch("merchant")}
-              className={`relative z-10 h-full flex items-center justify-center gap-2 text-xs font-bold transition-colors duration-300 ${
-                role === "merchant"
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+          <button
+            type="button"
+            onClick={() => handleRoleSwitch("merchant")}
+            className={`relative z-10 h-full flex items-center justify-center gap-2 text-xs font-bold transition-colors duration-300 ${role === "merchant"
+              ? "text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
               }`}
-            >
-              <Building2 className="w-4 h-4" />
-              Merchant
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRoleSwitch("partner")}
-              className={`relative z-10 h-full flex items-center justify-center gap-2 text-xs font-bold transition-colors duration-300 ${
-                role === "partner"
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+          >
+            <Building2 className="w-4 h-4" />
+            Merchant
+          </button>
+          <button
+            type="button"
+            onClick={() => handleRoleSwitch("partner")}
+            className={`relative z-10 h-full flex items-center justify-center gap-2 text-xs font-bold transition-colors duration-300 ${role === "partner"
+              ? "text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
               }`}
-            >
-              <UserCircle className="w-4 h-4" />
-              Partner
-            </button>
+          >
+            <UserCircle className="w-4 h-4" />
+            Partner
+          </button>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="rounded-xl border-destructive/30 bg-destructive/10 text-destructive font-medium">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-xs font-semibold">{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <form onSubmit={handleSignIn} className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-xs font-bold text-foreground ml-1">
+              Email Address
+            </Label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/70" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                required
+                className="pl-10 h-12 rounded-xl bg-background border border-border text-foreground font-medium placeholder:text-muted-foreground/60 transition-all shadow-none focus-visible:ring-1 focus-visible:ring-primary"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
           </div>
 
-          {error && (
-            <Alert variant="destructive" className="rounded-xl border-destructive/30 bg-destructive/10 text-destructive font-medium">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs font-semibold">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={handleSignIn} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs font-bold text-foreground ml-1">
-                Email Address
+          <div className="space-y-2">
+            <div className="flex items-center justify-between ml-1">
+              <Label htmlFor="password" className="text-xs font-bold text-foreground">
+                Password
               </Label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/70" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@company.com"
-                  required
-                  className="pl-10 h-12 rounded-xl bg-background border border-border text-foreground font-medium placeholder:text-muted-foreground/60 transition-all shadow-none focus-visible:ring-1 focus-visible:ring-primary"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between ml-1">
-                <Label htmlFor="password" className="text-xs font-bold text-foreground">
-                  Password
-                </Label>
-                <Link href="#" className="text-xs font-bold text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/70" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  required
-                  className="pl-10 pr-10 h-12 rounded-xl bg-background border border-border text-foreground font-medium placeholder:text-muted-foreground/60 transition-all shadow-none focus-visible:ring-1 focus-visible:ring-primary"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 rounded-xl font-bold transition-all active:scale-[0.99] gap-2 text-sm bg-primary text-primary-foreground shadow-none"
-              disabled={signingIn}
-            >
-              {signingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {signingIn ? "Authenticating..." : `Sign In as ${role === 'merchant' ? 'Merchant' : 'Partner'}`}
-              {!signingIn && <ArrowRight className="w-4 h-4" />}
-            </Button>
-          </form>
-
-          <div className="pt-2 text-center">
-            <p className="text-xs font-medium text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary font-bold hover:underline">
-                Sign up
+              <Link href="#" className="text-xs font-bold text-primary hover:underline">
+                Forgot password?
               </Link>
-            </p>
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/70" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                className="pl-10 pr-10 h-12 rounded-xl bg-background border border-border text-foreground font-medium placeholder:text-muted-foreground/60 transition-all shadow-none focus-visible:ring-1 focus-visible:ring-primary"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
+
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-xl font-bold transition-all active:scale-[0.99] gap-2 text-sm bg-primary text-primary-foreground shadow-none"
+            disabled={signingIn}
+          >
+            {signingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {signingIn ? "Authenticating..." : `Sign In as ${role === 'merchant' ? 'Merchant' : 'Partner'}`}
+            {!signingIn && <ArrowRight className="w-4 h-4" />}
+          </Button>
+        </form>
+
+        <div className="pt-2 text-center">
+          <p className="text-xs font-medium text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-primary font-bold hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
