@@ -2,9 +2,11 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, limit, updateDoc, addDoc, increment } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp, deleteDoc, query, where, limit, updateDoc, addDoc, increment, getDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { 
@@ -34,7 +36,6 @@ import {
   Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
   DialogContent, 
@@ -263,6 +264,41 @@ function ManagementContent() {
   const { data: transactions, loading: txLoading } = useCollection(txsQuery);
   const { data: stspayTransactions, loading: stsTxLoading } = useCollection(stspayTxsQuery);
   const { data: paymentChannels, loading: channelsLoading } = useCollection(channelsQuery);
+
+  const [stspayBalances, setStspayBalances] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!db || !users || users.length === 0) return;
+    let isMounted = true;
+
+    const fetchStsPayBalances = async () => {
+      const balances: Record<string, number> = {};
+      await Promise.all(
+        users.map(async (u) => {
+          if (u.stspayBalance !== undefined) {
+            balances[u.id] = u.stspayBalance;
+          } else {
+            try {
+              const stsSnap = await getDoc(doc(db, "users", u.id, "services", "stspay"));
+              if (stsSnap.exists()) {
+                balances[u.id] = stsSnap.data().balance || 0;
+              } else {
+                balances[u.id] = 0;
+              }
+            } catch (e) {
+              balances[u.id] = 0;
+            }
+          }
+        })
+      );
+      if (isMounted) {
+        setStspayBalances(balances);
+      }
+    };
+
+    fetchStsPayBalances();
+    return () => { isMounted = false; };
+  }, [db, users]);
 
   const filteredData = useMemo(() => {
     const s = search.toLowerCase();
@@ -1081,22 +1117,23 @@ function ManagementContent() {
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Price</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Status</th>
                     </>
-                  ) : (
-                    <>
+                  ) : (                    <>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Full Name</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Email Address</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{view === 'clients' ? 'Client Key' : 'Merchant ID'}</th>
                       <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">Role</th>
-                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Balance</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Main Balance</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">STSPay Balance</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-widest text-[9px] text-right whitespace-nowrap">Action</th>
                     </>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {(view === 'transactions' ? txLoading : usersLoading) ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing registry...</td></tr>
+                  <tr><td colSpan={7} className="px-6 py-12 text-center text-muted-foreground/30 italic">Synchronizing registry...</td></tr>
                 ) : filteredData.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-muted-foreground/30 italic">No records found.</td></tr>
+                  <tr><td colSpan={7} className="px-6 py-12 text-center text-muted-foreground/30 italic">No records found.</td></tr>
                 ) : (
                   filteredData.map((item, i) => (
                     <tr key={i} className="hover:bg-muted/10 transition-colors group">
@@ -1119,10 +1156,18 @@ function ManagementContent() {
                           <td className="px-6 py-4 font-mono text-[9px] text-muted-foreground/60 whitespace-nowrap uppercase">{item.merchantId || item.clientKey || "N/A"}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                              <Badge variant="outline" className={`${item.dev ? 'border-primary text-primary' : !!item.partner ? 'border-blue-500 text-blue-600' : 'border-border text-muted-foreground'} text-[8px] uppercase font-bold px-2 py-0.5`}>
-                               {item.dev ? 'Developer' : !!item.partner ? 'Partner' : 'Merchant'}
+                                {item.dev ? 'Developer' : !!item.partner ? 'Partner' : 'Merchant'}
                              </Badge>
                           </td>
                           <td className="px-6 py-4 text-right font-bold text-emerald-600 whitespace-nowrap">Rp {(item.balance || 0).toLocaleString('id-ID')}</td>
+                          <td className="px-6 py-4 text-right font-bold text-primary whitespace-nowrap">Rp {(stspayBalances[item.id] ?? item.stspayBalance ?? 0).toLocaleString('id-ID')}</td>
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <Button asChild variant="ghost" size="sm" className="h-7 px-2.5 text-[9px] font-bold uppercase text-primary hover:bg-primary/10 rounded-md">
+                              <Link href={`/dev/user/${item.id}`}>
+                                Detail
+                              </Link>
+                            </Button>
+                          </td>
                         </>
                       )}
                     </tr>

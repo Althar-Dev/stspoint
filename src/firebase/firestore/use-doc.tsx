@@ -20,7 +20,7 @@ export function useDoc(docRef: DocumentReference | null | undefined) {
     const unsubscribe = onSnapshot(
       docRef,
       (doc) => {
-        setData(doc.exists() ? { id: doc.id, ...doc.data() } : null);
+        setData(doc.exists() ? { ...doc.data(), id: doc.id } : null);
         setLoading(false);
       },
       async (serverError) => {

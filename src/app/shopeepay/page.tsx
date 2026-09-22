@@ -300,46 +300,12 @@ export default function ShopeepayDashboardPage() {
                                         Hubungkan akun ShopeePay Merchant Anda untuk mengaktifkan otomatisasi mutasi.
                                     </p>
                                 </div>
-                                <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                                    setIsDialogOpen(open);
-                                    if (!open) { setInnerToken(""); }
-                                }}>
-                                    <DialogTrigger asChild>
-                                        <Button className="bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#EE4D2D]/10 transition-all active:scale-95">
-                                            Hubungkan Sekarang
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
-                                        <DialogHeader>
-                                            <DialogTitle className="font-headline font-bold">Connect ShopeePay</DialogTitle>
-                                            <DialogDescription className="text-xs">
-                                                Masukkan Token ShopeePay yang didapatkan dari browser atau alat developer.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="space-y-4 py-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Shopee Token</Label>
-                                                <div className="relative">
-                                                    <Key className="absolute left-3 top-4 w-4 h-4 text-muted-foreground" />
-                                                    <Textarea
-                                                        placeholder="B:ESn12eqh..."
-                                                        value={innerToken}
-                                                        onChange={(e) => setInnerToken(e.target.value)}
-                                                        className="pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[120px] font-mono text-[10px]"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <Button
-                                                onClick={handleConnectAccount}
-                                                className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white gap-2"
-                                                disabled={isProcessing || !innerToken}
-                                            >
-                                                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
-                                                Simpan Token
-                                            </Button>
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
+                                <Button
+                                    onClick={() => setIsDialogOpen(true)}
+                                    className="bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white font-bold rounded-xl px-8 h-12 shadow-xl shadow-[#EE4D2D]/10 transition-all active:scale-95"
+                                >
+                                    Hubungkan Sekarang
+                                </Button>
                             </div>
                         ) : (
                             <>
@@ -439,47 +405,58 @@ export default function ShopeepayDashboardPage() {
                                         </div>
                                     </div>
 
-                                    <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-2 font-bold text-[10px] uppercase tracking-wider group hover:border-primary/20 transition-all">
-                                                <SettingsIcon className="w-3.5 h-3.5 text-[#EE4D2D]" />
-                                                Configuration
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
-                                            <DialogHeader>
-                                                <DialogTitle className="font-headline font-bold">ShopeePay Config</DialogTitle>
-                                                <DialogDescription className="text-xs">Sesuaikan payload QRIS dan kode nominal unik.</DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-4 py-4">
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Base QR Payload</Label>
-                                                    <Textarea
-                                                        placeholder="Enter QR payload..."
-                                                        value={baseQrInput}
-                                                        onChange={(e) => setBaseQrInput(e.target.value)}
-                                                        className="rounded-xl min-h-[120px] text-xs font-mono break-all bg-muted/30 border-transparent focus:bg-background transition-all"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Random Nominal Digit</Label>
-                                                    <Select value={digitSetting} onValueChange={setDigitSetting}>
-                                                        <SelectTrigger className="h-11 rounded-xl bg-muted/50 border-transparent">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="rounded-xl">
-                                                            <SelectItem value="2" className="text-xs">2 Digits (10 - 99)</SelectItem>
-                                                            <SelectItem value="3" className="text-xs">3 Digits (100 - 999)</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <Button onClick={handleSaveSettings} disabled={isProcessing} className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] text-white">
-                                                    {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                                                    Simpan Konfigurasi
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button
+                                            onClick={() => setIsDialogOpen(true)}
+                                            variant="outline"
+                                            className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-1.5 font-bold text-[10px] uppercase tracking-wider group hover:border-primary/20 transition-all"
+                                        >
+                                            <Key className="w-3.5 h-3.5 text-[#EE4D2D]" />
+                                            Update Token
+                                        </Button>
+
+                                        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" className="w-full h-10 rounded-xl border-border bg-card shadow-sm gap-1.5 font-bold text-[10px] uppercase tracking-wider group hover:border-primary/20 transition-all">
+                                                    <SettingsIcon className="w-3.5 h-3.5 text-[#EE4D2D]" />
+                                                    Config
                                                 </Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                            </DialogTrigger>
+                                            <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
+                                                <DialogHeader>
+                                                    <DialogTitle className="font-headline font-bold">ShopeePay Config</DialogTitle>
+                                                    <DialogDescription className="text-xs">Sesuaikan payload QRIS dan kode nominal unik.</DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4 py-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Base QR Payload</Label>
+                                                        <Textarea
+                                                            placeholder="Enter QR payload..."
+                                                            value={baseQrInput}
+                                                            onChange={(e) => setBaseQrInput(e.target.value)}
+                                                            className="rounded-xl min-h-[120px] text-xs font-mono break-all bg-muted/30 border-transparent focus:bg-background transition-all"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Random Nominal Digit</Label>
+                                                        <Select value={digitSetting} onValueChange={setDigitSetting}>
+                                                            <SelectTrigger className="h-11 rounded-xl bg-muted/50 border-transparent">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="rounded-xl">
+                                                                <SelectItem value="2" className="text-xs">2 Digits (10 - 99)</SelectItem>
+                                                                <SelectItem value="3" className="text-xs">3 Digits (100 - 999)</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <Button onClick={handleSaveSettings} disabled={isProcessing} className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] text-white">
+                                                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                                                        Simpan Konfigurasi
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -559,6 +536,44 @@ export default function ShopeepayDashboardPage() {
                     </div>
                 </Card>
             </div>
+
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                setIsDialogOpen(open);
+                if (!open) { setInnerToken(""); }
+            }}>
+                <DialogContent className="rounded-3xl border-border w-[94vw] md:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline font-bold">
+                            {isConnected ? "Perbarui Token ShopeePay" : "Connect ShopeePay"}
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Masukkan Token ShopeePay yang didapatkan dari browser atau alat developer.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Shopee Token</Label>
+                            <div className="relative">
+                                <Key className="absolute left-3 top-4 w-4 h-4 text-muted-foreground" />
+                                <Textarea
+                                    placeholder="B:ESn12eqh..."
+                                    value={innerToken}
+                                    onChange={(e) => setInnerToken(e.target.value)}
+                                    className="pl-10 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-border transition-all min-h-[120px] font-mono text-[10px]"
+                                />
+                            </div>
+                        </div>
+                        <Button
+                            onClick={handleConnectAccount}
+                            className="w-full h-11 rounded-xl font-bold bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white gap-2"
+                            disabled={isProcessing || !innerToken}
+                        >
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                            {isConnected ? "Perbarui Token" : "Simpan Token"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

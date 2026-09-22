@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, limit, doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { Mail, Calendar, Key, MoreHorizontal } from "lucide-react";
+import { collection, query, limit, doc, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import Link from "next/link";
+import { Mail, Calendar, Key, MoreHorizontal, Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function UserManagementPage() {
   const db = useFirestore();
@@ -22,6 +23,40 @@ export default function UserManagementPage() {
 
   const { data: users, loading } = useCollection(usersQuery);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [stspayBalances, setStspayBalances] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!db || !users || users.length === 0) return;
+    let isMounted = true;
+
+    const fetchStsPayBalances = async () => {
+      const balances: Record<string, number> = {};
+      await Promise.all(
+        users.map(async (u) => {
+          if (u.stspayBalance !== undefined) {
+            balances[u.id] = u.stspayBalance;
+          } else {
+            try {
+              const stsSnap = await getDoc(doc(db, "users", u.id, "services", "stspay"));
+              if (stsSnap.exists()) {
+                balances[u.id] = stsSnap.data().balance || 0;
+              } else {
+                balances[u.id] = 0;
+              }
+            } catch (e) {
+              balances[u.id] = 0;
+            }
+          }
+        })
+      );
+      if (isMounted) {
+        setStspayBalances(balances);
+      }
+    };
+
+    fetchStsPayBalances();
+    return () => { isMounted = false; };
+  }, [db, users]);
 
   const toggleDevStatus = async (userId: string, currentStatus: boolean) => {
     if (!db) return;
@@ -76,24 +111,39 @@ export default function UserManagementPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="hidden lg:flex flex-col items-end px-6 border-x border-border h-10 justify-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">System Context</p>
-                    <p className="text-xs font-mono text-primary font-bold">{user.merchantId || user.clientKey || "NONE"}</p>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="hidden lg:flex flex-col items-end px-3 border-l border-border h-10 justify-center">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Main Balance</p>
+                    <p className="text-xs font-mono text-emerald-600 font-bold">Rp {(user.balance || 0).toLocaleString('id-ID')}</p>
+                  </div>
+                  
+                  <div className="hidden lg:flex flex-col items-end px-3 border-x border-border h-10 justify-center">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">STSPay Balance</p>
+                    <p className="text-xs font-mono text-primary font-bold">Rp {(stspayBalances[user.id] ?? user.stspayBalance ?? 0).toLocaleString('id-ID')}</p>
                   </div>
                   
                   <div className="flex items-center gap-2">
                     <Button 
+                      asChild
+                      variant="outline" 
+                      size="sm" 
+                      className="h-9 px-3 rounded-md font-bold text-[10px] uppercase tracking-wider gap-1 border-border"
+                    >
+                      <Link href={`/dev/user/${user.id}`}>
+                        <Eye className="w-3.5 h-3.5 text-primary" /> Detail
+                      </Link>
+                    </Button>
+
+                    <Button 
                       variant="ghost" 
                       size="sm" 
-                      className={`h-9 px-4 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all ${user.dev ? 'text-destructive hover:bg-destructive/5' : 'text-emerald-600 hover:bg-emerald-500/5'}`}
+                      className={`h-9 px-3 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all ${user.dev ? 'text-destructive hover:bg-destructive/5' : 'text-emerald-600 hover:bg-emerald-500/5'}`}
                       onClick={() => toggleDevStatus(user.id, !!user.dev)}
                       disabled={isUpdating === user.id}
                     >
                       {isUpdating === user.id ? 'Updating...' : user.dev ? 'Revoke Access' : 'Grant DevRoot'}
-                    </Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md text-muted-foreground hover:text-foreground">
-                       <MoreHorizontal className="w-4 h-4" />
+                      <MoreHorizontal className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>

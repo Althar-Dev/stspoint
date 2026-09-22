@@ -20,7 +20,7 @@ export function useCollection(query: Query | null | undefined) {
     const unsubscribe = onSnapshot(
       query,
       (snapshot) => {
-        setData(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        setData(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
         setLoading(false);
       },
       async (serverError) => {
