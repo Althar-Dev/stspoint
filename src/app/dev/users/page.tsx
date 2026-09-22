@@ -142,6 +142,8 @@ export default function UserManagementPage() {
                       disabled={isUpdating === user.id}
                     >
                       {isUpdating === user.id ? 'Updating...' : user.dev ? 'Revoke Access' : 'Grant DevRoot'}
+                    </Button>
+
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md text-muted-foreground hover:text-foreground">
                       <MoreHorizontal className="w-4 h-4" />
                     </Button>
