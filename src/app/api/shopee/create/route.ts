@@ -154,8 +154,12 @@ export async function POST(request: Request) {
     }
 
     // --- TOTAL QUOTA LOGIC ---
-    const currentQuota = shopeepayData.quota || 0;
-    if (currentQuota <= 0 && plan !== 'enterprise') {
+    const rawQuota = typeof shopeepayData.quota === 'number'
+      ? shopeepayData.quota
+      : parseInt(String(shopeepayData.quota || 0), 10) || 0;
+    const isUnlimited = rawQuota >= 999999 || shopeepayData.isLifetime === true;
+
+    if (!isUnlimited && rawQuota <= 0) {
       return NextResponse.json({ 
         success: false, 
         message: 'API Quota Exceeded. Please upgrade your plan in the dashboard.' 
@@ -235,7 +239,9 @@ export async function POST(request: Request) {
       setDoc(globalHistoryRef, historyData),
       setDoc(userHistoryRef, historyData),
       updateDoc(shopeepayRef, {
-        quota: plan === 'enterprise' ? currentQuota : increment(-1),
+        quota: isUnlimited
+          ? rawQuota
+          : (typeof shopeepayData.quota === 'number' ? increment(-1) : Math.max(0, rawQuota - 1)),
         rpmRequestsCount: updatedRpmCount,
         rpmLastReset: shouldResetRpm ? serverTimestamp() : shopeepayData.rpmLastReset || serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -251,7 +257,7 @@ export async function POST(request: Request) {
         base_amount: baseAmount,
         random_code: randomSuffix,
         status: 'PENDING',
-        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
+        remaining_quota: isUnlimited ? -1 : Math.max(0, rawQuota - 1)
       }
     });
 

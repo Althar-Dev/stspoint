@@ -111,8 +111,12 @@ export async function POST(request: Request) {
     }
 
     // --- TOTAL QUOTA LOGIC ---
-    const currentQuota = orkutData.quota || 0;
-    if (currentQuota <= 0 && plan !== 'enterprise') {
+    const rawQuota = typeof orkutData.quota === 'number'
+      ? orkutData.quota
+      : parseInt(String(orkutData.quota || 0), 10) || 0;
+    const isUnlimited = rawQuota >= 999999 || orkutData.isLifetime === true;
+
+    if (!isUnlimited && rawQuota <= 0) {
       return NextResponse.json({ 
         success: false, 
         message: 'Orderkuota API Quota Exceeded. Please upgrade your plan.' 
@@ -190,7 +194,9 @@ export async function POST(request: Request) {
       setDoc(globalHistoryRef, historyData),
       setDoc(userHistoryRef, historyData),
       updateDoc(orkutRef, {
-        quota: plan === 'enterprise' ? currentQuota : increment(-1),
+        quota: isUnlimited
+          ? rawQuota
+          : (typeof orkutData.quota === 'number' ? increment(-1) : Math.max(0, rawQuota - 1)),
         rpmRequestsCount: updatedRpmCount,
         rpmLastReset: shouldResetRpm ? serverTimestamp() : orkutData.rpmLastReset || serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -206,7 +212,7 @@ export async function POST(request: Request) {
         base_amount: baseAmount,
         random_code: randomSuffix,
         status: 'PENDING',
-        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
+        remaining_quota: isUnlimited ? -1 : Math.max(0, rawQuota - 1)
       }
     });
 

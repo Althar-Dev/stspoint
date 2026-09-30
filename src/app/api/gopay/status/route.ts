@@ -102,8 +102,12 @@ export async function POST(request: Request) {
     }
 
     // --- QUOTA CHECK ---
-    const currentQuota = gomerchantData.quota || 0;
-    if (currentQuota <= 0 && plan !== 'enterprise') {
+    const rawQuota = typeof gomerchantData.quota === 'number'
+      ? gomerchantData.quota
+      : parseInt(String(gomerchantData.quota || 0), 10) || 0;
+    const isUnlimited = rawQuota >= 999999 || gomerchantData.isLifetime === true;
+
+    if (!isUnlimited && rawQuota <= 0) {
       return NextResponse.json({ 
         success: false, 
         message: 'API Quota Exceeded.' 
@@ -125,7 +129,9 @@ export async function POST(request: Request) {
 
     // Consume Quota and update RPM state
     await updateDoc(gomerchantRef, {
-      quota: plan === 'enterprise' ? currentQuota : increment(-1),
+      quota: isUnlimited
+        ? rawQuota
+        : (typeof gomerchantData.quota === 'number' ? increment(-1) : Math.max(0, rawQuota - 1)),
       rpmRequestsCount: updatedRpmCount,
       rpmLastReset: shouldResetRpm ? serverTimestamp() : gomerchantData.rpmLastReset || serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -141,7 +147,7 @@ export async function POST(request: Request) {
           status: 'PAID',
           amount: transactionData.amount,
           paid_at: transactionData.updatedAt?.toDate ? transactionData.updatedAt.toDate() : transactionData.updatedAt,
-          remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
+          remaining_quota: isUnlimited ? -1 : Math.max(0, rawQuota - 1)
         }
       });
     }
@@ -210,7 +216,7 @@ export async function POST(request: Request) {
               amount: transactionData.amount,
               paid_at: match.created_at,
               message: 'Payment detected via live mutation.',
-              remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
+              remaining_quota: isUnlimited ? -1 : Math.max(0, rawQuota - 1)
             }
           });
         }
@@ -225,7 +231,7 @@ export async function POST(request: Request) {
         status: transactionData.status,
         amount: transactionData.amount,
         created_at: transactionData.createdAt?.toDate ? transactionData.createdAt.toDate() : transactionData.createdAt,
-        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
+        remaining_quota: isUnlimited ? -1 : Math.max(0, rawQuota - 1)
       }
     });
 

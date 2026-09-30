@@ -112,8 +112,12 @@ export async function POST(request: Request) {
     }
 
     // --- TOTAL QUOTA LOGIC ---
-    const currentQuota = gomerchantData.quota || 0;
-    if (currentQuota <= 0 && plan !== 'enterprise') {
+    const rawQuota = typeof gomerchantData.quota === 'number'
+      ? gomerchantData.quota
+      : parseInt(String(gomerchantData.quota || 0), 10) || 0;
+    const isUnlimited = rawQuota >= 999999 || gomerchantData.isLifetime === true;
+
+    if (!isUnlimited && rawQuota <= 0) {
       return NextResponse.json({ 
         success: false, 
         message: 'API Quota Exceeded. Please upgrade your plan in the dashboard.' 
@@ -193,7 +197,9 @@ export async function POST(request: Request) {
       setDoc(globalHistoryRef, historyData),
       setDoc(userHistoryRef, historyData),
       updateDoc(gomerchantRef, {
-        quota: plan === 'enterprise' ? currentQuota : increment(-1),
+        quota: isUnlimited
+          ? rawQuota
+          : (typeof gomerchantData.quota === 'number' ? increment(-1) : Math.max(0, rawQuota - 1)),
         rpmRequestsCount: updatedRpmCount,
         rpmLastReset: shouldResetRpm ? serverTimestamp() : gomerchantData.rpmLastReset || serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -209,7 +215,7 @@ export async function POST(request: Request) {
         base_amount: baseAmount,
         random_code: randomSuffix,
         status: 'PENDING',
-        remaining_quota: plan === 'enterprise' ? -1 : currentQuota - 1
+        remaining_quota: isUnlimited ? -1 : Math.max(0, rawQuota - 1)
       }
     });
 
